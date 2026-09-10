@@ -7,6 +7,28 @@ const positiveDecimal = z
   .regex(/^\d+(?:\.\d+)?$/)
   .refine((value) => new Decimal(value).greaterThan(0));
 
+const printDurationFormSchema = z
+  .object({
+    componentId: z.string().min(1),
+    hours: z.coerce.number().int().nonnegative(),
+    minutes: z.coerce.number().int().min(0).max(59),
+  })
+  .refine((value) => value.hours > 0 || value.minutes > 0, {
+    path: ['minutes'],
+    message: 'Duration must be greater than zero',
+  });
+
+export const printDraftFormSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  customerId: z.string().min(1).nullable(),
+  printerId: z.string().min(1),
+  buildPlateId: z.string().min(1),
+  hotends: z.array(printDurationFormSchema).min(1),
+  otherComponentIds: z.array(z.string().min(1)).default([]),
+  filaments: z.array(z.object({ filamentId: z.string().min(1), usedGrams: positiveDecimal })).min(1),
+  notes: z.string().trim().max(5000),
+});
+
 export const printDraftSchema = z.object({
   name: z.string().trim().min(1).max(200),
   customerId: z

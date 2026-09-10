@@ -17,32 +17,39 @@
       <template #header>
         <h2 class="font-semibold">{{ editingId ? t('common.edit') : t('common.create') }} · {{ title }}</h2>
       </template>
-      <form class="grid gap-4 md:grid-cols-2" @submit.prevent="save">
-        <UFormField :label="t('master.name')" required>
+      <UForm :schema="formSchema" :state="form" class="grid gap-4 md:grid-cols-2" @submit="save">
+        <UFormField name="name" :label="t('master.name')" required>
           <UInput v-model="form.name" class="w-full" />
         </UFormField>
-        <UFormField v-if="resource === 'customers'" :label="t('master.email')">
+        <UFormField v-if="resource === 'customers'" name="email" :label="t('master.email')">
           <UInput v-model="form.email" class="w-full" type="email" />
         </UFormField>
         <template v-if="resource === 'printers' || resource === 'components'">
-          <UFormField :label="t('master.manufacturer')"
+          <UFormField name="manufacturer" :label="t('master.manufacturer')"
             ><UInput v-model="form.manufacturer" class="w-full"
           /></UFormField>
-          <UFormField :label="t('master.model')"><UInput v-model="form.model" class="w-full" /></UFormField>
-          <UFormField :label="t('master.purchasePrice')" required
+          <UFormField name="model" :label="t('master.model')"
+            ><UInput v-model="form.model" class="w-full"
+          /></UFormField>
+          <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
             ><UInput v-model="form.purchasePrice" class="w-full" inputmode="decimal"
           /></UFormField>
-          <UFormField :label="t('master.lifetime')" required
+          <UFormField name="expectedLifetimeHours" :label="t('master.lifetime')" required
             ><UInput v-model="form.expectedLifetimeHours" class="w-full" inputmode="decimal"
           /></UFormField>
-          <UFormField v-if="resource === 'printers'" :label="t('master.power')" required
+          <UFormField
+            v-if="resource === 'printers'"
+            name="averagePowerWatts"
+            :label="t('master.power')"
+            required
             ><UInput v-model="form.averagePowerWatts" class="w-full" type="number" min="0" step="1"
           /></UFormField>
-          <UFormField v-if="resource === 'components'" :label="t('master.type')" required>
+          <UFormField v-if="resource === 'components'" name="type" :label="t('master.type')" required>
             <USelect v-model="form.type" class="w-full" value-key="value" :items="componentTypes" />
           </UFormField>
           <UFormField
             v-if="resource === 'components'"
+            name="printerIds"
             :label="t('master.compatiblePrinters')"
             class="md:col-span-2"
           >
@@ -62,17 +69,19 @@
           />
         </template>
         <template v-if="resource === 'filaments'">
-          <UFormField :label="t('master.manufacturer')" required
+          <UFormField name="manufacturer" :label="t('master.manufacturer')" required
             ><UInput v-model="form.manufacturer" class="w-full"
           /></UFormField>
-          <UFormField :label="t('master.material')" required
+          <UFormField name="material" :label="t('master.material')" required
             ><UInput v-model="form.material" class="w-full"
           /></UFormField>
-          <UFormField :label="t('master.color')"><UInput v-model="form.color" class="w-full" /></UFormField>
-          <UFormField :label="t('master.purchasePrice')" required
+          <UFormField name="color" :label="t('master.color')"
+            ><UInput v-model="form.color" class="w-full"
+          /></UFormField>
+          <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
             ><UInput v-model="form.purchasePrice" class="w-full" inputmode="decimal"
           /></UFormField>
-          <UFormField :label="t('master.netWeight')" required
+          <UFormField name="netWeightGrams" :label="t('master.netWeight')" required
             ><UInput v-model="form.netWeightGrams" class="w-full" inputmode="decimal"
           /></UFormField>
           <UAlert
@@ -82,14 +91,14 @@
             :description="`${t('master.costPerGram')}: ${derivedRate}`"
           />
         </template>
-        <UFormField :label="t('master.note')" class="md:col-span-2"
+        <UFormField name="note" :label="t('master.note')" class="md:col-span-2"
           ><UTextarea v-model="form.note" class="w-full"
         /></UFormField>
         <div class="flex justify-end gap-2 md:col-span-2">
           <UButton color="neutral" variant="ghost" :label="t('common.cancel')" @click="editing = false" />
           <UButton type="submit" :loading="saving" :label="t('common.save')" />
         </div>
-      </form>
+      </UForm>
     </UCard>
 
     <div v-if="loading" class="flex min-h-40 items-center justify-center">
@@ -154,6 +163,7 @@
 
 <script setup lang="ts">
 import Decimal from 'decimal.js';
+import { componentSchema, customerSchema, filamentSchema, printerSchema } from '#shared/schemas/master-data';
 import type { MasterDataListItem, MasterDataResource, PaginatedResponse } from '#shared/types/master-data';
 
 const props = defineProps<{ resource: MasterDataResource; title: string }>();
@@ -177,6 +187,21 @@ const componentTypes = computed(() => [
   { label: t('master.buildPlate'), value: 'BUILD_PLATE' },
   { label: t('master.other'), value: 'OTHER' },
 ]);
+
+const formSchema = computed(() => {
+  switch (props.resource) {
+    case 'customers':
+      return customerSchema;
+    case 'printers':
+      return printerSchema;
+    case 'components':
+      return componentSchema;
+    case 'filaments':
+      return filamentSchema;
+    default:
+      return customerSchema;
+  }
+});
 
 function emptyForm() {
   return {

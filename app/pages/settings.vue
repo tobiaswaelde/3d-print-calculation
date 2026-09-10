@@ -1,26 +1,28 @@
 <template>
   <LayoutPagePanel panel-id="settings" :title="t('nav.settings')">
     <UCard class="max-w-2xl">
-      <form class="space-y-4" @submit.prevent="save">
-        <UFormField :label="t('auth.currency')" required :help="t('settings.currencyHelp')">
+      <UForm :schema="settingsSchema" :state="form" class="space-y-4" @submit="save">
+        <UFormField name="currency" :label="t('auth.currency')" required :help="t('settings.currencyHelp')">
           <USelect v-model="form.currency" class="w-full" :items="['EUR', 'USD', 'CHF', 'GBP']" />
         </UFormField>
-        <UFormField :label="t('settings.defaultLocale')" required>
+        <UFormField name="defaultLocale" :label="t('settings.defaultLocale')" required>
           <USelect v-model="form.defaultLocale" class="w-full" value-key="value" :items="localeOptions" />
         </UFormField>
-        <UFormField :label="t('auth.electricityPrice')" required>
+        <UFormField name="electricityPricePerKwh" :label="t('auth.electricityPrice')" required>
           <UInput v-model="form.electricityPricePerKwh" class="w-full" inputmode="decimal" />
         </UFormField>
         <UAlert v-if="message" :color="messageColor" :description="message" />
         <div class="flex justify-end">
           <UButton type="submit" :loading="pending" :label="t('common.save')" />
         </div>
-      </form>
+      </UForm>
     </UCard>
   </LayoutPagePanel>
 </template>
 
 <script setup lang="ts">
+import { settingsSchema } from '#shared/schemas/master-data';
+
 const { t } = useI18n();
 const pending = ref(false);
 const message = ref('');
