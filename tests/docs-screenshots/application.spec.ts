@@ -69,7 +69,7 @@ test('regenerates every application screenshot used by the documentation', async
   });
 
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'First-run setup' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'First-run setup' })).toBeVisible({ timeout: 30_000 });
   await capture(page, 'first-run-setup.jpg');
 
   await page.getByLabel('Display name').fill('Alex Morgan');

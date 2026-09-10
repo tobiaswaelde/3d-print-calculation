@@ -36,7 +36,7 @@
     "docs:screenshots": "playwright test --config playwright.screenshots.config.ts",
     "test:docs:e2e": "playwright test --config playwright.docs.config.ts",
     "changeset": "changeset",
-    "version": "changeset version && pnpm install --lockfile-only",
+    "version": "changeset version && pnpm install --lockfile-only && prettier --write pnpm-lock.yaml",
     "release": "changeset publish"
   },
   "dependencies": {
