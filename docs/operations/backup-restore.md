@@ -1,27 +1,26 @@
 ---
-title: Backup und Restore
-description: Konsistente SQLite-Backups erstellen, extern sichern und kontrolliert wiederherstellen.
+title: Backup and restore
+description: Create consistent SQLite backups, store them externally, and perform a controlled restore.
 ---
 
-# Backup und Restore
+# Backup and restore
 
-## Online-Backup
+## Create an online backup
 
-Kopiere niemals nur eine laufende `app.db`: SQLite kann gleichzeitig WAL-Dateien verwenden. Der mitgelieferte
-Befehl nutzt die SQLite-Backup-API und prüft das Ergebnis mit `integrity_check`.
+Never copy only a live `app.db`; SQLite may use write-ahead log files. The bundled command uses SQLite's backup API
+and validates the result with `integrity_check`:
 
 ```bash
 docker compose exec app pnpm db:backup /data/app-backup.db
 docker compose cp app:/data/app-backup.db ./app-backup.db
 ```
 
-Speichere die kopierte Datei verschlüsselt außerhalb des Hosts und prüfe Größe, Zugriffsrechte und Aufbewahrung.
-Backups enthalten Konten, Passwort-Hashes, Sitzungen und sämtliche Geschäftsdaten. Ein Backup im selben Volume ist
-kein Schutz gegen Volume-Verlust.
+Encrypt and store the copied file away from the host. It contains account hashes, sessions, settings, master data,
+prints, and snapshots. A second file inside the same volume does not protect against volume or host loss.
 
-## Verifizierter Restore
+## Restore a backup
 
-Ein Restore ersetzt Daten. Stoppe Schreibzugriffe und bewahre zuerst ein zusätzliches Backup des aktuellen Zustands:
+A restore replaces the current database. Stop writes and preserve the current state first:
 
 ```bash
 docker compose exec app pnpm db:backup /data/before-restore.db
@@ -34,9 +33,8 @@ docker compose up -d
 curl --fail http://127.0.0.1:3000/api/health
 ```
 
-Beim Start werden Migrationen angewendet, falls das Backup älter als das Image ist. Prüfe anschließend Anmeldung,
-Stammdaten, Anzahl abgeschlossener Drucke und einen bekannten Snapshot. Bei Fehlern stoppe den Container und stelle
-`before-restore.db` auf dieselbe Weise wieder her.
+Startup migrates an older backup forward when required. Verify sign-in, master data, completed-print counts, and a
+known snapshot. On failure, restore `before-restore.db` with the same process.
 
-Teste Backup und Restore regelmäßig auf einer wegwerfbaren Instanz. Ein Restore in eine ältere Anwendungsversion
-ist nur mit einem Backup aus genau dieser Version sicher; Migrationen werden nicht automatisch rückgängig gemacht.
+Test restore regularly on a disposable instance. Restoring into an older app version is safe only with a backup
+created by that version; migrations are not automatically reversed.

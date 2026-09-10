@@ -2,11 +2,11 @@
   <LayoutPagePanel :panel-id="resource" :title="title" table>
     <template #toolbar>
       <CommonTableToolbar v-model:search="search" :title="title">
-        <template #filters>
-          <UCheckbox v-model="includeArchived" :label="t('master.includeArchived')" />
+        <template #options>
+          <CommonTableOptionsMenu v-model:include-archived="includeArchived" />
         </template>
         <template #create>
-          <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
+          <CommonButtonsNew @click="startCreate" />
         </template>
       </CommonTableToolbar>
     </template>
@@ -22,7 +22,13 @@
     >
       <template #body>
         <UAlert v-if="dialogError" class="mb-4" color="error" :description="dialogError" />
-        <UForm :schema="formSchema" :state="form" class="grid gap-4 md:grid-cols-2" @submit="save">
+        <UForm
+          :id="`${resource}-form`"
+          :schema="formSchema"
+          :state="form"
+          class="grid gap-4 md:grid-cols-2"
+          @submit="save"
+        >
           <UFormField name="name" :label="t('master.name')" required>
             <UInput v-model="form.name" class="w-full" icon="i-tabler-tag" autofocus />
           </UFormField>
@@ -161,22 +167,29 @@
           <UFormField name="note" :label="t('master.note')" class="md:col-span-2"
             ><UTextarea v-model="form.note" class="w-full" icon="i-tabler-notes"
           /></UFormField>
-          <div class="flex justify-end gap-2 border-t border-default pt-4 md:col-span-2">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              :disabled="saving"
-              :label="t('common.cancel')"
-              @click="editing = false"
-            />
-            <UButton
-              type="submit"
-              icon="i-tabler-device-floppy"
-              :loading="saving"
-              :label="t('common.save')"
-            />
-          </div>
         </UForm>
+      </template>
+
+      <template #footer>
+        <div class="flex w-full justify-end gap-2">
+          <UButton
+            type="button"
+            color="error"
+            variant="outline"
+            :disabled="saving"
+            :label="t('common.cancel')"
+            @click="editing = false"
+          />
+          <UButton
+            type="submit"
+            :form="`${resource}-form`"
+            color="primary"
+            variant="solid"
+            icon="i-tabler-device-floppy"
+            :loading="saving"
+            :label="t('common.save')"
+          />
+        </div>
       </template>
     </UModal>
 
@@ -189,7 +202,7 @@
         class="min-h-full rounded-none border-0"
         :title="t('common.empty')"
       >
-        <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
+        <UButton icon="i-tabler-plus" label="New" @click="startCreate" />
       </CommonEmptyState>
       <table v-else class="w-full min-w-180 text-sm">
         <thead class="sticky top-0 z-10 bg-elevated text-left text-xs text-muted uppercase">
@@ -230,7 +243,6 @@
                   color="error"
                   variant="ghost"
                   icon="i-tabler-trash"
-                  :label="''"
                   :aria-label="t('common.delete')"
                   :confirmation="t('master.deleteConfirmation')"
                   @confirm="remove(item)"

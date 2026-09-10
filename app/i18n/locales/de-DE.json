@@ -30,11 +30,14 @@
     "create": "Erstellen",
     "save": "Speichern",
     "cancel": "Abbrechen",
+    "back": "Zurück",
+    "next": "Weiter",
     "delete": "Löschen",
     "archive": "Archivieren",
     "restore": "Wiederherstellen",
     "edit": "Bearbeiten",
     "search": "Suchen",
+    "tableOptions": "Tabellenoptionen",
     "loading": "Wird geladen …",
     "empty": "Noch keine Einträge",
     "confirm": "Bestätigen",
@@ -47,8 +50,17 @@
   "user": { "openMenu": "Benutzermenü öffnen" },
   "sidebar": {
     "github": "Projekt auf GitHub öffnen",
+    "docs": "Dokumentation öffnen",
     "collapse": "Navigation einklappen",
     "expand": "Navigation ausklappen"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "open": "Changelog öffnen",
+    "current": "Installiert",
+    "update": "Update",
+    "changes": "Änderungen",
+    "viewAll": "Alle Releases auf GitHub ansehen"
   },
   "search": {
     "title": "Globale Suche",
@@ -63,7 +75,13 @@
     "placeholder": "Dieser Bereich wird im nächsten Meilenstein eingerichtet."
   },
   "settings": {
-    "defaultLocale": "Standardsprache",
+    "general": "Allgemein",
+    "generalDescription": "Sprache, Darstellung und Datumsanzeige für diese Anwendung.",
+    "calculation": "Berechnung",
+    "calculationDescription": "Währung und Energiekosten für die Druckkostenberechnung.",
+    "dateFormat": "Datumsformat",
+    "dateFormatLocale": "Regional (z. B. 10.09.2026)",
+    "dateFormatIso": "ISO (2026-09-10)",
     "currencyHelp": "Nach dem ersten kostenrelevanten Datensatz kann die Währung nicht mehr geändert werden.",
     "saved": "Einstellungen gespeichert."
   },
@@ -95,8 +113,16 @@
   },
   "prints": {
     "new": "Neuer Druck",
+    "createDescription": "Erfasse Druckdaten, Laufzeiten und Material schrittweise.",
     "detail": "Druckdetails",
     "hotends": "Hotends und Laufzeiten",
+    "hotendsHelp": "Gib für jedes verwendete Hotend die Druckdauer an.",
+    "steps": {
+      "general": "Allgemein",
+      "hotends": "Laufzeit",
+      "materials": "Material",
+      "review": "Übersicht"
+    },
     "components": "Weitere Komponenten",
     "otherComponents": "Sonstige kompatible Komponenten",
     "hours": "Stunden",

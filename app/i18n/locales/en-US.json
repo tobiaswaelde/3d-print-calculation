@@ -30,11 +30,14 @@
     "create": "Create",
     "save": "Save",
     "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
     "delete": "Delete",
     "archive": "Archive",
     "restore": "Restore",
     "edit": "Edit",
     "search": "Search",
+    "tableOptions": "Table options",
     "loading": "Loading…",
     "empty": "No entries yet",
     "confirm": "Confirm",
@@ -47,8 +50,17 @@
   "user": { "openMenu": "Open user menu" },
   "sidebar": {
     "github": "Open project on GitHub",
+    "docs": "Open documentation",
     "collapse": "Collapse navigation",
     "expand": "Expand navigation"
+  },
+  "changelog": {
+    "title": "Changelog",
+    "open": "Open changelog",
+    "current": "Installed",
+    "update": "Update",
+    "changes": "Changes",
+    "viewAll": "View all releases on GitHub"
   },
   "search": {
     "title": "Global search",
@@ -63,7 +75,13 @@
     "placeholder": "This area is prepared for the next milestone."
   },
   "settings": {
-    "defaultLocale": "Default language",
+    "general": "General",
+    "generalDescription": "Language, appearance, and date display for this application.",
+    "calculation": "Calculation",
+    "calculationDescription": "Currency and energy costs used for print cost calculations.",
+    "dateFormat": "Date format",
+    "dateFormatLocale": "Regional (for example, 09/10/2026)",
+    "dateFormatIso": "ISO (2026-09-10)",
     "currencyHelp": "The currency cannot be changed after the first cost-bearing record is created.",
     "saved": "Settings saved."
   },
@@ -95,8 +113,16 @@
   },
   "prints": {
     "new": "New print",
+    "createDescription": "Enter print data, durations, and materials step by step.",
     "detail": "Print details",
     "hotends": "Hotends and durations",
+    "hotendsHelp": "Enter the print duration for each hotend used.",
+    "steps": {
+      "general": "General",
+      "hotends": "Duration",
+      "materials": "Material",
+      "review": "Review"
+    },
     "components": "Additional components",
     "otherComponents": "Other compatible components",
     "hours": "Hours",

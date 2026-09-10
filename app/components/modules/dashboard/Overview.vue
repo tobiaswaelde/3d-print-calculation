@@ -45,7 +45,9 @@
             <h2 class="font-semibold">{{ t('dashboard.costOverTime') }}</h2>
           </div>
         </template>
-        <ClientOnly><VChart v-if="data" class="h-80" autoresize :option="lineOption" /></ClientOnly>
+        <ClientOnly
+          ><VChart v-if="data" class="dashboard-chart" autoresize :option="lineOption"
+        /></ClientOnly>
         <ul class="sr-only">
           <li v-for="point in data?.completedCostSeries" :key="point.date">
             {{ point.date }}: {{ money(point.value, data!.currency) }}
@@ -63,7 +65,7 @@
             <h2 class="font-semibold">{{ t('dashboard.costCategories') }}</h2>
           </div>
         </template>
-        <ClientOnly><VChart v-if="data" class="h-80" autoresize :option="pieOption" /></ClientOnly>
+        <ClientOnly><VChart v-if="data" class="dashboard-chart" autoresize :option="pieOption" /></ClientOnly>
         <ul class="sr-only">
           <li v-for="item in data?.categoryTotals" :key="item.category">
             {{ categoryLabel(item.category) }}: {{ money(item.value, data!.currency) }}
@@ -72,7 +74,10 @@
       </UCard>
     </div>
 
-    <UCard class="overflow-hidden" :ui="{ header: 'bg-amber-50/70 dark:bg-amber-950/20' }">
+    <UCard
+      class="overflow-hidden"
+      :ui="{ header: 'bg-amber-50/70 dark:bg-amber-950/20', body: 'p-0 sm:p-0' }"
+    >
       <template #header>
         <div class="flex items-center justify-between gap-3">
           <div class="flex items-center gap-3">
@@ -83,14 +88,15 @@
             </div>
             <h2 class="font-semibold">{{ t('dashboard.unfinished') }}</h2>
           </div>
-          <UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" />
+          <UButton icon="i-tabler-plus" :label="t('prints.new')" @click="createOpen = true" />
         </div>
       </template>
       <CommonEmptyState
         v-if="data && !data.unfinishedPrints.length"
+        class="rounded-none border-0"
         :title="t('dashboard.noDrafts')"
         :description="t('dashboard.noDraftsDescription')"
-        ><UButton to="/prints/new" :label="t('prints.new')"
+        ><UButton :label="t('prints.new')" @click="createOpen = true"
       /></CommonEmptyState>
       <div v-else class="overflow-x-auto">
         <table class="w-full min-w-180 text-sm">
@@ -100,8 +106,8 @@
               <th class="p-3">{{ t('nav.customers') }}</th>
               <th class="p-3">{{ t('nav.printers') }}</th>
               <th class="p-3">{{ t('dashboard.updated') }}</th>
-              <th class="p-3">{{ t('prints.duration') }}</th>
-              <th class="p-3">{{ t('prints.totalCost') }}</th>
+              <th class="p-3 text-right">{{ t('prints.duration') }}</th>
+              <th class="p-3 text-right">{{ t('prints.totalCost') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -119,28 +125,41 @@
                   {{ item.name }}
                 </NuxtLink>
               </td>
-              <td class="p-3">{{ item.customer?.name ?? '—' }}</td>
-              <td class="p-3">{{ item.printer.name }}</td>
-              <td class="p-3">{{ date(item.updatedAt) }}</td>
-              <td class="p-3">{{ duration(item.totalDurationSeconds) }}</td>
-              <td class="p-3">{{ money(item.totalCost, item.currency) }}</td>
+              <td class="p-3">
+                <UBadge color="neutral" variant="subtle" icon="i-tabler-user">
+                  {{ item.customer?.name ?? '—' }}
+                </UBadge>
+              </td>
+              <td class="p-3">
+                <UBadge color="neutral" variant="subtle" icon="i-tabler-printer">{{
+                  item.printer.name
+                }}</UBadge>
+              </td>
+              <td class="p-3">{{ dateTime(item.updatedAt) }}</td>
+              <td class="p-3 text-right font-mono tabular-nums">{{ duration(item.totalDurationSeconds) }}</td>
+              <td class="p-3 text-right font-mono tabular-nums">
+                {{ money(item.totalCost, item.currency) }}
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
     </UCard>
+
+    <ModulesPrintsCreateDialog v-model:open="createOpen" @created="refresh" />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { DashboardDto } from '#shared/types/prints';
 
-const { t, locale } = useI18n();
-const { money } = useFormatting();
+const { t } = useI18n();
+const { money, dateTime } = useFormatting();
 const period = ref<DashboardDto['period']>('30d');
 const colorMode = useColorMode();
 const data = ref<DashboardDto | null>(null);
 const error = ref('');
+const createOpen = ref(false);
 const periodOptions = computed(() => [
   { label: t('dashboard.last30Days'), value: '30d' },
   { label: t('dashboard.last90Days'), value: '90d' },
@@ -148,8 +167,6 @@ const periodOptions = computed(() => [
 ]);
 const duration = (seconds: number) =>
   `${Math.floor(seconds / 3600)} h ${Math.floor((seconds % 3600) / 60)} min`;
-const date = (value: string) =>
-  new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 const categoryLabel = (category: string) => t(`dashboard.category.${category}`);
 const kpis = computed(() => [
   {
@@ -238,3 +255,10 @@ async function refresh() {
 watch(period, refresh);
 onMounted(refresh);
 </script>
+
+<style scoped>
+.dashboard-chart {
+  display: block;
+  height: 20rem;
+}
+</style>

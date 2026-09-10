@@ -1,42 +1,39 @@
 ---
-title: Berechnungsregeln
-description: Formelversion 1, Einheiten, Eingabegrenzen, Dezimalpräzision und reproduzierbares Rechenbeispiel.
+title: Calculation rules
+description: Formula version 1, units, input boundaries, decimal precision, and a reproducible example.
 ---
 
-# Berechnungsregeln
+# Calculation rules
 
-Formelversion `1` verwendet `decimal.js` ohne Zwischenrundung. API-Ergebnisse sind kanonische Dezimalstrings; erst
-die Oberfläche formatiert Geld für die Anzeige. `t = Sekunden / 3600`, Leistung wird mit `/ 1000` von Watt in kW
-umgerechnet.
-
-```text
-Drucker       = t_gesamt × (Kaufpreis_Drucker / Lebensdauer_Drucker_h)
-Hotend        = t_Hotend × (Kaufpreis_Hotend / Lebensdauer_Hotend_h)
-Bauplatte     = t_gesamt × (Kaufpreis_Bauplatte / Lebensdauer_Bauplatte_h)
-Weitere Teile = t_gesamt × Σ(Kaufpreis_Teil / Lebensdauer_Teil_h)
-Filament      = Σ(Gramm_verbraucht × Kaufpreis_Rolle / Nettogramm_Rolle)
-Strom         = t_gesamt × (Watt_Drucker / 1000) × Preis_kWh
-Gesamt        = Drucker + alle Komponenten + Filament + Strom
-```
-
-Mindestens ein Hotend und ein Filament sowie genau ein Drucker und eine Bauplatte sind erforderlich. Die
-Gesamtdauer ist die Summe positiver ganzzahliger Hotend-Sekunden. Verbrauchsgewichte und Lebensdauern müssen positiv
-sein; Preise und Watt dürfen null, aber nicht negativ sein. Ressourcen müssen aktiv, eindeutig und mit dem Drucker
-kompatibel sein.
-
-## Unabhängig reproduzierbares Beispiel
-
-Für 5400 s = 1,5 h, Drucker 1200/6000 h und 120 W, Hotend 100/2000 h, Bauplatte 60/1200 h,
-42,5 g einer 29,99/1000-g-Rolle und Strompreis 0,32/kWh:
+Formula version `1` uses `decimal.js` without intermediate rounding. API results are canonical decimal strings;
+only the UI formats currency for display. Let `t = seconds / 3600`, and convert watts to kilowatts by dividing by
+1,000.
 
 ```text
-Drucker    1.5 × 0.2       = 0.3
-Hotend     1.5 × 0.05      = 0.075
-Bauplatte  1.5 × 0.05      = 0.075
-Filament   42.5 × 0.02999  = 1.274575
-Strom      1.5 × 0.12 × .32= 0.0576
-Gesamt                      = 1.782175
+Printer       = total_h × (printer_price / printer_lifetime_h)
+Hotend        = hotend_h × (hotend_price / hotend_lifetime_h)
+Build plate   = total_h × (plate_price / plate_lifetime_h)
+Other parts   = total_h × Σ(part_price / part_lifetime_h)
+Filament      = Σ(used_g × spool_price / spool_net_g)
+Electricity   = total_h × (printer_watts / 1000) × price_per_kWh
+Total         = printer + components + filament + electricity
 ```
 
-Eine neue Formel erhält eine neue `calculationVersion`. Alte Abschluss-Snapshots behalten ihre Version und Werte;
-Duplikate werden mit der aktuellen Version und aktuellen Preisen berechnet.
+One printer and build plate, at least one hotend, and at least one filament are required. Total duration sums
+positive whole hotend seconds. Used weight and lifetimes are positive; prices and watts may be zero but not
+negative. Resources must be active, unique, and compatible.
+
+For 5,400 seconds (1.5 hours), a printer at 1,200/6,000 hours and 120 W, a hotend at 100/2,000 hours, a build plate
+at 60/1,200 hours, 42.5 g from a 29.99/1,000-g spool, and electricity at 0.32/kWh:
+
+```text
+Printer     1.5 × 0.2        = 0.3
+Hotend      1.5 × 0.05       = 0.075
+Build plate 1.5 × 0.05       = 0.075
+Filament    42.5 × 0.02999   = 1.274575
+Electricity 1.5 × 0.12 × .32 = 0.0576
+Total                         = 1.782175
+```
+
+A changed formula receives a new `calculationVersion`. Existing completed snapshots retain their version and
+values; duplicates use the current formula and current prices.

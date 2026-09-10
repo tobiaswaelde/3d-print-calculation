@@ -6,7 +6,7 @@
     <g fill="#ecfeff" stroke="#0e7490" stroke-width="2">
       <rect x="20" y="50" width="150" height="80" rx="12"/><rect x="215" y="50" width="150" height="80" rx="12"/><rect x="410" y="50" width="150" height="80" rx="12"/><rect x="605" y="50" width="135" height="80" rx="12"/>
     </g>
-    <g fill="#164e63"><text x="95" y="82">Master data</text><text x="95" y="106">Stammdaten</text><text x="290" y="82">Draft + preview</text><text x="290" y="106">Entwurf + Vorschau</text><text x="485" y="82">Completed snapshot</text><text x="485" y="106">Abschluss-Snapshot</text><text x="672" y="82">Duplicate</text><text x="672" y="106">Duplikat</text></g>
+    <g fill="#164e63"><text x="95" y="95">Master data</text><text x="290" y="95">Draft + preview</text><text x="485" y="95">Completed snapshot</text><text x="672" y="95">Duplicate</text></g>
     <g stroke="#0e7490" stroke-width="3" marker-end="url(#arrow)"><path d="M170 90h38"/><path d="M365 90h38"/><path d="M560 90h38"/></g>
   </g>
 </svg>

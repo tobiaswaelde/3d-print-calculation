@@ -1,8 +1,18 @@
 <template>
-  <UDashboardPanel :id="panelId" class="min-h-0" :ui="{ body: 'min-h-0 gap-0! overflow-hidden p-0!' }">
+  <UDashboardPanel
+    :id="panelId"
+    class="min-h-0"
+    :aria-label="title"
+    :ui="{ body: 'min-h-0 gap-0! overflow-hidden p-0!' }"
+  >
     <template #header>
-      <UDashboardNavbar :title="title">
-        <LayoutGlobalSearch />
+      <UDashboardNavbar :ui="{ left: 'flex-1' }">
+        <template #left="{ sidebarCollapsed }">
+          <UDashboardSidebarCollapse
+            :aria-label="t(sidebarCollapsed.value ? 'sidebar.expand' : 'sidebar.collapse')"
+          />
+          <LayoutGlobalSearch />
+        </template>
         <template #right>
           <slot name="actions" />
           <LayoutAppUserMenu />
@@ -22,6 +32,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+
 withDefaults(defineProps<{ panelId: string; title: string; table?: boolean }>(), {
   table: false,
 });

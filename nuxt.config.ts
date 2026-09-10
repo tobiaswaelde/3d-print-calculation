@@ -16,7 +16,7 @@ export default defineNuxtConfig({
   },
   i18n: {
     langDir: '../app/i18n/locales',
-    defaultLocale: 'de-DE',
+    defaultLocale: process.env.DOCS_SCREENSHOTS === 'true' ? 'en-US' : 'de-DE',
     strategy: 'no_prefix',
     detectBrowserLanguage: false,
     locales: [

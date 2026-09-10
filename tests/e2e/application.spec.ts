@@ -2,6 +2,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
 test('setup, navigation, persistence, accessibility, and responsive shell', async ({ page }) => {
+  test.setTimeout(90_000);
+  await page.route('**/api/version-latest', (route) => route.fulfill({ json: { latest: '999.0.0' } }));
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'Ersteinrichtung' })).toBeVisible();
   await page.getByLabel('Anzeigename').fill('Browser Test');
@@ -12,10 +14,34 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(electricityPrice.locator('..')).toContainText('EUR/kWh');
   await electricityPrice.fill('0.32');
   await page.getByRole('button', { name: 'Ersteinrichtung' }).click();
-  await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Druckkosten im Zeitverlauf' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Übersicht' })).toHaveCount(0);
+  const collapseButton = page.getByRole('button', { name: 'Navigation einklappen' });
+  const globalSearchButton = page.getByRole('button', { name: 'Globale Suche öffnen' });
+  await expect(collapseButton).toHaveCount(1);
+  const [collapseBox, searchBox] = await Promise.all([
+    collapseButton.boundingBox(),
+    globalSearchButton.boundingBox(),
+  ]);
+  expect(collapseBox!.x).toBeLessThan(searchBox!.x);
+  expect(searchBox!.width).toBeGreaterThan(256);
+  const changelogButton = page.getByRole('button', { name: 'Changelog öffnen' });
+  await expect(changelogButton).toContainText('Update');
+  await changelogButton.click();
+  await expect(page.getByRole('dialog', { name: 'Changelog' })).toContainText('v0.2.0');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('link', { name: 'Dokumentation öffnen' })).toHaveAttribute(
+    'href',
+    'https://tobiaswaelde.github.io/3d-print-calculation/',
+  );
   const tablerIcon = page.locator('.iconify[class*="i-tabler:"]').first();
   await expect(tablerIcon).toBeVisible();
   expect(await tablerIcon.evaluate((element) => getComputedStyle(element).maskImage)).toContain(
+    'data:image/svg+xml',
+  );
+  const filamentIcon = page.getByRole('link', { name: 'Filamente' }).locator('.iconify');
+  await expect(filamentIcon).toBeVisible();
+  expect(await filamentIcon.evaluate((element) => getComputedStyle(element).maskImage)).toContain(
     'data:image/svg+xml',
   );
 
@@ -23,6 +49,24 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   expect(
     accessibility.violations.filter((violation) => ['critical', 'serious'].includes(violation.impact ?? '')),
   ).toEqual([]);
+
+  await page.getByRole('link', { name: 'Drucke', exact: true }).click();
+  const printsToolbar = page.locator('[data-table-toolbar]');
+  await expect(printsToolbar.getByText('Drucke', { exact: true })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Status' })).toContainText('Alle Status');
+  await expect(printsToolbar.getByText('Archivierte anzeigen')).toHaveCount(0);
+  await printsToolbar.getByRole('button', { name: 'Tabellenoptionen' }).click();
+  await expect(page.getByRole('menuitemcheckbox', { name: 'Archivierte anzeigen' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(printsToolbar.getByRole('button', { name: 'New' })).toBeVisible();
+  await page.keyboard.press('Control+n');
+  const createPrintDialog = page.getByRole('dialog', { name: 'Neuer Druck' });
+  await expect(createPrintDialog).toBeVisible();
+  await expect(createPrintDialog.getByText('Allgemein')).toBeVisible();
+  await createPrintDialog.getByRole('button', { name: 'Weiter' }).click();
+  await expect(createPrintDialog.getByLabel('Name')).toBeVisible();
+  await createPrintDialog.getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(createPrintDialog).toBeHidden();
 
   await page.getByRole('link', { name: 'Kunden' }).click();
   const tableToolbar = page.locator('[data-table-toolbar]');
@@ -32,7 +76,8 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(tableToolbar.getByText('Kunden')).toBeVisible();
   await expect(tableToolbar.getByRole('searchbox')).toBeVisible();
   await expect(tableRegion).toBeVisible();
-  await tableToolbar.getByRole('button', { name: 'Erstellen' }).click();
+  await expect(tableToolbar.getByRole('button', { name: 'New' })).toBeVisible();
+  await page.keyboard.press('Control+n');
   const resourceDialog = page.getByRole('dialog');
   await expect(resourceDialog).toBeVisible();
   await expect(resourceDialog.getByLabel('Name')).toBeFocused();
@@ -56,6 +101,16 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(resourceDialog).toBeHidden();
   await expect(page.getByRole('cell', { name: 'Acme Updated' })).toBeVisible();
 
+  const deleteButton = customerRow.getByRole('button', { name: 'Löschen' });
+  await expect(deleteButton).toHaveText('');
+  await deleteButton.click();
+  const deleteConfirmation = page.getByText(
+    'Dieser Eintrag wird dauerhaft gelöscht, sofern er nicht verwendet wird.',
+  );
+  await expect(deleteConfirmation).toBeVisible();
+  await page.getByRole('button', { name: 'Abbrechen' }).click();
+  await expect(deleteConfirmation).toBeHidden();
+
   await page.getByRole('button', { name: 'Globale Suche öffnen' }).click();
   const globalSearch = page.getByRole('search', { name: 'Globale Suche' });
   await globalSearch.getByRole('searchbox').fill('Acme');
@@ -65,12 +120,22 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(globalSearch.getByRole('searchbox')).toBeFocused();
   await page.keyboard.press('Escape');
 
-  await page.getByRole('button', { name: 'Benutzermenü öffnen' }).click();
-  await page.getByRole('menuitem', { name: 'Sprache' }).hover();
-  await page.getByRole('menuitem', { name: 'English' }).click();
-  await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
+  await page.getByRole('link', { name: 'Einstellungen' }).click();
+  await expect(page.getByRole('heading', { name: 'Allgemein' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Berechnung' })).toBeVisible();
+  await page.getByRole('combobox', { name: 'Sprache' }).click();
+  await page.getByRole('option', { name: 'English' }).click();
+  const dateFormat = page.getByRole('combobox', { name: 'Datumsformat' });
+  await dateFormat.click();
+  await page.getByRole('option', { name: 'ISO (2026-09-10)' }).click();
+  await page.getByRole('button', { name: 'Speichern' }).click();
+  await expect(page.getByText('Settings saved.')).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Date format' })).toContainText('ISO (2026-09-10)');
+  await page.getByRole('link', { name: 'Customers' }).click();
+  await expect(tableToolbar.getByText('Customers')).toBeVisible();
+  await page.reload();
+  await expect(tableToolbar.getByText('Customers')).toBeVisible();
 
   await page.getByRole('button', { name: 'Open user menu' }).click();
   await page.getByRole('menuitem', { name: 'Appearance' }).hover();
@@ -78,7 +143,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page.locator('html')).toHaveClass(/dark/);
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
+  await expect(tableToolbar.getByText('Customers')).toBeVisible();
   const geometry = await page.evaluate(() => ({
     viewportWidth: innerWidth,
     documentWidth: document.documentElement.scrollWidth,

@@ -4,7 +4,6 @@
       <UAvatar :text="initials" color="primary" size="sm" />
       <span class="hidden min-w-0 text-left sm:block">
         <span class="block truncate text-sm font-medium text-highlighted">{{ user?.displayName }}</span>
-        <span class="block truncate text-xs text-muted">{{ user?.email }}</span>
       </span>
       <UIcon name="i-tabler-selector" class="hidden size-4 text-muted sm:block" />
     </UButton>

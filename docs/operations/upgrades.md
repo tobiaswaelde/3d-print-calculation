@@ -1,17 +1,17 @@
 ---
-title: Upgrade und Rollback
-description: Versionen sicher aktualisieren, Datenverträglichkeit prüfen und mit klaren Grenzen zurückrollen.
+title: Upgrade and rollback
+description: Upgrade pinned versions safely and roll back within explicit data-safety boundaries.
 ---
 
-# Upgrade und Rollback
+# Upgrade and rollback
 
 ## Upgrade
 
-1. Lies die [GitHub Releases](https://github.com/tobiaswaelde/3d-print-calculation/releases) vom aktuellen bis zum
-   Ziel-Tag und beachte Breaking Changes oder Migrationshinweise.
-2. Erstelle ein [externes, geprüftes Backup](/operations/backup-restore).
-3. Ändere in Compose ausschließlich den festen Image-Tag, ziehe das Image und starte neu.
-4. Warte auf den Healthcheck und prüfe Login, Dashboard, Stammdaten und einen abgeschlossenen Snapshot.
+1. Read all relevant [GitHub Releases](https://github.com/tobiaswaelde/3d-print-calculation/releases) between the
+   installed version and target version.
+2. Create an [external, verified backup](/operations/backup-restore).
+3. Change only the pinned image tag, pull the image, and restart the service.
+4. Verify health, logs, sign-in, dashboard, master data, and a known completed snapshot.
 
 ```bash
 docker compose pull app
@@ -20,19 +20,17 @@ docker compose ps
 docker compose logs --tail=100 app
 ```
 
-Dokumentation auf `main` beschreibt den neuesten Stand. Der Changeset-Release verbindet App-Version, Git-Tag,
-Release Notes und Image-Tag. Für einen älteren Betrieb nutze die Dokumentation am entsprechenden Git-Tag.
+The documentation on `main` describes the latest application state. Changesets align the application version,
+Git tag, GitHub release, and image tag. Historical source documentation remains available in `docs/` at each tag.
 
-## Rollback
+## Roll back
 
-Ein reiner Image-Rollback ist nur zulässig, wenn die Release Notes die Datenbank als rückwärtskompatibel ausweisen.
-Andernfalls:
+An image-only rollback is allowed only when the release notes declare database compatibility. Otherwise:
 
-1. Stoppe die Anwendung.
-2. Pinne den vorherigen Image-Tag.
-3. Stelle das unmittelbar vor dem Upgrade erzeugte Datenbank-Backup wieder her.
-4. Starte genau eine Replik und prüfe Healthcheck sowie bekannte Daten.
+1. Stop the application.
+2. Pin the previous image tag.
+3. Restore the database backup created immediately before the upgrade.
+4. Start exactly one replica and verify health plus known data.
 
-Alle nach dem Upgrade geschriebenen Daten gehen bei diesem vollständigen Rollback verloren. Ohne passendes Backup
-ist ein Downgrade nicht sicher; bleibe dann auf der neuen Version, sichere den Zustand und kläre den Fehler anhand
-der [Fehlerbehebung](/operations/troubleshooting) oder eines GitHub-Issues.
+This full rollback loses data written after the upgrade. Without a matching backup, a downgrade is unsafe; keep
+the new version running, preserve the database, and investigate through [Troubleshooting](/operations/troubleshooting).

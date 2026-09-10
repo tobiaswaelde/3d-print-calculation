@@ -1,70 +1,59 @@
 ---
 title: HTTP API
-description: Endpunkte, Authentifizierung, DTOs, Pagination, Validierung und Fehlerformat der ersten Version.
+description: Endpoints, authentication, request models, pagination, validation, and stable error envelopes.
 ---
 
 # HTTP API
 
-Alle Pfade liegen unter derselben Origin wie die Weboberfläche. Authentifizierung erfolgt per
-`print-cost-session`-Cookie; schreibende Requests benötigen dieselbe `Origin`. Dezimalwerte sind JSON-Strings,
-Zeitpunkte ISO-8601-Strings und Dauern Sekunden.
+All routes share the web interface origin. Authentication uses the `print-cost-session` cookie, and write requests
+require a matching `Origin`. Decimal values are JSON strings, timestamps are ISO 8601 strings, and durations are
+whole seconds.
 
-## Endpunkte
+## Endpoints
 
-| Methode und Pfad                       | Auth     | Vertrag                                                        |
-| -------------------------------------- | -------- | -------------------------------------------------------------- |
-| `GET /api/health`                      | nein     | `{ status, database }`, 503 bei nicht lesbarer DB              |
-| `GET /api/auth/setup-status`           | nein     | `{ initialized }`                                              |
-| `POST /api/auth/setup`                 | nein     | Erstkonto plus Einstellungen; nur einmal, danach 409           |
-| `POST /api/auth/login`                 | nein     | E-Mail/Passwort; setzt Session-Cookie                          |
-| `GET /api/auth/session`                | optional | `{ user }`, sonst `null`                                       |
-| `POST /api/auth/logout`                | ja       | Löscht aktuelle Session                                        |
-| `PATCH /api/auth/preferences`          | ja       | `{ locale }`                                                   |
-| `GET/PATCH /api/settings`              | ja       | Währung, Standardsprache, Strompreis; Währung kann 409 liefern |
-| `GET/POST /api/customers`              | ja       | Liste oder neuer Kunde                                         |
-| `GET/PATCH/DELETE /api/customers/:id`  | ja       | Lesen, ersetzen/archivieren oder sicher löschen                |
-| `GET/POST /api/printers`               | ja       | Liste oder neuer Drucker                                       |
-| `GET/PATCH/DELETE /api/printers/:id`   | ja       | Lesen, ersetzen/archivieren oder sicher löschen                |
-| `GET/POST /api/components`             | ja       | Liste oder Komponente mit `printerIds`                         |
-| `GET/PATCH/DELETE /api/components/:id` | ja       | Lesen, ersetzen/archivieren oder sicher löschen                |
-| `GET/POST /api/filaments`              | ja       | Liste oder Filament                                            |
-| `GET/PATCH/DELETE /api/filaments/:id`  | ja       | Lesen, ersetzen/archivieren oder sicher löschen                |
-| `POST /api/prints/calculate`           | ja       | Vorschau aus einem Print-Draft-DTO                             |
-| `GET/POST /api/prints`                 | ja       | Gefilterte Liste oder neuer Entwurf                            |
-| `GET/PATCH /api/prints/:id`            | ja       | Detail oder Aktualisierung eines `DRAFT`                       |
-| `POST /api/prints/:id/complete`        | ja       | Unveränderlich abschließen                                     |
-| `POST /api/prints/:id/duplicate`       | ja       | Neuen `DRAFT` zu aktuellen Preisen erzeugen                    |
-| `GET /api/dashboard?period=30d`        | ja       | KPIs, Kostenserien und offene Entwürfe; `30d`, `90d`, `all`    |
+| Method and path                        | Auth     | Contract                                                                |
+| -------------------------------------- | -------- | ----------------------------------------------------------------------- |
+| `GET /api/health`                      | No       | `{ status, database, version }`; 503 if the database is unreadable      |
+| `GET /api/auth/setup-status`           | No       | `{ initialized }`                                                       |
+| `POST /api/auth/setup`                 | No       | Create the first account and settings once; later calls return 409      |
+| `POST /api/auth/login`                 | No       | Validate email/password and set the session cookie                      |
+| `GET /api/auth/session`                | Optional | `{ user }` or `null`                                                    |
+| `POST /api/auth/logout`                | Yes      | Delete the current session                                              |
+| `PATCH /api/auth/preferences`          | Yes      | Update `{ locale }` for the account                                     |
+| `GET/PATCH /api/settings`              | Yes      | Read or update currency, default language, and electricity price        |
+| `GET/POST /api/customers`              | Yes      | Paginated list or create                                                |
+| `GET/PATCH/DELETE /api/customers/:id`  | Yes      | Read, replace/archive, or safely delete                                 |
+| `GET/POST /api/printers`               | Yes      | Paginated list or create                                                |
+| `GET/PATCH/DELETE /api/printers/:id`   | Yes      | Read, replace/archive, or safely delete                                 |
+| `GET/POST /api/components`             | Yes      | Paginated list or create with `printerIds`                              |
+| `GET/PATCH/DELETE /api/components/:id` | Yes      | Read, replace/archive, or safely delete                                 |
+| `GET/POST /api/filaments`              | Yes      | Paginated list or create                                                |
+| `GET/PATCH/DELETE /api/filaments/:id`  | Yes      | Read, replace/archive, or safely delete                                 |
+| `POST /api/prints/calculate`           | Yes      | Preview a print-draft DTO without persistence                           |
+| `GET/POST /api/prints`                 | Yes      | Filtered list or create a draft                                         |
+| `GET/PATCH /api/prints/:id`            | Yes      | Read, update a draft, or set `{ archived }`                             |
+| `POST /api/prints/:id/complete`        | Yes      | Recalculate and complete immutably                                      |
+| `POST /api/prints/:id/duplicate`       | Yes      | Create a current-price draft copy                                       |
+| `GET /api/dashboard?period=30d`        | Yes      | KPIs, cost series, categories, and drafts for `30d`, `90d`, or `all`    |
+| `GET /api/search?q=…`                  | Yes      | Grouped print and master-data results for a two-or-more-character query |
+| `GET /api/version-latest`              | Yes      | Latest GitHub Release version or `null`, cached for six hours           |
 
-Listen verwenden `search`, `page` ab 1, `pageSize` 1–100 und `includeArchived=true|false`. Drucklisten akzeptieren
-zusätzlich `status=DRAFT|COMPLETED` und `customerId`. Die Antwort enthält `items`, `total`, `page`, `pageSize`.
+## Lists and input models
 
-## Wesentliche Request-DTOs
+Master-data lists accept `search`, one-based `page`, `pageSize` from 1–100, and `includeArchived=true|false`. Print
+lists also accept `status=DRAFT|COMPLETED` and `customerId`. Responses contain `items`, `total`, `page`, and
+`pageSize`.
 
-Setup erwartet `displayName`, `email`, ein mindestens 12 Zeichen langes `password`, `locale` (`de-DE` oder
-`en-US`), `currency` (`EUR`, `USD`, `CHF`, `GBP`) und `electricityPrice`. Ein Druckentwurf erwartet `name`, optional
-`customerId`, `printerId`, `buildPlateId`, mindestens ein `{ componentId, durationSeconds }` in `hotends`, optionale
-`otherComponentIds`, mindestens ein `{ filamentId, usedGrams }` in `filaments` und optionale `notes`.
+Setup requires `displayName`, `email`, a password of at least 12 characters, supported `locale`, `currency`, and
+`electricityPrice`. A print draft requires `name`, optional `customerId`, `printerId`, `buildPlateId`, one or more
+`{ componentId, durationSeconds }` hotends, optional `otherComponentIds`, one or more
+`{ filamentId, usedGrams }`, and optional `notes`.
 
-Master-Data-PATCH ersetzt das vollständige editierbare DTO; Archivierung verwendet stattdessen `{ archived }` am
-selben PATCH-Endpunkt. Die geprüften Zod-Verträge stehen unter
-[`shared/schemas`](https://github.com/tobiaswaelde/3d-print-calculation/tree/main/shared/schemas).
+Master-data PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Authoritative
+schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/3d-print-calculation/tree/main/shared/schemas).
 
-## Fehler
+## Errors
 
-Fehler verwenden den HTTP-Status plus einen stabilen maschinenlesbaren Umschlag:
-
-```json
-{
-  "data": {
-    "code": "VALIDATION_ERROR",
-    "messageKey": "errors.validation",
-    "fieldErrors": {},
-    "requestId": "..."
-  }
-}
-```
-
-Typisch sind 401 ohne Session, 403 bei fremder Origin, 409 bei unveränderlichen Drucken, referenziertem Löschen,
-gesperrter Währung oder wiederholtem Setup sowie 422 bei ungültigen oder inkompatiblen Eingaben. Clients sollen
-`code` auswerten und `requestId` für die Log-Korrelation anzeigen, nicht englische Servertexte parsen.
+Errors include an HTTP status and stable `data` with `code`, `messageKey`, optional `fieldErrors`, and `requestId`.
+Expect 401 without a session, 403 for a foreign origin, 409 for immutability, references, currency, or setup
+conflicts, and 422 for invalid or incompatible input. API clients should branch on `code`, not parse messages.

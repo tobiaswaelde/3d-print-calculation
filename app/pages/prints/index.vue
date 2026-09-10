@@ -3,11 +3,19 @@
     <template #toolbar>
       <CommonTableToolbar v-model:search="search" :title="t('nav.prints')">
         <template #filters>
-          <USelect v-model="status" class="w-44" value-key="value" :items="statusOptions" />
-          <UCheckbox v-model="includeArchived" :label="t('master.includeArchived')" />
+          <USelect
+            v-model="status"
+            class="w-44"
+            value-key="value"
+            :items="statusOptions"
+            :aria-label="t('prints.status')"
+          />
+        </template>
+        <template #options>
+          <CommonTableOptionsMenu v-model:include-archived="includeArchived" />
         </template>
         <template #create>
-          <UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" />
+          <CommonButtonsNew @click="createOpen = true" />
         </template>
       </CommonTableToolbar>
     </template>
@@ -22,7 +30,7 @@
         class="min-h-full rounded-none border-0"
         :title="t('common.empty')"
       >
-        <UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" />
+        <UButton icon="i-tabler-plus" label="New" @click="createOpen = true" />
       </CommonEmptyState>
       <template v-else>
         <table class="w-full min-w-180 text-sm">
@@ -62,6 +70,8 @@
         </table>
       </template>
     </div>
+
+    <ModulesPrintsCreateDialog v-model:open="createOpen" @created="refresh" />
   </LayoutPagePanel>
 </template>
 
@@ -74,15 +84,17 @@ const route = useRoute();
 const { money } = useFormatting();
 const items = ref<PrintJobDto[]>([]);
 const search = ref('');
-const status = ref(
-  route.query.status === 'DRAFT' || route.query.status === 'COMPLETED' ? route.query.status : '',
+type StatusFilter = 'ALL' | PrintJobDto['status'];
+const status = ref<StatusFilter>(
+  route.query.status === 'DRAFT' || route.query.status === 'COMPLETED' ? route.query.status : 'ALL',
 );
 const includeArchived = ref(false);
+const createOpen = ref(route.query.create === 'true');
 const loading = ref(true);
 const error = ref('');
 let timer: ReturnType<typeof setTimeout> | undefined;
-const statusOptions = computed(() => [
-  { label: t('prints.allStatuses'), value: '' },
+const statusOptions = computed<Array<{ label: string; value: StatusFilter }>>(() => [
+  { label: t('prints.allStatuses'), value: 'ALL' },
   { label: t('prints.draft'), value: 'DRAFT' },
   { label: t('prints.completed'), value: 'COMPLETED' },
 ]);
@@ -95,7 +107,7 @@ async function refresh() {
     const response = await $fetch<PaginatedResponse<PrintJobDto>>('/api/prints', {
       query: {
         search: search.value,
-        status: status.value || undefined,
+        status: status.value === 'ALL' ? undefined : status.value,
         includeArchived: includeArchived.value,
       },
     });
@@ -110,6 +122,12 @@ async function refresh() {
 watch([search, status, includeArchived], () => {
   clearTimeout(timer);
   timer = setTimeout(refresh, 250);
+});
+watch(createOpen, (open) => {
+  if (open || route.query.create === undefined) return;
+  const query = { ...route.query };
+  delete query.create;
+  void navigateTo({ path: '/prints', query }, { replace: true });
 });
 onMounted(refresh);
 </script>

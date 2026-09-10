@@ -1,23 +1,20 @@
 ---
-title: Self-hosted Deployment
-description: Voraussetzungen, Container-Tags, Compose-Konfiguration, Migrationen, Healthcheck und Betriebsgrenzen.
+title: Self-hosted deployment
+description: Deploy one container with pinned image tags, persistent SQLite storage, migrations, and health checks.
 ---
 
-# Self-hosted Deployment
+# Self-hosted deployment
 
-## Voraussetzungen
+Use a current Docker daemon with the Compose plugin, access to GHCR, and writable local storage for the persistent
+volume. Run exactly **one replica**: SQLite is a single-writer database and setup locking is process-local.
 
-Benötigt werden ein aktueller Docker-Daemon mit Compose-Plugin, Zugang zu GHCR sowie ein beschreibbares lokales
-Dateisystem für das persistente Volume. Die Anwendung unterstützt genau **eine Replik**: SQLite ist eine
-Single-Writer-Datenbank und das Setup-Lock gilt pro Prozess.
+The image is `ghcr.io/tobiaswaelde/3d-print-calculation`. Pin `vMAJOR.MINOR.PATCH` in production. `latest` follows
+the newest release, while `sha-…` identifies a specific commit build.
 
-Das veröffentlichte Image lautet `ghcr.io/tobiaswaelde/3d-print-calculation`. Verwende in Produktion einen festen
-Tag `vMAJOR.MINOR.PATCH`; `latest` folgt dem neuesten Release und `sha-…` bezeichnet einen Build-Commit.
+## Install
 
-## Installation
-
-Kopiere [`compose.example.yml`](https://github.com/tobiaswaelde/3d-print-calculation/blob/main/compose.example.yml)
-als `compose.yml` und pinne den Image-Tag:
+Copy [`compose.example.yml`](https://github.com/tobiaswaelde/3d-print-calculation/blob/main/compose.example.yml) to
+`compose.yml`, pin the image tag, and retain the database path and volume:
 
 ```yaml
 services:
@@ -32,8 +29,8 @@ services:
     volumes: [app-data:/data]
 ```
 
-Es gibt kein vorgegebenes Anmeldegeheimnis in Umgebungsvariablen. Das erste Konto entsteht ausschließlich im
-Browser-Setup. Begrenze Port `3000` per Firewall oder Reverse Proxy und stelle für externen Zugriff TLS bereit.
+No login secret is supplied through the environment. The first account is created in the browser. Protect port
+3000 with a firewall or TLS reverse proxy.
 
 ```bash
 docker compose pull
@@ -42,12 +39,12 @@ docker compose ps
 curl --fail http://127.0.0.1:3000/api/health
 ```
 
-Der Container läuft als UID/GID `1001`, prüft `/data` auf Schreibbarkeit, erstellt die SQLite-Datei bei Bedarf und
-führt vor jedem Serverstart `prisma migrate deploy` aus. Der Healthcheck meldet nur dann HTTP 200, wenn die
-Datenbank tatsächlich lesbar ist. Ein Neustart verwendet dasselbe Volume und wendet nur ausstehende Migrationen
-an.
+## Startup behavior
 
-Nach einem gesunden Start öffne `http://HOST:3000` und folge der [Ersteinrichtung](/guide/setup). Richte danach
-zuerst [Stammdaten](/guide/master-data) ein. Vor Änderungen am Image gilt immer der
-[Upgrade- und Backup-Ablauf](/operations/upgrades). Sicherheitslücken werden gemäß der
-[Security Policy](https://github.com/tobiaswaelde/3d-print-calculation/blob/main/SECURITY.md) privat gemeldet.
+The image runs as UID/GID 1001, verifies that `/data` is writable, creates SQLite when needed, and runs
+`prisma migrate deploy` before the server starts. The health endpoint returns HTTP 200 only after a successful
+database query. Restarts reuse the volume and apply only pending migrations.
+
+After a healthy start, open `http://HOST:3000` and complete [first-run setup](/guide/setup). Before changing image
+versions, follow the [upgrade procedure](/operations/upgrades). Report vulnerabilities privately under the
+[security policy](https://github.com/tobiaswaelde/3d-print-calculation/blob/main/SECURITY.md).

@@ -3,7 +3,7 @@
     <UButton
       color="neutral"
       variant="outline"
-      class="h-9 w-9 justify-start bg-default sm:w-64"
+      class="h-9 w-9 justify-start bg-default sm:w-80"
       :aria-label="t('search.open')"
     >
       <UIcon name="i-tabler-command" class="size-4 shrink-0 text-primary" />
@@ -94,7 +94,7 @@ const icons: Record<GlobalSearchKind, string> = {
   customers: 'i-tabler-users',
   printers: 'i-tabler-printer',
   components: 'i-tabler-components',
-  filaments: 'i-tabler-spool',
+  filaments: 'i-tabler-disc',
 };
 const totalResults = computed(
   () => response.value?.groups.reduce((total, group) => total + group.items.length, 0) ?? 0,

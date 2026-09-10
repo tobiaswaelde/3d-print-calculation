@@ -20,6 +20,7 @@
         :placeholder="t('common.search')"
       />
       <slot name="filters" />
+      <slot name="options" />
       <slot name="create" />
     </template>
   </UDashboardToolbar>

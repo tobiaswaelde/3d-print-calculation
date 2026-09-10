@@ -147,7 +147,7 @@
                 ><USelect
                   v-model="filament.filamentId"
                   class="w-full"
-                  icon="i-tabler-spool"
+                  icon="i-tabler-disc"
                   value-key="value"
                   :items="filamentOptions"
               /></UFormField>

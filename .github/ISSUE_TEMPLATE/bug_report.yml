@@ -1,0 +1,116 @@
+name: Bug report
+description: Report a reproducible problem with the application, API, or deployment.
+title: '[Bug]: '
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a problem.
+
+        Before submitting, search the existing issues and check the documentation. Report security vulnerabilities through the private security advisory form instead of this public form.
+
+  - type: checkboxes
+    id: prerequisites
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and did not find a duplicate.
+          required: true
+        - label: I am using the latest published version, or I confirmed that the problem still exists there.
+          required: true
+        - label: I removed credentials, session cookies, database contents, personal data, and other sensitive information from this report.
+          required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: Select the part of the project where the problem occurs.
+      options:
+        - Calculation and completed snapshots
+        - Print workflow
+        - Master data
+        - Dashboard and search
+        - Setup, login, and sessions
+        - API and server logic
+        - Database and migrations
+        - Docker, deployment, backup, or upgrade
+        - Localization
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Application version
+      description: Enter the release version, exact container image tag, or Git commit.
+      placeholder: e.g. 0.2.0, ghcr.io/tobiaswaelde/3d-print-calculation:0.2.0, or a1b2c3d
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - Docker Compose
+        - Docker or another container runtime
+        - Local development with pnpm
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include the operating system, browser, and relevant runtime or container details.
+      placeholder: e.g. Ubuntu 24.04, Docker 28, Firefox 143
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reliable sequence that reproduces the problem. Use synthetic data only.
+      placeholder: |
+        1. Open ...
+        2. Enter ...
+        3. Select ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead? Include the exact error message when possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste only relevant, redacted log lines. Do not upload a production database or expose secrets or personal data.
+      render: shell
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add screenshots or anything else that may help reproduce or diagnose the problem. Remove sensitive information first.

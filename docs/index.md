@@ -1,32 +1,32 @@
 ---
 title: 3D Print Costing
-description: Einstieg in die selbst gehostete und deterministische 3D-Druck-Kostenberechnung.
+description: Complete US English documentation for the self-hosted 3D print cost calculator.
 layout: home
 hero:
   name: 3D Print Costing
-  text: Nachvollziehbare Kosten pro Druck
-  tagline: Selbst gehostet, zweisprachig und mit unveränderlichen Abschluss-Snapshots.
+  text: Know what every print costs
+  tagline: A self-hosted workflow for repeatable estimates, live cost previews, and immutable completed-print records.
   image:
     src: /logo.svg
-    alt: Würfellogo von 3D Print Costing
+    alt: 3D Print Costing cube logo
   actions:
     - theme: brand
-      text: Erste Schritte
+      text: Read the user guide
       link: /getting-started/
     - theme: alt
-      text: Deployment
+      text: Deploy the app
       link: /operations/deployment
 features:
   - icon: 🎯
-    title: Deterministisch
-    details: Decimal-Arithmetik und versionierte Formeln liefern reproduzierbare Ergebnisse.
+    title: Reproducible
+    details: Decimal arithmetic and versioned formulas keep calculations traceable.
+  - icon: 🧭
+    title: Fully documented
+    details: Every application page and user-facing workflow is explained with real screenshots.
   - icon: 📦
-    title: Betriebsbereit
-    details: Container, Migrationen, Healthcheck sowie sichere Backup- und Restore-Abläufe.
-  - icon: 📊
-    title: Nachvollziehbar
-    details: Abgeschlossene Drucke bewahren Preise, Eingaben und Ergebnis als Snapshot.
+    title: Self-hosted
+    details: Run one container with SQLite persistence, health checks, backups, and controlled upgrades.
 ---
 
-Die Dokumentation deckt [Bedienung](/getting-started/), [Betrieb](/operations/deployment) und
-[technische Verträge](/reference/architecture) ab. Die [englische Fassung](/en/) enthält dieselben Themen.
+Use the [guided application tour](/getting-started/) for day-to-day work, the [operations runbooks](/operations/deployment)
+for hosting, or the [technical reference](/reference/architecture) for implementation contracts.

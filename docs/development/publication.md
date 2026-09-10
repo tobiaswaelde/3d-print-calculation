@@ -1,29 +1,27 @@
 ---
-title: Dokumentation veröffentlichen
-description: GitHub-Pages-Pipeline, Versionszuordnung, Sicherheitsgrenzen und Rollback der Dokumentation.
+title: Publishing documentation
+description: GitHub Pages deployment, version alignment, verification, and documentation rollback.
 ---
 
-# Dokumentation veröffentlichen
+# Publishing documentation
 
-Pull Requests bauen und prüfen die Dokumentation, veröffentlichen sie aber nicht. Nur ein Push auf `main` startet
-den Pages-Job mit `contents: read`, `pages: write` und `id-token: write`; das gebaute `docs/.vitepress/dist` wird als
-Pages-Artefakt deployt. Es sind keine Repository-Geheimnisse erforderlich.
+Pull requests regenerate the application screenshots, build the documentation, and verify it without publishing.
+A push to `main` runs the same Playwright screenshot generator before GitHub Pages is built with `contents: read`,
+`pages: write`, and `id-token: write`; the resulting `docs/.vitepress/dist` is deployed without repository secrets.
 
-Die Seite unter `https://tobiaswaelde.github.io/3d-print-calculation/` beschreibt den neuesten `main`-Stand. Jeder
-Produkt-Commit enthält einen Changeset. Nach Merge des Changesets-Version-PRs verbinden Git-Tag, GitHub Release und
-Container-Tag dieselbe App-Version. Unveränderliche historische Dokumentation ist über `docs/` im jeweiligen Git-
-Tag verfügbar; Release Notes verlinken den passenden Tag.
+`https://tobiaswaelde.github.io/3d-print-calculation/` documents current `main`. Changesets align the application
+version, Git tag, GitHub release, and container tag. Immutable historical documentation remains in `docs/` at each
+Git tag.
 
-## Veröffentlichung prüfen
+## Verify publication
 
-1. CI muss Doku-Check, Build und Browser-Smoke-Test bestanden haben.
-2. Nach Deployment Startseite, Sprachwechsel, Suche, Sitemap und mindestens einen tiefen Link öffnen.
-3. Mit Tastatur und 390-px-Viewport prüfen; die automatisierte Prüfung dient als Mindestschutz.
+1. Confirm the Playwright screenshot generator, documentation check, build, and browser smoke test passed in CI.
+2. Open the home page, local search, sitemap, and at least one deep user-guide link.
+3. Confirm the logo gradient, application screenshots, favicon, keyboard navigation, and 390-pixel viewport.
+4. Check that no legacy `/en/` or German documentation navigation remains.
 
-## Rollback
+## Roll back
 
-Pages speichert kein Anwendungsdatum. Bei fehlerhafter Dokumentation revertiere den verursachenden Commit auf
-`main` mit einem neuen Changeset; die normale Pipeline veröffentlicht den vorherigen Inhalt erneut. Historie nicht
-umschreiben und kein altes Build-Artefakt manuell hochladen. Wenn die Dokumentation absichtlich zu einer älteren
-App-Version zurückkehren soll, revertiere Inhalt und Navigation gemeinsam und kennzeichne die unterstützte Version
-sichtbar.
+Revert the faulty documentation commit on `main` with a new Changeset and allow the normal workflow to redeploy.
+Do not rewrite history or upload an old build artifact manually. If documentation intentionally returns to an older
+application contract, revert content and navigation together and state the supported version visibly.

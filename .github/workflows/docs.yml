@@ -3,22 +3,36 @@ name: Documentation
 on:
   pull_request:
     paths:
+      - 'app/**'
       - 'docs/**'
+      - 'prisma/**'
+      - 'server/**'
+      - 'shared/**'
+      - 'nuxt.config.ts'
       - 'scripts/check-docs.ts'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'playwright.docs.config.ts'
+      - 'playwright.screenshots.config.ts'
       - 'tests/docs-e2e/**'
+      - 'tests/docs-screenshots/**'
       - '.github/workflows/docs.yml'
   push:
     branches: [main]
     paths:
+      - 'app/**'
       - 'docs/**'
+      - 'prisma/**'
+      - 'server/**'
+      - 'shared/**'
+      - 'nuxt.config.ts'
       - 'scripts/check-docs.ts'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'playwright.docs.config.ts'
+      - 'playwright.screenshots.config.ts'
       - 'tests/docs-e2e/**'
+      - 'tests/docs-screenshots/**'
       - '.github/workflows/docs.yml'
 
 permissions:
@@ -40,8 +54,9 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm docs:check
-      - run: pnpm docs:build
       - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm docs:screenshots
+      - run: pnpm docs:build
       - run: pnpm test:docs:e2e
       - if: github.event_name == 'push'
         uses: actions/configure-pages@v6

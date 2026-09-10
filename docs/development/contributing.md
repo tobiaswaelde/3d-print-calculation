@@ -1,12 +1,12 @@
 ---
-title: Mitwirken
-description: Lokale Entwicklung, Migrationen, Tests, Changesets und Regeln für zweisprachige Dokumentation.
+title: Contributing
+description: Local development, migrations, verification, Changesets, and US English documentation rules.
 ---
 
-# Mitwirken
+# Contributing
 
-Benötigt werden Node.js 24, Corepack/pnpm aus `packageManager`, Git und für E2E-/Container-Tests Chromium sowie
-Docker. Ein sauberer Checkout startet so:
+Use Node.js 24, Corepack/pnpm from `packageManager`, Git, and Chromium plus Docker for the complete verification
+suite:
 
 ```bash
 corepack enable
@@ -16,11 +16,12 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Es gibt absichtlich kein Seed-Skript; die Ersteinrichtung und Stammdaten werden über UI oder API angelegt. Neue
-Prisma-Änderungen benötigen eine Migration via `pnpm db:migrate`; Produktionsstarts verwenden ausschließlich
-`pnpm db:deploy`.
+There is intentionally no seed script; setup and master data are created through the UI or API. Prisma changes
+require a migration from `pnpm db:migrate`; production startup only runs `pnpm db:deploy`.
 
-Vor einem Commit laufen mindestens die betroffenen Checks, vor Übergabe die vollständige Kette:
+## Verification
+
+Run the checks relevant to a narrow change, and use the full sequence before release:
 
 ```bash
 pnpm format:check
@@ -31,19 +32,27 @@ pnpm test
 pnpm build
 pnpm test:integration
 pnpm test:e2e
-pnpm docs:check && pnpm docs:build && pnpm test:docs:e2e
+pnpm docs:screenshots
+pnpm docs:check
+pnpm docs:build
+pnpm test:docs:e2e
 sh tests/container-smoke.sh
 ```
 
-Jeder Produkt-Commit enthält eine Datei unter `.changeset/`. Änderungen bleiben eng geschnitten; API-, Formel- und
-Snapshot-Verträge benötigen Tests. Erweiterungspunkte sind neue Nitro-Routen, Zod-Schemas, versionierte Domain-
-Funktionen und Nuxt-Module. Die [Architekturgrenzen](/reference/architecture) und Nicht-Ziele gelten, bis ein
-expliziter Produktentscheid sie ändert.
+Every product change includes a file under `.changeset/`. API, formula, and snapshot changes require tests and
+must respect the [architecture boundaries](/reference/architecture).
 
-## Dokumentationsregeln
+## Documentation rules
 
-Jede Markdown-Seite erhält `title` und `description`, eine gleichnamige Übersetzung unter `docs/en/`, interne Links
-ohne Dateiendung und aussagekräftigen Alt-Text für jedes Bild. Seiten müssen in Navigation/Sidebar eingetragen sein.
-Bezeichnungen, Einheiten und Beispiele folgen der Anwendung; Geheimnisse und persönliche Daten gehören weder in
-Screenshots noch in Beispiele. `pnpm docs:check` prüft Parität, Frontmatter, Orphans und Bild-Alt-Texte;
-`pnpm docs:build` validiert Ziele und Anker.
+Documentation is written in US English only. Every Markdown page needs `title` and `description` frontmatter,
+extensionless internal links, useful image alternative text, and a sidebar entry. Keep labels, units, and examples
+aligned with the current application. Screenshots must use synthetic data, show the US English interface, and
+contain no secrets or personal information.
+
+`pnpm docs:screenshots` starts the application against a temporary SQLite database, creates deterministic sample
+data, and replaces every image in `docs/public/screenshots/`. Run it whenever the documented UI changes. The
+documentation workflow runs the same generator before every build, so the deployed screenshots always match the
+UI from that commit.
+
+`pnpm docs:check` validates frontmatter, navigation, alt text, unresolved placeholders, and the absence of legacy
+localized Markdown. `pnpm docs:build` validates page rendering, links, and anchors.

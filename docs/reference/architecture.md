@@ -1,28 +1,26 @@
 ---
-title: Architektur
-description: Nuxt-, Nitro-, Authentifizierungs- und Persistenzgrenzen der Anwendung.
+title: Architecture
+description: Nuxt, Nitro, authentication, domain calculation, and SQLite persistence boundaries.
 ---
 
-# Architektur
+# Architecture
 
-Die Anwendung ist ein Nuxt-4-SPA mit Nuxt UI. Seiten und Komponenten unter `app/` sprechen ausschließlich über
-`$fetch` mit Nitro-Endpunkten unter `server/api/`. Zod-Schemas in `shared/schemas/` validieren HTTP-Eingaben;
-`shared/domain/print-calculation.ts` enthält die seiteneffektfreie Kostenformel.
+The application is a Nuxt 4 single-page app with Nuxt UI. Pages and components under `app/` call Nitro endpoints
+under `server/api/` through `$fetch`. Zod schemas in `shared/schemas/` validate input, while the side-effect-free
+cost engine lives in `shared/domain/print-calculation.ts`.
 
 ```text
-Browser → globale Route-Middleware → Nitro API → Service → Prisma → SQLite /data/app.db
-                                    ↘ Zod       ↘ Decimal-Kalkulation
+Browser → route middleware → Nitro API → service → Prisma → SQLite /data/app.db
+                                  ↘ Zod   ↘ Decimal calculation
 ```
 
-Die Ersteinrichtung erzeugt `User` und `AppSettings` atomar. Passwörter werden mit Argon2 gehasht. Zufällige
-Session-Tokens liegen nur im `HttpOnly`-/`SameSite=Lax`-Cookie; gespeichert wird ihr SHA-256-Hash. Schreibende
-Requests akzeptieren keine fremde Origin. Außer Setup-Status, Setup, Login und Health benötigen alle
-Geschäftsendpunkte eine gültige Session.
+First-run setup creates `User` and `AppSettings` atomically. Passwords use Argon2. Random session tokens exist only
+in an HTTP-only, SameSite=Lax cookie; the database stores SHA-256 hashes. Writes reject foreign origins. Business
+routes require a session; setup status, setup, sign-in, and health do not.
 
-Prisma nutzt den synchronen Better-SQLite3-Adapter. Deshalb sind Setup und Writes auf einen Prozess und eine
-Container-Replik ausgelegt. Der Container führt Migrationen vor dem Serverstart aus und beendet den Prisma-Client
-beim Nitro-Shutdown. Weitere Grenzen stehen im [Deployment-Runbook](/operations/deployment).
+Prisma uses the synchronous Better-SQLite3 adapter, so writes and setup target one process and one container
+replica. Startup applies migrations and Nitro shutdown disconnects Prisma. See [Deployment](/operations/deployment).
 
-Bewusste Nicht-Ziele der ersten Version sind Mehrbenutzer-Rollen, Cloud-Synchronisation, mehrere Währungen in einer
-Instanz, Slicer-Import, Angebote/Rechnungen, E-Mail-Passwortreset und horizontale Skalierung. Erweiterungen sollen
-neue versionierte Domain-Verträge ergänzen, nicht gespeicherte Snapshots rückwirkend verändern.
+The current scope excludes multi-user roles, cloud synchronization, multiple currencies per instance, slicer
+imports, quotes and invoices, email password reset, and horizontal scaling. Extensions should add versioned domain
+contracts instead of mutating historical snapshots.
