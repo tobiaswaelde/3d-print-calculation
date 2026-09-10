@@ -1,11 +1,11 @@
 ---
-title: Master data overview
+title: Inventory overview
 description: Understand shared list behavior, validation, calculated rates, archiving, and safe deletion.
 ---
 
-# Master data overview
+# Inventory overview
 
-Master data provides the reusable inputs for every print calculation:
+Inventory provides the reusable inputs for every print calculation:
 
 - [Customers](/guide/customers) provide optional ownership and contact context.
 - [Printers](/guide/printers) provide purchase price, expected lifetime, and average power.

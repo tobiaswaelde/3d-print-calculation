@@ -28,5 +28,5 @@ configured electricity price.
 ## Page functions
 
 Use **New**, **Edit**, search, archive, restore, and safe delete as described in the
-[master-data overview](/guide/master-data). Archiving a printer also removes it from new print drafts. Components
+[inventory overview](/guide/master-data). Archiving a printer also removes it from new print drafts. Components
 must explicitly include a printer in **Compatible printers** before they appear for it in the print editor.

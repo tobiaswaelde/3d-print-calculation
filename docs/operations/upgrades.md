@@ -11,7 +11,7 @@ description: Upgrade pinned versions safely and roll back within explicit data-s
    installed version and target version.
 2. Create an [external, verified backup](/operations/backup-restore).
 3. Change only the pinned image tag, pull the image, and restart the service.
-4. Verify health, logs, sign-in, dashboard, master data, and a known completed snapshot.
+4. Verify health, logs, sign-in, dashboard, inventory, and a known completed snapshot.
 
 ```bash
 docker compose pull app

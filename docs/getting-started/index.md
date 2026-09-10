@@ -7,7 +7,7 @@ description: Understand the application structure and move from first-run setup 
 
 ezPrint turns printer ownership, component wear, material use, electricity, and print duration into a
 single reproducible total. The normal workflow is deliberately ordered: configure the instance, create reusable
-master data, calculate a draft, and complete it only when the inputs are final.
+inventory, calculate a draft, and complete it only when the inputs are final.
 
 ## Recommended first workflow
 
@@ -18,7 +18,7 @@ master data, calculate a draft, and complete it only when the inputs are final.
 4. Review the live cost breakdown, save the record as a draft, and select **Complete** when the inputs are final.
 5. Use the [dashboard](/guide/dashboard) to monitor active drafts and completed-print costs.
 
-![Flow from master data through a draft and completed snapshot to a duplicate](/print-workflow.svg)
+![Flow from inventory through a draft and completed snapshot to a duplicate](/print-workflow.svg)
 
 ## Application map
 

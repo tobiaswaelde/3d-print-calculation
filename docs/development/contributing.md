@@ -16,7 +16,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-There is intentionally no seed script; setup and master data are created through the UI or API. Prisma changes
+There is intentionally no seed script; setup and inventory are created through the UI or API. Prisma changes
 require a migration from `pnpm db:migrate`; production startup only runs `pnpm db:deploy`.
 
 ## Verification

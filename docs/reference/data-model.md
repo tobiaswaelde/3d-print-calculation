@@ -6,7 +6,7 @@ description: Prisma models, relationships, archiving, decimal serialization, and
 # Data model
 
 `User` owns `Session` records; `AppSettings` is the singleton with ID `1`. `Customer`, `Printer`, `Component`, and
-`Filament` are master data. `PrinterComponent` represents printer/component compatibility.
+`Filament` are inventory records. `PrinterComponent` represents printer/component compatibility.
 
 A `PrintJob` references one printer, an optional customer, and component and filament usage rows. Usage rows copy
 names, prices, lifetimes, quantities, and line costs at calculation time. `PrintCostSnapshot` also retains totals,

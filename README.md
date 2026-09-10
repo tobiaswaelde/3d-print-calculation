@@ -14,7 +14,7 @@ interface.
 - Calculate printer, component, filament, and electricity costs with decimal arithmetic.
 - Keep completed calculations reproducible through immutable, versioned snapshots.
 - Manage customers, printers, components, filaments, and draft print jobs from a responsive UI.
-- Find prints and master data through the global application search.
+- Find prints and inventory through the global application search.
 - Run the application as a single container with SQLite persistence, migrations, and a health check.
 - Use the complete US English [documentation website](https://tobiaswaelde.github.io/ezprint/), including screenshots for every application page.
 

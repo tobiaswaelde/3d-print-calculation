@@ -62,13 +62,13 @@ formula version, category totals, and final total.
 
 ![Completed print with its immutable banner and disabled input fields](/screenshots/completed-print.jpg)
 
-Completed fields are disabled. Later master-data or electricity-price changes do not alter the snapshot.
+Completed fields are disabled. Later inventory or electricity-price changes do not alter the snapshot.
 
 ![Completed cost breakdown and stored calculation sources](/screenshots/completed-print-sources.jpg)
 
 ## Duplicate a print
 
 **Duplicate** is available on both drafts and completed prints. It creates a new draft with a `(copy)` suffix,
-retains the referenced resources and quantities, and recalculates with the current active master data, formula, and
+retains the referenced resources and quantities, and recalculates with the current active inventory, formula, and
 settings. Review the new total before saving or completing it; duplication is the supported way to reuse a
 completed record.

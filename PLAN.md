@@ -80,7 +80,7 @@ Vue single-file components follow `<template>`, typed `<script setup lang="ts">`
 ### Resource screens
 
 - Every resource has a searchable list, empty state, create/edit form, validation feedback, and archive handling.
-- Referenced master data is archived instead of deleted. Hard deletion is permitted only for unreferenced records.
+- Referenced inventory is archived instead of deleted. Hard deletion is permitted only for unreferenced records.
 - Forms display derived hourly or per-gram rates immediately but the server remains authoritative.
 - Monetary values are formatted in the instance currency; duration is entered as hours/minutes, stored as seconds, and weight is entered in grams.
 
@@ -88,7 +88,7 @@ Vue single-file components follow `<template>`, typed `<script setup lang="ts">`
 
 - A print job can be saved as a draft, completed, archived, or duplicated.
 - Completed jobs and their cost snapshots are immutable and cannot be reopened.
-- Duplicating any job creates a new draft and recalculates it from current master data.
+- Duplicating any job creates a new draft and recalculates it from current inventory.
 - The editor selects one printer, exactly one compatible build plate, one or more compatible hotends with a duration for each, one or more filaments with a weight for each, optional additional compatible components, and an optional customer.
 - A live cost summary shows duration, printer, component, filament, electricity, and total cost before saving.
 
@@ -126,7 +126,7 @@ Vue single-file components follow `<template>`, typed `<script setup lang="ts">`
 - Total print duration is the sum of hotend durations.
 - A selected build plate and each selected `OTHER` component use total print duration for their line cost.
 - Each selected hotend uses its own entered duration.
-- Master-data changes never rewrite an existing print snapshot.
+- Inventory changes never rewrite an existing print snapshot.
 - The instance currency cannot change after any cost-bearing master record or print job exists.
 
 ## 5. Cost Calculation Contract
@@ -171,7 +171,7 @@ The API provides `POST /api/prints/calculate` for previews. Print create/update/
 - `/api/prints` for list/create and `/:id` read/update/archive behavior.
 - `/api/prints/calculate` for validated, non-persisting previews.
 - `/api/prints/:id/complete` to atomically recalculate, snapshot, and lock a draft.
-- `/api/prints/:id/duplicate` to create a new draft using current master-data prices.
+- `/api/prints/:id/duplicate` to create a new draft using current inventory prices.
 - `/api/dashboard` for the reporting-period KPI summary, completed-print chart series, cost-category totals, and the unfiltered list of non-archived draft prints.
 - `/api/health` for unauthenticated container health checks without exposing business data.
 
@@ -225,7 +225,7 @@ Run on pull requests and pushes to `main`:
 - First-run setup is single-use and safe against concurrent requests.
 - Login, logout, expiration, invalid credentials, and CLI reset/session invalidation work.
 - Compatibility, archive/delete, currency-lock, and referential-integrity rules are enforced server-side.
-- Draft saves recalculate snapshots; completion locks a final snapshot; master-data edits do not change historical results.
+- Draft saves recalculate snapshots; completion locks a final snapshot; inventory edits do not change historical results.
 - Duplicate creates an editable draft using current master values.
 
 ### Browser acceptance tests
@@ -256,7 +256,7 @@ Run on pull requests and pushes to `main`:
 - [#4 Build the Nuxt UI dashboard shell, localization, and theming](https://github.com/tobiaswaelde/ezprint/issues/4)
 - [#5 Add CI, Changesets, and container release foundations](https://github.com/tobiaswaelde/ezprint/issues/5)
 
-### [M2 — Cost Master Data](https://github.com/tobiaswaelde/ezprint/milestone/2)
+### [M2 — Cost Inventory](https://github.com/tobiaswaelde/ezprint/milestone/2)
 
 - [#6 Implement instance settings and electricity pricing](https://github.com/tobiaswaelde/ezprint/issues/6)
 - [#7 Implement customer management](https://github.com/tobiaswaelde/ezprint/issues/7)

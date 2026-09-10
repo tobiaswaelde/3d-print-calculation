@@ -16,7 +16,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
     text: 'User guide',
     items: [
       { text: 'Dashboard', link: '/guide/dashboard' },
-      { text: 'Master data overview', link: '/guide/master-data' },
+      { text: 'Inventory overview', link: '/guide/master-data' },
       { text: 'Customers', link: '/guide/customers' },
       { text: 'Printers', link: '/guide/printers' },
       { text: 'Components', link: '/guide/components' },

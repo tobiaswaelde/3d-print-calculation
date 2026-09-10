@@ -244,10 +244,10 @@ test('regenerates every application screenshot used by the documentation', async
 
   await page.goto(`/prints/${completed.id}`);
   await expect(
-    page.getByText('This snapshot is immutable. You can duplicate it using current master data.'),
+    page.getByText('This snapshot is immutable. You can duplicate it using current inventory.'),
   ).toBeVisible();
   await page
-    .getByText('This snapshot is immutable. You can duplicate it using current master data.')
+    .getByText('This snapshot is immutable. You can duplicate it using current inventory.')
     .scrollIntoViewIfNeeded();
   await capture(page, 'completed-print.jpg');
   await page.getByRole('heading', { name: 'Stored calculation sources' }).scrollIntoViewIfNeeded();

@@ -52,4 +52,4 @@ history; use the host's interactive secret facility when possible.
 - If setup reports a validation error, check all required fields, the email format, password length, and decimal syntax.
 - If the instance is already initialized, use `/login`; setup is intentionally not repeatable.
 - If credentials fail, verify the email address or perform the local password reset.
-- If a signed-in page is empty, create the required [master data](/guide/master-data) before starting a print.
+- If a signed-in page is empty, create the required [inventory](/guide/master-data) before starting a print.

@@ -10,7 +10,7 @@
     "settings": "Einstellungen",
     "sections": {
       "workspace": "Arbeitsbereich",
-      "masterData": "Stammdaten",
+      "masterData": "Inventar",
       "system": "System"
     }
   },
@@ -65,7 +65,7 @@
   "search": {
     "title": "Globale Suche",
     "open": "Globale Suche öffnen",
-    "placeholder": "Drucke und Stammdaten suchen",
+    "placeholder": "Drucke und Inventar durchsuchen",
     "hint": "Gib mindestens zwei Zeichen ein.",
     "empty": "Keine passenden Ergebnisse gefunden.",
     "failed": "Die Suche konnte nicht geladen werden."
@@ -144,7 +144,7 @@
     "saveDraft": "Entwurf speichern",
     "complete": "Abschließen",
     "completeConfirmation": "Der Druck wird neu berechnet und danach unveränderlich abgeschlossen.",
-    "immutable": "Dieser Snapshot ist unveränderlich. Du kannst ihn mit aktuellen Stammdaten duplizieren.",
+    "immutable": "Dieser Snapshot ist unveränderlich. Du kannst ihn mit dem aktuellen Inventar duplizieren.",
     "duplicate": "Duplizieren",
     "snapshotSources": "Gespeicherte Berechnungsquellen",
     "formulaVersion": "Formelversion"

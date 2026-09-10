@@ -31,7 +31,7 @@ body:
       options:
         - Calculation and completed snapshots
         - Print workflow
-        - Master data
+        - Inventory
         - Dashboard and search
         - Setup, login, and sessions
         - API and server logic

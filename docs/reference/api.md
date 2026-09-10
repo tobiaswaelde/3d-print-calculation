@@ -35,12 +35,12 @@ whole seconds.
 | `POST /api/prints/:id/complete`        | Yes      | Recalculate and complete immutably                                      |
 | `POST /api/prints/:id/duplicate`       | Yes      | Create a current-price draft copy                                       |
 | `GET /api/dashboard?period=30d`        | Yes      | KPIs, cost series, categories, and drafts for `30d`, `90d`, or `all`    |
-| `GET /api/search?q=…`                  | Yes      | Grouped print and master-data results for a two-or-more-character query |
+| `GET /api/search?q=…`                  | Yes      | Grouped print and inventory results for a two-or-more-character query   |
 | `GET /api/version-latest`              | Yes      | Latest GitHub Release version or `null`, cached for five minutes        |
 
 ## Lists and input models
 
-Master-data lists accept `search`, one-based `page`, `pageSize` from 1–100, and `includeArchived=true|false`. Print
+Inventory lists accept `search`, one-based `page`, `pageSize` from 1–100, and `includeArchived=true|false`. Print
 lists also accept `status=DRAFT|COMPLETED` and `customerId`. Responses contain `items`, `total`, `page`, and
 `pageSize`.
 
@@ -49,7 +49,7 @@ Setup requires `displayName`, `email`, a password of at least 12 characters, sup
 `{ componentId, durationSeconds }` hotends, optional `otherComponentIds`, one or more
 `{ filamentId, usedGrams }`, and optional `notes`.
 
-Master-data PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Authoritative
+Inventory PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Authoritative
 schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/ezprint/tree/main/shared/schemas).
 
 ## Errors

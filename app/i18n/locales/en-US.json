@@ -10,7 +10,7 @@
     "settings": "Settings",
     "sections": {
       "workspace": "Workspace",
-      "masterData": "Master data",
+      "masterData": "Inventory",
       "system": "System"
     }
   },
@@ -65,7 +65,7 @@
   "search": {
     "title": "Global search",
     "open": "Open global search",
-    "placeholder": "Search prints and master data",
+    "placeholder": "Search prints and inventory",
     "hint": "Enter at least two characters.",
     "empty": "No matching results found.",
     "failed": "Search could not be loaded."
@@ -144,7 +144,7 @@
     "saveDraft": "Save draft",
     "complete": "Complete",
     "completeConfirmation": "The print is recalculated and then completed as an immutable snapshot.",
-    "immutable": "This snapshot is immutable. You can duplicate it using current master data.",
+    "immutable": "This snapshot is immutable. You can duplicate it using current inventory.",
     "duplicate": "Duplicate",
     "snapshotSources": "Stored calculation sources",
     "formulaVersion": "Formula version"

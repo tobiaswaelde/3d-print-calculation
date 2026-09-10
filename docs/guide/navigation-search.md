@@ -7,7 +7,7 @@ description: Use the sidebar, page toolbars, global search, keyboard shortcuts, 
 
 ## Sidebar and page header
 
-The sidebar groups links into **Workspace**, **Master data**, and **System**. Select the logo or **Dashboard** to
+The sidebar groups links into **Workspace**, **Inventory**, and **System**. Select the logo or **Dashboard** to
 return to the overview. The sidebar can be collapsed or resized; its state is stored in the browser. The footer
 links open GitHub and this documentation. The installed version opens the changelog, and an **Update available** badge appears
 when a newer semantic version is available.
@@ -20,7 +20,7 @@ Press <kbd>Ctrl</kbd>+<kbd>N</kbd> on a list page to open its create dialog.
 
 Select the search field in the top bar or press <kbd>/</kbd> while focus is outside a form control. Enter at least
 two characters. Results are grouped into prints, customers, printers, components, and filaments. Selecting a print
-opens its details; selecting master data opens the matching filtered page.
+opens its details; selecting an inventory item opens the matching filtered page.
 
 ![Global search grouped by matching resource](/screenshots/global-search.jpg)
 
