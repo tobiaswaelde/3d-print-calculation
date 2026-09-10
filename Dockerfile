@@ -1,12 +1,12 @@
-FROM node:24-bookworm-slim AS build
+FROM node:26-bookworm-slim AS build
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/* && corepack enable
+RUN apt-get update && apt-get install -y --no-install-recommends openssl && rm -rf /var/lib/apt/lists/* && npm install --global corepack@0.36.0 && corepack enable
 WORKDIR /app
 COPY . .
 RUN pnpm install --frozen-lockfile && pnpm build
 
-FROM node:24-bookworm-slim AS runtime
+FROM node:26-bookworm-slim AS runtime
 ENV NODE_ENV=production
 ENV DATABASE_URL=file:/data/app.db
 WORKDIR /app
