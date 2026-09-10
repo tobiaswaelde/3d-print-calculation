@@ -25,7 +25,7 @@ jobs:
       - id: changesets
         uses: changesets/action@v2
         with:
-          version-script: pnpm version
+          version-script: pnpm run version
           github-token: ${{ secrets.GITHUB_TOKEN }}
           create-github-releases: false
           push-git-tags: false
