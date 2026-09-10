@@ -19,7 +19,7 @@ table remain current operational data rather than historical reporting.
 ## KPI cards
 
 - **Active drafts** opens the Prints page filtered to Draft.
-- **Completed prints** opens the Prints page filtered to Completed.
+- **Completed prints** opens the Prints page filtered to Done.
 - **Total duration** sums completed-print duration in the selected period.
 - **Total calculated cost** sums immutable completed-print totals in the selected period.
 
@@ -31,7 +31,8 @@ provided for assistive technology.
 
 ## Unfinished prints
 
-The table lists each draft's name, optional customer, printer, last update, duration, and current total. Select a
-name to continue editing. **New print** opens the same guided dialog available on the Prints page.
+The table lists every non-Done print with its name, optional customer, printer, workflow status, last update,
+duration, and current total. Select a name to view or continue editing it. **New print** opens the same guided
+dialog available on the Prints page.
 
 ![Unfinished-print table with a current draft and the New print action](/screenshots/dashboard-unfinished.jpg)

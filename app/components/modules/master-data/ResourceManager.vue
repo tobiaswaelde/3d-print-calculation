@@ -157,9 +157,12 @@
             <UFormField name="material" :label="t('master.material')" required
               ><UInput v-model="form.material" class="w-full" icon="i-tabler-box"
             /></UFormField>
-            <UFormField name="color" :label="t('master.color')">
+            <UFormField name="colorName" :label="t('master.colorName')" required>
+              <UInput v-model="form.colorName" class="w-full" icon="i-tabler-palette" />
+            </UFormField>
+            <UFormField name="colorHex" :label="t('master.colorHex')" required>
               <div class="flex gap-2">
-                <UInput v-model="form.color" class="min-w-0 flex-1" icon="i-tabler-palette" />
+                <UInput v-model="form.colorHex" class="min-w-0 flex-1" icon="i-tabler-hash" />
                 <UPopover :content="{ align: 'end', sideOffset: 8 }">
                   <UButton
                     color="neutral"
@@ -169,11 +172,11 @@
                   >
                     <span
                       class="size-5 rounded-sm border border-default"
-                      :style="{ backgroundColor: form.color || '#ffffff' }"
+                      :style="{ backgroundColor: form.colorHex || '#ffffff' }"
                     />
                   </UButton>
                   <template #content>
-                    <UColorPicker v-model="form.color" class="p-3" format="hex" />
+                    <UColorPicker v-model="form.colorHex" class="p-3" format="hex" />
                   </template>
                 </UPopover>
               </div>
@@ -374,7 +377,8 @@ function emptyForm() {
     alwaysUsed: false,
     printerIds: [] as string[],
     material: '',
-    color: '#FFFFFF',
+    colorName: '',
+    colorHex: '#FFFFFF',
     netWeightGrams: '1000',
     note: '',
   };
@@ -438,7 +442,7 @@ function startEdit(item: MasterDataListItem) {
   ) {
     manufacturerOptions.value.push({ label: item.manufacturer, value: item.manufacturerId });
   }
-  if (props.resource === 'filaments' && typeof item.color !== 'string') form.color = '#FFFFFF';
+  if (props.resource === 'filaments' && typeof item.colorHex !== 'string') form.colorHex = '#FFFFFF';
   form.printerIds = Array.isArray(item.printerIds) ? ([...item.printerIds] as string[]) : [];
   editingId.value = item.id;
   dialogError.value = '';
@@ -482,7 +486,7 @@ function details(item: MasterDataListItem) {
   if (props.resource === 'customers') return String(item.email ?? '—');
   if (props.resource === 'manufacturers') return String(item.note ?? '—');
   if (props.resource === 'filaments')
-    return [item.manufacturer, item.material, item.color].filter(Boolean).join(' · ');
+    return [item.manufacturer, item.material, item.colorName, item.colorHex].filter(Boolean).join(' · ');
   if (props.resource === 'components')
     return [
       t(`master.${String(item.type).toLowerCase()}`),
@@ -509,8 +513,8 @@ watchEffect(() => {
   const manufacturer =
     manufacturerOptions.value.find((option) => option.value === form.manufacturerId)?.label ?? '';
   const material = form.material.trim();
-  const color = form.color.trim();
-  form.name = `${manufacturer}${manufacturer && material ? ' ' : ''}${material}${color ? ` - ${color}` : ''}`;
+  const colorName = form.colorName.trim();
+  form.name = `${manufacturer}${manufacturer && material ? ' ' : ''}${material}${colorName ? ` - ${colorName}` : ''}`;
 });
 onMounted(refresh);
 </script>

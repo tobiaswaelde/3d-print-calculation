@@ -47,6 +47,7 @@
     "@prisma/adapter-better-sqlite3": "7.10.0",
     "@prisma/client": "7.10.0",
     "better-sqlite3": "12.11.1",
+    "dayjs": "1.11.23",
     "decimal.js": "10.6.0",
     "dotenv": "17.4.2",
     "echarts": "6.1.0",

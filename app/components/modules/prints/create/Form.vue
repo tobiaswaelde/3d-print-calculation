@@ -1,5 +1,12 @@
 <template>
-  <UForm ref="formRef" :schema="printDraftFormSchema" :state="form" class="space-y-6" @submit="persist">
+  <UForm
+    :id="formId"
+    ref="formRef"
+    :schema="printDraftFormSchema"
+    :state="form"
+    class="space-y-6"
+    @submit="persist"
+  >
     <UAlert v-if="error" color="error" :description="error" />
 
     <div v-if="loading" class="flex min-h-72 items-center justify-center">
@@ -60,7 +67,7 @@
                 <h3 class="font-semibold">{{ t('prints.hotends') }}</h3>
                 <p class="text-sm text-muted">{{ t('prints.hotendsHelp') }}</p>
               </div>
-              <UButton icon="i-tabler-plus" size="sm" :label="t('common.create')" @click="addHotend" />
+              <UButton icon="i-tabler-plus" size="sm" :label="t('common.add')" @click="addHotend" />
             </div>
             <div
               v-for="(hotend, index) in form.hotends"
@@ -130,7 +137,7 @@
             <div class="space-y-4">
               <div class="flex items-center justify-between gap-3">
                 <h3 class="font-semibold">{{ t('nav.filaments') }}</h3>
-                <UButton icon="i-tabler-plus" size="sm" :label="t('common.create')" @click="addFilament" />
+                <UButton icon="i-tabler-plus" size="sm" :label="t('common.add')" @click="addFilament" />
               </div>
               <div
                 v-for="(filament, index) in form.filaments"
@@ -138,11 +145,9 @@
                 class="grid items-start gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_12rem_auto]"
               >
                 <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required>
-                  <USelect
+                  <CommonFilamentSelect
                     v-model="filament.filamentId"
                     class="w-full"
-                    icon="i-tabler-disc"
-                    value-key="value"
                     :items="filamentOptions"
                   />
                 </UFormField>
@@ -188,43 +193,6 @@
           </div>
         </template>
       </UStepper>
-
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-default pt-4">
-        <div class="flex gap-2">
-          <UButton
-            type="button"
-            color="neutral"
-            variant="outline"
-            :label="t('common.cancel')"
-            :disabled="saving"
-            @click="emit('cancel')"
-          />
-          <UButton
-            v-if="currentStep > 0"
-            type="button"
-            color="neutral"
-            variant="soft"
-            icon="i-tabler-arrow-left"
-            :label="t('common.back')"
-            :disabled="saving"
-            @click="currentStep -= 1"
-          />
-        </div>
-        <UButton
-          v-if="currentStep < stepperItems.length - 1"
-          type="button"
-          trailing-icon="i-tabler-arrow-right"
-          :label="t('common.next')"
-          @click="nextStep"
-        />
-        <UButton
-          v-else
-          type="submit"
-          icon="i-tabler-device-floppy"
-          :label="t('prints.saveDraft')"
-          :loading="saving"
-        />
-      </div>
     </template>
   </UForm>
 </template>
@@ -237,8 +205,11 @@ import type { MasterDataListItem, PaginatedResponse } from '#shared/types/master
 import type { PrintJobDto } from '#shared/types/prints';
 
 const emit = defineEmits<{
-  cancel: [];
   created: [print: PrintJobDto];
+}>();
+
+const { formId = 'new-print-form' } = defineProps<{
+  formId?: string;
 }>();
 
 const { t } = useI18n();
@@ -300,7 +271,14 @@ const hotendOptions = computed(() =>
 const otherOptions = computed(() =>
   options(compatibleComponents.value.filter((item) => item.type === 'OTHER')),
 );
-const filamentOptions = computed(() => options(filaments.value));
+const filamentOptions = computed(() =>
+  filaments.value.map((item) => ({
+    label: item.name,
+    value: item.id,
+    colorName: String(item.colorName),
+    colorHex: String(item.colorHex),
+  })),
+);
 
 function payload() {
   return {
@@ -349,6 +327,14 @@ async function nextStep() {
     // UForm displays validation errors next to the affected fields.
   }
 }
+
+function previousStep() {
+  if (currentStep.value > 0) currentStep.value -= 1;
+}
+
+const lastStep = computed(() => stepperItems.value.length - 1);
+
+defineExpose({ currentStep, lastStep, loading, saving, nextStep, previousStep });
 
 async function load() {
   const [customerResponse, printerResponse, componentResponse, filamentResponse] = await Promise.all([

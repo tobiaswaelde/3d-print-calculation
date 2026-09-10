@@ -18,10 +18,10 @@ function bucket(date: Date, period: '30d' | '90d' | 'all') {
 export async function dashboardData(periodInput: unknown, now = new Date()) {
   const period = parseBody(dashboardPeriodSchema, periodInput);
   const start = startFor(period, now);
-  const [completed, drafts] = await Promise.all([
+  const [completed, unfinished] = await Promise.all([
     db.printJob.findMany({
       where: {
-        status: 'COMPLETED',
+        status: 'DONE',
         archivedAt: null,
         ...(start ? { completedAt: { gte: start, lte: now } } : {}),
       },
@@ -29,7 +29,7 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
       orderBy: { completedAt: 'asc' },
     }),
     db.printJob.findMany({
-      where: { status: 'DRAFT', archivedAt: null },
+      where: { status: { not: 'DONE' }, archivedAt: null },
       include: { customer: true, printer: true },
       orderBy: { updatedAt: 'desc' },
     }),
@@ -62,10 +62,10 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
     periodEnd: now.toISOString(),
     currency:
       completed[0]?.currency ??
-      drafts[0]?.currency ??
+      unfinished[0]?.currency ??
       (await db.appSettings.findUniqueOrThrow({ where: { id: 1 } })).currency,
     kpis: {
-      activeDrafts: drafts.length,
+      activeDrafts: unfinished.filter((job) => job.status === 'DRAFT').length,
       completedPrints: completed.length,
       totalDurationSeconds: duration,
       totalCost: canonicalDecimal(total),
@@ -78,9 +78,10 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
       category,
       value: canonicalDecimal(value),
     })),
-    unfinishedPrints: drafts.map((job) => ({
+    unfinishedPrints: unfinished.map((job) => ({
       id: job.id,
       name: job.name,
+      status: job.status,
       customer: job.customer ? { id: job.customer.id, name: job.customer.name } : null,
       printer: { id: job.printer.id, name: job.printer.name },
       totalDurationSeconds: job.totalDurationSeconds,

@@ -14,7 +14,8 @@ when a newer semantic version is available.
 
 Every list page has a fixed toolbar with a Dashboard breadcrumb, local search, table options, and **New**. Local
 search filters only the current resource. **Table options → Show archived** adds archived records to the table.
-Press <kbd>Ctrl</kbd>+<kbd>N</kbd> on a list page to open its create dialog.
+Press <kbd>Shift</kbd>+<kbd>N</kbd> on a list page to open its create dialog. Open the keyboard-shortcut dialog
+with <kbd>?</kbd> or from the user menu for a compact overview of all available shortcuts.
 
 ## Global search
 
@@ -33,6 +34,7 @@ The avatar menu provides quick controls for:
 
 - **Language:** switches the application between German and US English and stores the choice on the account.
 - **Appearance:** Light, Dark, or System; the selection is stored in the browser.
+- **Keyboard shortcuts:** opens the overview of available global and table shortcuts.
 - **Sign out:** deletes the current session and returns to sign-in.
 
 ![User menu with language, appearance, and sign-out actions](/screenshots/user-menu.jpg)

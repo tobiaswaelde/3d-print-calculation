@@ -26,7 +26,8 @@ test('manufacturer inventory supplies component and filament dropdowns', async (
         components: 'Komponenten',
         filaments: 'Filamente',
         manufacturer: 'Hersteller',
-        color: 'Farbe',
+        colorName: 'Farbname',
+        colorHex: 'Farbe (HEX-Code)',
         save: 'Speichern',
         cancel: 'Abbrechen',
       }
@@ -34,7 +35,8 @@ test('manufacturer inventory supplies component and filament dropdowns', async (
         components: 'Components',
         filaments: 'Filaments',
         manufacturer: 'Manufacturer',
-        color: 'Color',
+        colorName: 'Color name',
+        colorHex: 'Color (hex code)',
         save: 'Save',
         cancel: 'Cancel',
       };
@@ -56,17 +58,19 @@ test('manufacturer inventory supplies component and filament dropdowns', async (
 
   await page.getByRole('link', { name: labels.filaments }).click();
   await toolbar.getByRole('button', { name: 'New' }).click();
-  await expect(dialog.getByLabel('Name')).toHaveAttribute('readonly');
+  const derivedName = dialog.getByLabel(/^Name/);
+  await expect(derivedName).toHaveAttribute('readonly');
   await dialog.getByLabel(labels.manufacturer).click();
   await page.getByRole('option', { name: 'Dropdown Maker' }).click();
   await expect(page.getByRole('option', { name: 'Dropdown Maker' })).toBeHidden();
-  await expect(dialog.getByLabel('Name')).toHaveValue('Dropdown Maker - #FFFFFF');
+  await expect(derivedName).toHaveValue('Dropdown Maker');
   const material = dialog.getByLabel('Material');
   await material.fill('PLA');
   await expect(material).toHaveValue('PLA');
-  await expect(dialog.getByLabel('Name')).toHaveValue('Dropdown Maker PLA - #FFFFFF');
-  await dialog.getByRole('textbox', { name: labels.color, exact: true }).fill('#112233');
-  await expect(dialog.getByLabel('Name')).toHaveValue('Dropdown Maker PLA - #112233');
+  await expect(derivedName).toHaveValue('Dropdown Maker PLA');
+  await dialog.getByLabel(labels.colorName).fill('Ocean Blue');
+  await expect(derivedName).toHaveValue('Dropdown Maker PLA - Ocean Blue');
+  await dialog.getByLabel(labels.colorHex).fill('#112233');
   await dialog.getByRole('button', { name: labels.save }).click();
-  await expect(page.getByRole('cell', { name: 'Dropdown Maker PLA - #112233' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Dropdown Maker PLA - Ocean Blue' })).toBeVisible();
 });

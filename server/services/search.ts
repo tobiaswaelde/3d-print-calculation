@@ -80,7 +80,8 @@ export async function searchApplication(query: Record<string, unknown>) {
           { name: { contains: q } },
           { manufacturer: { name: { contains: q } } },
           { material: { contains: q } },
-          { color: { contains: q } },
+          { colorName: { contains: q } },
+          { colorHex: { contains: q } },
         ],
       },
       select: {
@@ -88,7 +89,8 @@ export async function searchApplication(query: Record<string, unknown>) {
         name: true,
         manufacturer: { select: { name: true } },
         material: true,
-        color: true,
+        colorName: true,
+        colorHex: true,
       },
       orderBy: [{ manufacturer: { name: 'asc' } }, { name: 'asc' }],
       take: 5,
@@ -137,7 +139,9 @@ export async function searchApplication(query: Record<string, unknown>) {
       items: filaments.map((item) => ({
         id: item.id,
         title: item.name,
-        description: [item.manufacturer.name, item.material, item.color].filter(Boolean).join(' · '),
+        description: [item.manufacturer.name, item.material, item.colorName, item.colorHex]
+          .filter(Boolean)
+          .join(' · '),
         to: masterDataTarget('filaments', item.name),
       })),
     },

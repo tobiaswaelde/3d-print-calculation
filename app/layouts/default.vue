@@ -3,6 +3,7 @@
     <LayoutAppSidebar />
     <slot />
     <LayoutChangelogDialog v-model:open="changelogOpen" />
+    <CommonDialogsShortcuts />
   </UDashboardGroup>
 </template>
 

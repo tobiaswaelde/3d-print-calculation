@@ -85,7 +85,8 @@ function filamentDto(value: FilamentWithManufacturer) {
     manufacturerId: value.manufacturerId,
     manufacturer: value.manufacturer.name,
     material: value.material,
-    color: value.color,
+    colorName: value.colorName,
+    colorHex: value.colorHex,
     purchasePrice: canonicalDecimal(value.purchasePrice.toString()),
     netWeightGrams: canonicalDecimal(value.netWeightGrams.toString()),
     costPerGram: canonicalDecimal(
@@ -255,7 +256,7 @@ export async function createResource(resource: Resource, input: unknown) {
     await db.filament.create({
       data: {
         ...data,
-        name: `${manufacturer!.name} ${data.material}${data.color ? ` - ${data.color}` : ''}`,
+        name: `${manufacturer!.name} ${data.material} - ${data.colorName}`,
       },
       include: { manufacturer: true },
     }),
@@ -273,14 +274,14 @@ export async function updateResource(resource: Resource, id: string, input: unkn
       const manufacturer = await transaction.manufacturer.update({ where: { id }, data });
       const filaments = await transaction.filament.findMany({
         where: { manufacturerId: id },
-        select: { id: true, material: true, color: true },
+        select: { id: true, material: true, colorName: true },
       });
       await Promise.all(
         filaments.map((filament) =>
           transaction.filament.update({
             where: { id: filament.id },
             data: {
-              name: `${manufacturer.name} ${filament.material}${filament.color ? ` - ${filament.color}` : ''}`,
+              name: `${manufacturer.name} ${filament.material} - ${filament.colorName}`,
             },
           }),
         ),
@@ -313,7 +314,7 @@ export async function updateResource(resource: Resource, id: string, input: unkn
       where: { id },
       data: {
         ...data,
-        name: `${manufacturer!.name} ${data.material}${data.color ? ` - ${data.color}` : ''}`,
+        name: `${manufacturer!.name} ${data.material} - ${data.colorName}`,
       },
       include: { manufacturer: true },
     }),

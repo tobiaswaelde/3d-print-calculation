@@ -21,7 +21,7 @@ created without a customer.
 ## Page functions
 
 - **Search** filters by customer name and email.
-- **New** or <kbd>Ctrl</kbd>+<kbd>N</kbd> opens the create dialog.
+- **New** or <kbd>Shift</kbd>+<kbd>N</kbd> opens the create dialog.
 - **Edit** opens the same fields with saved values; save to replace the editable data.
 - **Archive** removes the customer from new-print selectors but keeps it linked to existing prints.
 - **Table options → Show archived** reveals archived customers; **Restore** makes one active again.

@@ -141,6 +141,7 @@ function onShortcut(event: KeyboardEvent) {
     event.metaKey ||
     event.ctrlKey ||
     event.altKey ||
+    event.shiftKey ||
     target?.matches('input, textarea, select, [contenteditable="true"]')
   )
     return;

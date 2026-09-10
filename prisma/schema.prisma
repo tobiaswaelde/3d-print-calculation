@@ -125,7 +125,8 @@ model Filament {
   manufacturerId String
   manufacturer   Manufacturer         @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
   material       String
-  color          String?
+  colorName      String
+  colorHex       String               @default("#FFFFFF")
   purchasePrice  Decimal
   netWeightGrams Decimal
   note           String?
@@ -154,6 +155,7 @@ model PrintJob {
   currency             String
   totalCost            Decimal
   completedAt          DateTime?
+  paidAt               DateTime?
   archivedAt           DateTime?
   componentUsages      PrintComponentUsage[]
   filamentUsages       PrintFilamentUsage[]
@@ -166,6 +168,7 @@ model PrintJob {
   @@index([customerId])
   @@index([printerId])
   @@index([completedAt])
+  @@index([paidAt])
 }
 
 model PrintComponentUsage {

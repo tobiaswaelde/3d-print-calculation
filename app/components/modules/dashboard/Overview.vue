@@ -99,12 +99,13 @@
         ><UButton :label="t('prints.new')" @click="createOpen = true"
       /></CommonEmptyState>
       <div v-else class="overflow-x-auto">
-        <table class="w-full min-w-180 text-sm">
+        <table class="w-full min-w-200 text-sm">
           <thead class="text-left text-muted">
             <tr>
               <th class="p-3">{{ t('master.name') }}</th>
               <th class="p-3">{{ t('nav.customers') }}</th>
               <th class="p-3">{{ t('nav.printers') }}</th>
+              <th class="p-3">{{ t('prints.status') }}</th>
               <th class="p-3">{{ t('dashboard.updated') }}</th>
               <th class="p-3 text-right">{{ t('prints.duration') }}</th>
               <th class="p-3 text-right">{{ t('prints.totalCost') }}</th>
@@ -135,6 +136,11 @@
                   item.printer.name
                 }}</UBadge>
               </td>
+              <td class="p-3">
+                <UBadge :color="statusColors[item.status]" variant="subtle">
+                  {{ t(`prints.${item.status.toLowerCase()}`) }}
+                </UBadge>
+              </td>
               <td class="p-3">{{ dateTime(item.updatedAt) }}</td>
               <td class="p-3 text-right font-mono tabular-nums">{{ duration(item.totalDurationSeconds) }}</td>
               <td class="p-3 text-right font-mono tabular-nums">
@@ -154,7 +160,7 @@
 import type { DashboardDto } from '#shared/types/prints';
 
 const { t } = useI18n();
-const { money, dateTime } = useFormatting();
+const { money, dateTime, duration } = useFormatting();
 const period = ref<DashboardDto['period']>('30d');
 const colorMode = useColorMode();
 const data = ref<DashboardDto | null>(null);
@@ -165,9 +171,14 @@ const periodOptions = computed(() => [
   { label: t('dashboard.last90Days'), value: '90d' },
   { label: t('dashboard.allTime'), value: 'all' },
 ]);
-const duration = (seconds: number) =>
-  `${Math.floor(seconds / 3600)} h ${Math.floor((seconds % 3600) / 60)} min`;
 const categoryLabel = (category: string) => t(`dashboard.category.${category}`);
+const statusColors = {
+  DRAFT: 'neutral',
+  PRINTING: 'info',
+  PRINTED: 'primary',
+  SHIPPED: 'warning',
+  DONE: 'success',
+} as const;
 const kpis = computed(() => [
   {
     label: t('dashboard.activeDrafts'),
@@ -181,7 +192,7 @@ const kpis = computed(() => [
   {
     label: t('dashboard.completedPrints'),
     value: data.value?.kpis.completedPrints ?? 0,
-    to: '/prints?status=COMPLETED',
+    to: '/prints?status=DONE',
     icon: 'i-tabler-circle-check',
     accentClass: 'bg-emerald-500',
     iconWellClass:
@@ -190,7 +201,7 @@ const kpis = computed(() => [
   {
     label: t('dashboard.totalDuration'),
     value: duration(data.value?.kpis.totalDurationSeconds ?? 0),
-    to: '/prints?status=COMPLETED',
+    to: '/prints?status=DONE',
     icon: 'i-tabler-clock',
     accentClass: 'bg-violet-500',
     iconWellClass:
@@ -199,7 +210,7 @@ const kpis = computed(() => [
   {
     label: t('dashboard.totalCost'),
     value: money(data.value?.kpis.totalCost ?? '0', data.value?.currency ?? 'EUR'),
-    to: '/prints?status=COMPLETED',
+    to: '/prints?status=DONE',
     icon: 'i-tabler-coins',
     accentClass: 'bg-blue-500',
     iconWellClass:

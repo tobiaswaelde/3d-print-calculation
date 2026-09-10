@@ -29,6 +29,7 @@
   },
   "common": {
     "create": "Erstellen",
+    "add": "Hinzufügen",
     "save": "Speichern",
     "cancel": "Abbrechen",
     "back": "Zurück",
@@ -47,6 +48,23 @@
     "light": "Hell",
     "dark": "Dunkel",
     "system": "System"
+  },
+  "shortcuts": {
+    "title": "Tastenkürzel",
+    "description": "Navigiere schnell und führe Aktionen mit diesen Tastenkürzeln aus.",
+    "open": "Tastenkürzel anzeigen",
+    "scope": "Bereich",
+    "shortcut": "Kürzel",
+    "action": "Aktion",
+    "scopes": {
+      "global": "Global",
+      "table": "Tabelle"
+    },
+    "actions": {
+      "search": "Globale Suche öffnen",
+      "showShortcuts": "Tastenkürzel anzeigen",
+      "newItem": "Neuen Eintrag erstellen"
+    }
   },
   "user": { "openMenu": "Benutzermenü öffnen" },
   "sidebar": {
@@ -77,12 +95,16 @@
   },
   "settings": {
     "general": "Allgemein",
-    "generalDescription": "Sprache, Darstellung und Datumsanzeige für diese Anwendung.",
+    "generalDescription": "Sprache, Darstellung sowie Datums-, Uhrzeit- und Daueranzeige für diese Anwendung.",
     "calculation": "Berechnung",
     "calculationDescription": "Währung und Energiekosten für die Druckkostenberechnung.",
     "dateFormat": "Datumsformat",
-    "dateFormatLocale": "Regional (z. B. 10.09.2026)",
-    "dateFormatIso": "ISO (2026-09-10)",
+    "timeFormat": "Uhrzeitformat",
+    "durationFormat": "Dauerformat",
+    "durationFormatHuman": "Lesbar (1 Stunde 30 Minuten)",
+    "durationFormatCompact": "Kompakt (1h 30m)",
+    "durationFormatClock": "Digital (01:30:00)",
+    "durationFormatDecimal": "Dezimalstunden (1,5 h)",
     "currencyHelp": "Nach dem ersten kostenrelevanten Datensatz kann die Währung nicht mehr geändert werden.",
     "saved": "Einstellungen gespeichert."
   },
@@ -99,7 +121,8 @@
     "alwaysUsed": "Immer verwendet",
     "alwaysUsedDescription": "Bei neuen Drucken für kompatible Drucker automatisch vorauswählen.",
     "material": "Material",
-    "color": "Farbe",
+    "colorName": "Farbname",
+    "colorHex": "Farbe (HEX-Code)",
     "pickColor": "Farbe auswählen",
     "netWeight": "Nettogewicht (g)",
     "note": "Notiz",
@@ -142,12 +165,24 @@
     "duration": "Dauer",
     "status": "Status",
     "draft": "Entwurf",
+    "printing": "Wird gedruckt",
+    "printed": "Gedruckt",
+    "shipped": "Versendet",
+    "done": "Erledigt",
     "completed": "Abgeschlossen",
     "allStatuses": "Alle Status",
+    "workflow": "Ablauf",
+    "payment": "Zahlung",
+    "paid": "Bezahlt",
+    "unpaid": "Unbezahlt",
+    "markPaid": "Als bezahlt markieren",
+    "markUnpaid": "Als unbezahlt markieren",
+    "updateStatus": "Status übernehmen",
+    "statusChangeConfirmation": "Beim Verlassen des Entwurfs wird der Kostensnapshot finalisiert und die Druckdaten werden unveränderlich.",
     "saveDraft": "Entwurf speichern",
     "complete": "Abschließen",
     "completeConfirmation": "Der Druck wird neu berechnet und danach unveränderlich abgeschlossen.",
-    "immutable": "Dieser Snapshot ist unveränderlich. Du kannst ihn mit dem aktuellen Inventar duplizieren.",
+    "immutable": "Die Druckdaten sind nach Verlassen des Entwurfs unveränderlich. Du kannst den Druck mit dem aktuellen Inventar duplizieren.",
     "duplicate": "Duplizieren",
     "snapshotSources": "Gespeicherte Berechnungsquellen",
     "formulaVersion": "Formelversion"

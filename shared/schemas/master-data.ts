@@ -76,7 +76,12 @@ export const filamentSchema = z.object({
   name: z.string().trim().max(200).optional(),
   manufacturerId: z.string().trim().min(1),
   material: z.string().trim().min(1).max(100),
-  color: optionalText,
+  colorName: z.string().trim().min(1).max(100),
+  colorHex: z
+    .string()
+    .trim()
+    .regex(/^#[0-9a-f]{6}$/i)
+    .transform((value) => value.toUpperCase()),
   purchasePrice: decimalSchema(),
   netWeightGrams: decimalSchema({ positive: true }),
   note: optionalText,

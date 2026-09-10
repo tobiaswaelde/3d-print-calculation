@@ -24,6 +24,8 @@ describe('master data validation', () => {
         name: 'PLA',
         manufacturerId: 'manufacturer-1',
         material: 'PLA',
+        colorName: 'Black',
+        colorHex: '#000000',
         purchasePrice: '20',
         netWeightGrams: '0',
       }).success,
@@ -35,6 +37,8 @@ describe('master data validation', () => {
       name: 'PLA',
       manufacturerId: 'manufacturer-1',
       material: 'PLA',
+      colorName: 'Black',
+      colorHex: '#000000',
       purchasePrice: '19.99',
       netWeightGrams: '750.5',
     });
@@ -46,13 +50,29 @@ describe('master data validation', () => {
       name: 'Custom name',
       manufacturerId: ' manufacturer-1 ',
       material: ' PLA ',
-      color: ' #12ABEF ',
+      colorName: ' Teal ',
+      colorHex: ' #12abef ',
       purchasePrice: '19.99',
       netWeightGrams: '1000',
     });
 
     expect(result.manufacturerId).toBe('manufacturer-1');
     expect(result.material).toBe('PLA');
-    expect(result.color).toBe('#12ABEF');
+    expect(result.colorName).toBe('Teal');
+    expect(result.colorHex).toBe('#12ABEF');
+  });
+
+  it('requires a color name and a six-digit hex code', () => {
+    const base = {
+      manufacturerId: 'manufacturer-1',
+      material: 'PLA',
+      colorName: 'Teal',
+      colorHex: '#12ABEF',
+      purchasePrice: '19.99',
+      netWeightGrams: '1000',
+    };
+
+    expect(filamentSchema.safeParse({ ...base, colorName: '' }).success).toBe(false);
+    expect(filamentSchema.safeParse({ ...base, colorHex: 'teal' }).success).toBe(false);
   });
 });

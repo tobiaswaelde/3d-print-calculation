@@ -2,7 +2,7 @@
   <UTooltip>
     <UButton icon="i-tabler-plus" label="New" @click="emit('click', $event)" />
 
-    <template #content> <UKbd value="ctrl" /> + <UKbd value="N" /> </template>
+    <template #content> <UKbd value="shift" /> + <UKbd value="N" /> </template>
   </UTooltip>
 </template>
 
@@ -12,6 +12,6 @@ const emit = defineEmits<{
 }>();
 
 defineShortcuts({
-  ctrl_n: () => emit('click'),
+  shift_n: () => emit('click'),
 });
 </script>

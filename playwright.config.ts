@@ -6,6 +6,8 @@ import { assertSafeTestDatabaseUrl } from './tests/utils/test-database';
 
 const testRoot = mkdtempSync(join(tmpdir(), 'print-cost-browser-'));
 const databaseUrl = `file:${join(testRoot, 'app.db')}`;
+const port = Number(process.env.PRINT_COST_E2E_PORT ?? 3000);
+const baseURL = `http://127.0.0.1:${port}`;
 assertSafeTestDatabaseUrl(databaseUrl, testRoot);
 process.env.PRINT_COST_E2E_ROOT = testRoot;
 
@@ -16,11 +18,11 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 15_000 },
   globalTeardown: './tests/e2e/global-teardown.ts',
-  use: { baseURL: 'http://127.0.0.1:3000', trace: 'retain-on-failure' },
+  use: { baseURL, trace: 'retain-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'pnpm db:deploy && pnpm dev --host 127.0.0.1 --port 3000',
-    url: 'http://127.0.0.1:3000/api/health',
+    command: `pnpm db:deploy && pnpm dev --host 127.0.0.1 --port ${port}`,
+    url: `${baseURL}/api/health`,
     reuseExistingServer: false,
     timeout: 120_000,
     env: { DATABASE_URL: databaseUrl, NODE_ENV: 'test' },

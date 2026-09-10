@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { componentSchema, customerSchema, settingsSchema } from '../shared/schemas/master-data';
-import { printDraftFormSchema } from '../shared/schemas/prints';
+import {
+  printDraftFormSchema,
+  printListQuerySchema,
+  printWorkflowUpdateSchema,
+} from '../shared/schemas/prints';
 
 describe('application form validation', () => {
   it('accepts valid settings and rejects malformed decimal input', () => {
@@ -70,5 +74,15 @@ describe('application form validation', () => {
         filaments: [{ filamentId: 'filament-1', usedGrams: '0' }],
       }).success,
     ).toBe(false);
+  });
+
+  it('accepts the print workflow statuses and payment actions', () => {
+    for (const status of ['DRAFT', 'PRINTING', 'PRINTED', 'SHIPPED', 'DONE']) {
+      expect(printListQuerySchema.parse({ status }).status).toBe(status);
+      expect(printWorkflowUpdateSchema.safeParse({ status }).success).toBe(true);
+    }
+    expect(printWorkflowUpdateSchema.safeParse({ status: 'COMPLETED' }).success).toBe(false);
+    expect(printWorkflowUpdateSchema.safeParse({ paid: true }).success).toBe(true);
+    expect(printWorkflowUpdateSchema.safeParse({}).success).toBe(false);
   });
 });

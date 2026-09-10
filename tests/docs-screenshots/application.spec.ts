@@ -14,7 +14,7 @@ const screenshotOptions = {
 
 type Resource = { id: string };
 
-async function api<T>(page: Page, path: string, method: 'POST', body?: unknown): Promise<T> {
+async function api<T>(page: Page, path: string, method: 'POST' | 'PATCH', body?: unknown): Promise<T> {
   return page.evaluate(
     async ({ path, method, body }) => {
       const response = await fetch(path, {
@@ -145,7 +145,8 @@ test('regenerates every application screenshot used by the documentation', async
     name: 'PolyTerra PLA Teal',
     manufacturerId: polymaker.id,
     material: 'PLA',
-    color: 'Teal',
+    colorName: 'Teal',
+    colorHex: '#1F9E89',
     purchasePrice: '24.99',
     netWeightGrams: '1000',
     note: null,
@@ -165,10 +166,31 @@ test('regenerates every application screenshot used by the documentation', async
     name: 'Architectural Lamp',
   });
   await api(page, `/api/prints/${completed.id}/complete`, 'POST');
+  await api(page, `/api/prints/${completed.id}`, 'PATCH', { paid: true });
   const draft = await api<Resource>(page, '/api/prints', 'POST', {
     ...printInput,
     name: 'Prototype Housing',
   });
+  const workflowExamples = [
+    { name: 'Paid Draft Sample', status: 'DRAFT', paid: true },
+    { name: 'Paid Printing Sample', status: 'PRINTING', paid: true },
+    { name: 'Unpaid Printing Sample', status: 'PRINTING', paid: false },
+    { name: 'Paid Printed Sample', status: 'PRINTED', paid: true },
+    { name: 'Unpaid Printed Sample', status: 'PRINTED', paid: false },
+    { name: 'Paid Shipped Sample', status: 'SHIPPED', paid: true },
+    { name: 'Unpaid Shipped Sample', status: 'SHIPPED', paid: false },
+    { name: 'Unpaid Done Sample', status: 'DONE', paid: false },
+  ] as const;
+  for (const example of workflowExamples) {
+    const print = await api<Resource>(page, '/api/prints', 'POST', {
+      ...printInput,
+      name: example.name,
+    });
+    if (example.status !== 'DRAFT') {
+      await api(page, `/api/prints/${print.id}`, 'PATCH', { status: example.status });
+    }
+    if (example.paid) await api(page, `/api/prints/${print.id}`, 'PATCH', { paid: true });
+  }
 
   await page.route('**/api/dashboard?**', async (route) => {
     const response = await route.fetch();
@@ -182,7 +204,8 @@ test('regenerates every application screenshot used by the documentation', async
   });
   await page.route(`**/api/prints/${completed.id}`, async (route) => {
     const response = await route.fetch();
-    const body = (await response.json()) as { snapshot?: { calculatedAt: string } };
+    const body = (await response.json()) as { paidAt?: string; snapshot?: { calculatedAt: string } };
+    if (body.paidAt) body.paidAt = '2026-09-10T18:54:00.000Z';
     if (body.snapshot) body.snapshot.calculatedAt = '2026-09-10T18:54:00.000Z';
     await route.fulfill({ response, json: body });
   });
@@ -197,7 +220,26 @@ test('regenerates every application screenshot used by the documentation', async
   await capture(page, 'dashboard-unfinished.jpg');
 
   await page.goto('/prints');
-  await expect(page.getByRole('link', { name: 'Prototype Housing', exact: true })).toBeVisible();
+  const expectedWorkflowRows = [
+    { name: 'Prototype Housing', status: 'Draft', payment: 'Unpaid' },
+    { name: 'Paid Draft Sample', status: 'Draft', payment: 'Paid' },
+    { name: 'Paid Printing Sample', status: 'Printing', payment: 'Paid' },
+    { name: 'Unpaid Printing Sample', status: 'Printing', payment: 'Unpaid' },
+    { name: 'Paid Printed Sample', status: 'Printed', payment: 'Paid' },
+    { name: 'Unpaid Printed Sample', status: 'Printed', payment: 'Unpaid' },
+    { name: 'Paid Shipped Sample', status: 'Shipped', payment: 'Paid' },
+    { name: 'Unpaid Shipped Sample', status: 'Shipped', payment: 'Unpaid' },
+    { name: 'Architectural Lamp', status: 'Done', payment: 'Paid' },
+    { name: 'Unpaid Done Sample', status: 'Done', payment: 'Unpaid' },
+  ];
+  for (const example of expectedWorkflowRows) {
+    const row = page
+      .getByRole('row')
+      .filter({ has: page.getByRole('link', { name: example.name, exact: true }) });
+    await expect(row).toBeVisible();
+    await expect(row.getByText(example.status, { exact: true })).toBeVisible();
+    await expect(row.getByText(example.payment, { exact: true })).toBeVisible();
+  }
   await capture(page, 'prints.jpg');
 
   await page.goto('/customers');
@@ -259,12 +301,11 @@ test('regenerates every application screenshot used by the documentation', async
   await capture(page, 'print-draft.jpg');
 
   await page.goto(`/prints/${completed.id}`);
-  await expect(
-    page.getByText('This snapshot is immutable. You can duplicate it using current inventory.'),
-  ).toBeVisible();
-  await page
-    .getByText('This snapshot is immutable. You can duplicate it using current inventory.')
-    .scrollIntoViewIfNeeded();
+  const immutableMessage = page.getByText(
+    'The print details are immutable after leaving draft. You can duplicate the print using current inventory.',
+  );
+  await expect(immutableMessage).toBeVisible();
+  await immutableMessage.scrollIntoViewIfNeeded();
   await capture(page, 'completed-print.jpg');
   await page.getByRole('heading', { name: 'Stored calculation sources' }).scrollIntoViewIfNeeded();
   await capture(page, 'completed-print-sources.jpg');

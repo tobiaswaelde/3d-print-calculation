@@ -16,6 +16,7 @@ import type { DropdownMenuItem } from '@nuxt/ui';
 const { t, locales: localeDefinitions, setLocale } = useI18n();
 const colorMode = useColorMode();
 const { user, logout, updateLocale } = useAuth();
+const shortcutsOpen = useState('shortcuts-open', () => false);
 
 const themes = ['light', 'dark', 'system'] as const;
 const locales = computed(() =>
@@ -57,6 +58,14 @@ const items = computed<DropdownMenuItem[][]>(() => [
     },
   ],
   [
+    {
+      label: t('shortcuts.open'),
+      icon: 'i-tabler-keyboard',
+      kbds: ['?'],
+      onSelect: () => {
+        shortcutsOpen.value = true;
+      },
+    },
     {
       label: t('auth.logout'),
       icon: 'i-tabler-logout',

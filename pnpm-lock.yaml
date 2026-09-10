@@ -153,6 +153,9 @@ importers:
       better-sqlite3:
         specifier: 12.11.1
         version: 12.11.1
+      dayjs:
+        specifier: 1.11.23
+        version: 1.11.23
       decimal.js:
         specifier: 10.6.0
         version: 10.6.0
@@ -6386,6 +6389,12 @@ packages:
         integrity: sha512-VqKjzBLejbSMT4IgbmVgDjpkYrNWUYJnbCGo874u7MMKIWsILRX+OpX/gTk8MqjpT1A/c6HY2dCA77ZN0lkQ2Q==,
       }
     engines: { node: '>=12' }
+
+  dayjs@1.11.23:
+    resolution:
+      {
+        integrity: sha512-QDTCU0M0MxR3hQfnlDJfwekQiaanm1ubOD231u73WBckQ/fsamwRLiE2GBz6D3a/xF1NgfiDLJjXBa1hYOYTtQ==,
+      }
 
   db0@0.3.4:
     resolution:
@@ -15957,6 +15966,8 @@ snapshots:
   d3-time@3.1.0:
     dependencies:
       d3-array: 3.2.4
+
+  dayjs@1.11.23: {}
 
   db0@0.3.4(@electric-sql/pglite@0.4.3)(better-sqlite3@12.11.1)(mysql2@3.15.3):
     optionalDependencies:

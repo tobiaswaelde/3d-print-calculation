@@ -19,6 +19,11 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   const brandLink = page.getByRole('link', { name: 'ezPrint' });
   await expect(brandLink).toHaveText('ezPrint');
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toHaveCount(0);
+  await page.keyboard.press('Shift+/');
+  const shortcutsDialog = page.getByRole('dialog', { name: 'Tastenkürzel' });
+  await expect(shortcutsDialog).toContainText('Neuen Eintrag erstellen');
+  await expect(shortcutsDialog.getByRole('cell', { name: '⇧ + N' })).toBeVisible();
+  await page.keyboard.press('Escape');
   const collapseButton = page.getByRole('button', { name: 'Navigation einklappen' });
   const globalSearchButton = page.getByRole('button', { name: 'Globale Suche öffnen' });
   await expect(collapseButton).toHaveCount(1);
@@ -63,15 +68,24 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   const printsToolbar = page.locator('[data-table-toolbar]');
   await expect(printsToolbar.getByText('Drucke', { exact: true })).toBeVisible();
   await expect(page.getByRole('combobox', { name: 'Status' })).toContainText('Alle Status');
+  await page.getByRole('combobox', { name: 'Status' }).click();
+  for (const option of ['Entwurf', 'Wird gedruckt', 'Gedruckt', 'Versendet', 'Erledigt']) {
+    await expect(page.getByRole('option', { name: option, exact: true })).toBeVisible();
+  }
+  await page.keyboard.press('Escape');
   await expect(printsToolbar.getByText('Archivierte anzeigen')).toHaveCount(0);
   await printsToolbar.getByRole('button', { name: 'Tabellenoptionen' }).click();
   await expect(page.getByRole('menuitemcheckbox', { name: 'Archivierte anzeigen' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(printsToolbar.getByRole('button', { name: 'New' })).toBeVisible();
-  await page.keyboard.press('Control+n');
+  await page.keyboard.press('Shift+n');
   const createPrintDialog = page.getByRole('dialog', { name: 'Neuer Druck' });
   await expect(createPrintDialog).toBeVisible();
   await expect(createPrintDialog.getByText('Allgemein')).toBeVisible();
+  const createPrintFooter = createPrintDialog.locator('[data-slot="footer"]');
+  await expect(createPrintFooter).toBeVisible();
+  await expect(createPrintFooter.getByRole('button', { name: 'Abbrechen' })).toBeVisible();
+  await expect(createPrintFooter.getByRole('button', { name: 'Weiter' })).toBeVisible();
   await createPrintDialog.getByRole('button', { name: 'Weiter' }).click();
   await expect(createPrintDialog.getByLabel('Name')).toBeVisible();
   await createPrintDialog.getByRole('button', { name: 'Abbrechen' }).click();
@@ -86,7 +100,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(tableToolbar.getByRole('searchbox')).toBeVisible();
   await expect(tableRegion).toBeVisible();
   await expect(tableToolbar.getByRole('button', { name: 'New' })).toBeVisible();
-  await page.keyboard.press('Control+n');
+  await page.keyboard.press('Shift+n');
   const resourceDialog = page.getByRole('dialog');
   await expect(resourceDialog).toBeVisible();
   await expect(resourceDialog.getByLabel('Name')).toBeFocused();
@@ -136,11 +150,19 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('option', { name: 'English' }).click();
   const dateFormat = page.getByRole('combobox', { name: 'Datumsformat' });
   await dateFormat.click();
-  await page.getByRole('option', { name: 'ISO (2026-09-10)' }).click();
+  await page.getByRole('option', { name: 'YYYY-MM-DD' }).click();
+  const timeFormat = page.getByRole('combobox', { name: 'Uhrzeitformat' });
+  await timeFormat.click();
+  await page.getByRole('option', { name: 'hh:mm A' }).click();
+  const durationFormat = page.getByRole('combobox', { name: 'Dauerformat' });
+  await durationFormat.click();
+  await page.getByRole('option', { name: 'Digital (01:30:00)' }).click();
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByText('Settings saved.')).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('combobox', { name: 'Date format' })).toContainText('ISO (2026-09-10)');
+  await expect(page.getByRole('combobox', { name: 'Date format' })).toContainText('YYYY-MM-DD');
+  await expect(page.getByRole('combobox', { name: 'Time format' })).toContainText('hh:mm A');
+  await expect(page.getByRole('combobox', { name: 'Duration format' })).toContainText('Clock (01:30:00)');
   await page.getByRole('link', { name: 'Customers' }).click();
   await expect(tableToolbar.getByText('Customers')).toBeVisible();
   await page.reload();

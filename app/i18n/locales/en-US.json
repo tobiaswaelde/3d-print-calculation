@@ -29,6 +29,7 @@
   },
   "common": {
     "create": "Create",
+    "add": "Add",
     "save": "Save",
     "cancel": "Cancel",
     "back": "Back",
@@ -47,6 +48,23 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "description": "Quickly navigate and perform actions with these keyboard shortcuts.",
+    "open": "Show keyboard shortcuts",
+    "scope": "Scope",
+    "shortcut": "Shortcut",
+    "action": "Action",
+    "scopes": {
+      "global": "Global",
+      "table": "Table"
+    },
+    "actions": {
+      "search": "Open global search",
+      "showShortcuts": "Show keyboard shortcuts",
+      "newItem": "Create new item"
+    }
   },
   "user": { "openMenu": "Open user menu" },
   "sidebar": {
@@ -77,12 +95,16 @@
   },
   "settings": {
     "general": "General",
-    "generalDescription": "Language, appearance, and date display for this application.",
+    "generalDescription": "Language, appearance, date, time, and duration display for this application.",
     "calculation": "Calculation",
     "calculationDescription": "Currency and energy costs used for print cost calculations.",
     "dateFormat": "Date format",
-    "dateFormatLocale": "Regional (for example, 09/10/2026)",
-    "dateFormatIso": "ISO (2026-09-10)",
+    "timeFormat": "Time format",
+    "durationFormat": "Duration format",
+    "durationFormatHuman": "Human readable (1 hour 30 minutes)",
+    "durationFormatCompact": "Compact (1h 30m)",
+    "durationFormatClock": "Clock (01:30:00)",
+    "durationFormatDecimal": "Decimal hours (1.5 h)",
     "currencyHelp": "The currency cannot be changed after the first cost-bearing record is created.",
     "saved": "Settings saved."
   },
@@ -99,7 +121,8 @@
     "alwaysUsed": "Always used",
     "alwaysUsedDescription": "Automatically preselect for new prints with compatible printers.",
     "material": "Material",
-    "color": "Color",
+    "colorName": "Color name",
+    "colorHex": "Color (hex code)",
     "pickColor": "Choose color",
     "netWeight": "Net weight (g)",
     "note": "Note",
@@ -142,12 +165,24 @@
     "duration": "Duration",
     "status": "Status",
     "draft": "Draft",
+    "printing": "Printing",
+    "printed": "Printed",
+    "shipped": "Shipped",
+    "done": "Done",
     "completed": "Completed",
     "allStatuses": "All statuses",
+    "workflow": "Workflow",
+    "payment": "Payment",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "markPaid": "Mark as paid",
+    "markUnpaid": "Mark as unpaid",
+    "updateStatus": "Update status",
+    "statusChangeConfirmation": "Leaving draft finalizes the cost snapshot and makes the print details immutable.",
     "saveDraft": "Save draft",
     "complete": "Complete",
     "completeConfirmation": "The print is recalculated and then completed as an immutable snapshot.",
-    "immutable": "This snapshot is immutable. You can duplicate it using current inventory.",
+    "immutable": "The print details are immutable after leaving draft. You can duplicate the print using current inventory.",
     "duplicate": "Duplicate",
     "snapshotSources": "Stored calculation sources",
     "formulaVersion": "Formula version"

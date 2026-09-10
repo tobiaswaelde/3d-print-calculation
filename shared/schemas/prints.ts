@@ -1,6 +1,10 @@
 import Decimal from 'decimal.js';
 import { z } from 'zod';
 
+export const printStatuses = ['DRAFT', 'PRINTING', 'PRINTED', 'SHIPPED', 'DONE'] as const;
+export const printStatusSchema = z.enum(printStatuses);
+export type PrintStatus = z.output<typeof printStatusSchema>;
+
 const positiveDecimal = z
   .union([z.string(), z.number().finite()])
   .transform((value) => String(value).trim())
@@ -55,13 +59,20 @@ export const printListQuerySchema = z.object({
   search: z.string().trim().max(200).default(''),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
-  status: z.enum(['DRAFT', 'COMPLETED']).optional(),
+  status: printStatusSchema.optional(),
   customerId: z.string().optional(),
   includeArchived: z.preprocess(
     (value) => (value === 'true' ? true : value === 'false' || value === undefined ? false : value),
     z.boolean(),
   ),
 });
+
+export const printWorkflowUpdateSchema = z
+  .object({
+    status: printStatusSchema.optional(),
+    paid: z.boolean().optional(),
+  })
+  .refine((value) => value.status !== undefined || value.paid !== undefined);
 
 export const dashboardPeriodSchema = z.enum(['30d', '90d', 'all']).default('30d');
 export type PrintDraftInput = z.output<typeof printDraftSchema>;

@@ -2,12 +2,62 @@
   <div class="space-y-5">
     <UAlert v-if="error" color="error" :description="error" />
     <UAlert
-      v-if="job?.status === 'COMPLETED'"
+      v-if="job && job.status !== 'DRAFT'"
       color="success"
       icon="i-tabler-lock"
-      :title="t('prints.completed')"
+      :title="t(`prints.${job.status.toLowerCase()}`)"
       :description="t('prints.immutable')"
     />
+
+    <UCard v-if="job">
+      <template #header>
+        <h2 class="font-semibold">{{ t('prints.workflow') }}</h2>
+      </template>
+      <div class="grid items-end gap-4 md:grid-cols-2">
+        <UFormField :label="t('prints.status')">
+          <div class="flex items-center gap-2">
+            <USelect
+              v-model="selectedStatus"
+              class="min-w-44 flex-1"
+              value-key="value"
+              :items="statusOptions"
+              :disabled="workflowSaving"
+            />
+            <CommonConfirmButton
+              v-if="job.status === 'DRAFT' && selectedStatus !== 'DRAFT'"
+              color="primary"
+              :label="t('prints.updateStatus')"
+              :confirmation="t('prints.statusChangeConfirmation')"
+              :disabled="workflowSaving"
+              @confirm="changeStatus"
+            />
+            <UButton
+              v-else
+              :label="t('prints.updateStatus')"
+              :loading="workflowSaving"
+              :disabled="selectedStatus === job.status"
+              @click="changeStatus"
+            />
+          </div>
+        </UFormField>
+        <UFormField :label="t('prints.payment')">
+          <div class="flex items-center gap-2">
+            <UBadge :color="job.paidAt ? 'success' : 'neutral'" variant="subtle">
+              {{ t(job.paidAt ? 'prints.paid' : 'prints.unpaid') }}
+            </UBadge>
+            <UButton
+              color="neutral"
+              variant="outline"
+              :icon="job.paidAt ? 'i-tabler-cash-off' : 'i-tabler-cash'"
+              :label="t(job.paidAt ? 'prints.markUnpaid' : 'prints.markPaid')"
+              :loading="paymentSaving"
+              @click="togglePaid"
+            />
+            <span v-if="job.paidAt" class="text-sm text-muted">{{ dateTime(job.paidAt) }}</span>
+          </div>
+        </UFormField>
+      </div>
+    </UCard>
 
     <UForm
       ref="editorForm"
@@ -17,7 +67,7 @@
       @submit="submitValidated"
       @error="resetSubmitIntent"
     >
-      <fieldset :disabled="job?.status === 'COMPLETED' || loading" class="space-y-5 disabled:opacity-75">
+      <fieldset :disabled="job?.status !== 'DRAFT' || loading" class="space-y-5 disabled:opacity-75">
         <UCard>
           <div class="grid gap-4 md:grid-cols-2">
             <UFormField name="name" :label="t('master.name')" required
@@ -57,7 +107,7 @@
           <template #header
             ><div class="flex items-center justify-between">
               <h2 class="font-semibold">{{ t('prints.hotends') }}</h2>
-              <UButton icon="i-tabler-plus" size="sm" :label="t('common.create')" @click="addHotend" /></div
+              <UButton icon="i-tabler-plus" size="sm" :label="t('common.add')" @click="addHotend" /></div
           ></template>
           <div class="space-y-3">
             <div
@@ -136,7 +186,7 @@
           <template #header
             ><div class="flex items-center justify-between">
               <h2 class="font-semibold">{{ t('nav.filaments') }}</h2>
-              <UButton icon="i-tabler-plus" size="sm" :label="t('common.create')" @click="addFilament" /></div
+              <UButton icon="i-tabler-plus" size="sm" :label="t('common.add')" @click="addFilament" /></div
           ></template>
           <div class="space-y-3">
             <div
@@ -145,12 +195,7 @@
               class="grid items-start gap-3 md:grid-cols-[1fr_12rem_auto]"
             >
               <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required
-                ><USelect
-                  v-model="filament.filamentId"
-                  class="w-full"
-                  icon="i-tabler-disc"
-                  value-key="value"
-                  :items="filamentOptions"
+                ><CommonFilamentSelect v-model="filament.filamentId" class="w-full" :items="filamentOptions"
               /></UFormField>
               <UFormField :name="`filaments.${index}.usedGrams`" :label="t('prints.usedGrams')" required
                 ><UInput
@@ -190,13 +235,13 @@
         <p v-else class="text-sm text-muted">{{ t('prints.previewHint') }}</p>
       </UCard>
 
-      <UCard v-if="job?.status === 'COMPLETED' && job.snapshot">
+      <UCard v-if="job && job.status !== 'DRAFT' && job.snapshot">
         <template #header>
           <div>
             <h2 class="font-semibold">{{ t('prints.snapshotSources') }}</h2>
             <p class="text-xs text-muted">
               {{ t('prints.formulaVersion') }} {{ job.snapshot.formulaVersion }} ·
-              {{ new Date(job.snapshot.calculatedAt).toLocaleString() }}
+              {{ dateTime(job.snapshot.calculatedAt) }}
             </p>
           </div>
         </template>
@@ -231,21 +276,14 @@
           @click="duplicate"
         />
         <UButton
-          v-if="job?.status !== 'COMPLETED'"
+          v-if="job?.status === 'DRAFT'"
           type="submit"
           color="neutral"
           variant="outline"
           icon="i-tabler-device-floppy"
           :loading="saving"
           :label="t('prints.saveDraft')"
-          @click="submitIntent = 'save'"
-        />
-        <CommonConfirmButton
-          v-if="job?.status === 'DRAFT'"
-          icon="i-tabler-check"
-          :label="t('prints.complete')"
-          :confirmation="t('prints.completeConfirmation')"
-          @confirm="triggerComplete"
+          @click="submitIntent = { type: 'save' }"
         />
       </div>
     </UForm>
@@ -254,16 +292,19 @@
 
 <script setup lang="ts">
 import type { PrintCalculationResult } from '#shared/domain/print-calculation';
-import { printDraftFormSchema } from '#shared/schemas/prints';
+import { printDraftFormSchema, printStatuses } from '#shared/schemas/prints';
+import type { PrintStatus } from '#shared/schemas/prints';
 import type { MasterDataListItem, PaginatedResponse } from '#shared/types/master-data';
 import type { PrintJobDto } from '#shared/types/prints';
 
 const props = defineProps<{ printId?: string }>();
 const { t } = useI18n();
-const { money } = useFormatting();
+const { money, dateTime } = useFormatting();
 const job = ref<PrintJobDto | null>(null);
 const loading = ref(true);
 const saving = ref(false);
+const workflowSaving = ref(false);
+const paymentSaving = ref(false);
 const previewPending = ref(false);
 const error = ref('');
 const costs = ref<PrintCalculationResult | null>(null);
@@ -274,7 +315,15 @@ const components = ref<MasterDataListItem[]>([]);
 const filaments = ref<MasterDataListItem[]>([]);
 let previewTimer: ReturnType<typeof setTimeout> | undefined;
 let hydrating = true;
-const submitIntent = ref<'save' | 'complete'>('save');
+const selectedStatus = ref<PrintStatus>('DRAFT');
+const submitIntent = ref<{ type: 'save' } | { type: 'status'; status: PrintStatus }>({ type: 'save' });
+const statusOptions = computed(() =>
+  printStatuses.map((value) => ({
+    label: t(`prints.${value.toLowerCase()}`),
+    value,
+    disabled: value === 'DRAFT' && job.value?.status !== 'DRAFT',
+  })),
+);
 
 const form = reactive({
   name: '',
@@ -305,7 +354,14 @@ const hotendOptions = computed(() =>
 const otherOptions = computed(() =>
   options(compatibleComponents.value.filter((item) => item.type === 'OTHER')),
 );
-const filamentOptions = computed(() => options(filaments.value));
+const filamentOptions = computed(() =>
+  filaments.value.map((item) => ({
+    label: item.name,
+    value: item.id,
+    colorName: String(item.colorName),
+    colorHex: String(item.colorHex),
+  })),
+);
 
 function payload() {
   return {
@@ -325,6 +381,7 @@ function payload() {
 
 function hydrate(value: PrintJobDto) {
   job.value = value;
+  selectedStatus.value = value.status;
   form.name = value.name;
   form.customerId = value.customerId;
   form.printerId = value.printerId;
@@ -424,18 +481,55 @@ async function persist() {
 
 async function submitValidated() {
   const intent = submitIntent.value;
-  submitIntent.value = 'save';
-  if (!(await persist()) || intent !== 'complete' || !job.value) return;
-  hydrate(await $fetch<PrintJobDto>(`/api/prints/${job.value.id}/complete`, { method: 'POST' }));
+  submitIntent.value = { type: 'save' };
+  if (!(await persist())) {
+    if (job.value) selectedStatus.value = job.value.status;
+    return;
+  }
+  if (intent.type !== 'status') return;
+  await updateWorkflow({ status: intent.status });
 }
 
 function resetSubmitIntent() {
-  submitIntent.value = 'save';
+  submitIntent.value = { type: 'save' };
+  if (job.value) selectedStatus.value = job.value.status;
 }
 
-async function triggerComplete() {
-  submitIntent.value = 'complete';
-  await editorForm.value?.submit();
+async function updateWorkflow(body: { status?: PrintStatus; paid?: boolean }) {
+  if (!job.value) return;
+  const value = await $fetch<PrintJobDto>(`/api/prints/${job.value.id}`, { method: 'PATCH', body });
+  job.value = value;
+  selectedStatus.value = value.status;
+}
+
+async function changeStatus() {
+  if (!job.value || selectedStatus.value === job.value.status) return;
+  workflowSaving.value = true;
+  try {
+    if (job.value.status === 'DRAFT') {
+      submitIntent.value = { type: 'status', status: selectedStatus.value };
+      await editorForm.value?.submit();
+    } else {
+      await updateWorkflow({ status: selectedStatus.value });
+    }
+  } catch (reason) {
+    selectedStatus.value = job.value.status;
+    error.value = reason instanceof Error ? reason.message : String(reason);
+  } finally {
+    workflowSaving.value = false;
+  }
+}
+
+async function togglePaid() {
+  if (!job.value) return;
+  paymentSaving.value = true;
+  try {
+    await updateWorkflow({ paid: !job.value.paidAt });
+  } catch (reason) {
+    error.value = reason instanceof Error ? reason.message : String(reason);
+  } finally {
+    paymentSaving.value = false;
+  }
 }
 
 async function duplicate() {
@@ -460,7 +554,7 @@ watch(
 watch(
   form,
   () => {
-    if (hydrating || job.value?.status === 'COMPLETED') return;
+    if (hydrating || job.value?.status !== 'DRAFT') return;
     clearTimeout(previewTimer);
     previewTimer = setTimeout(preview, 300);
   },

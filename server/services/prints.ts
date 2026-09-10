@@ -1,7 +1,7 @@
 import type { Prisma } from '../../prisma/generated/client/client';
 import { calculatePrintCost } from '#shared/domain/print-calculation';
 import type { PrintDraftInput } from '#shared/schemas/prints';
-import { printDraftSchema, printListQuerySchema } from '#shared/schemas/prints';
+import { printDraftSchema, printListQuerySchema, printWorkflowUpdateSchema } from '#shared/schemas/prints';
 import { canonicalDecimal } from '#shared/utils/decimal';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
@@ -32,6 +32,7 @@ function printDto(value: PrintWithSnapshot) {
     currency: value.currency,
     totalCost: canonicalDecimal(value.totalCost.toString()),
     completedAt: value.completedAt?.toISOString() ?? null,
+    paidAt: value.paidAt?.toISOString() ?? null,
     archivedAt: value.archivedAt?.toISOString() ?? null,
     createdAt: value.createdAt.toISOString(),
     updatedAt: value.updatedAt.toISOString(),
@@ -312,18 +313,44 @@ function intentFromPrint(value: PrintWithSnapshot): PrintDraftInput {
 }
 
 export async function completePrint(id: string) {
+  return updatePrintWorkflow(id, { status: 'DONE' });
+}
+
+export async function updatePrintWorkflow(id: string, input: unknown) {
+  const parsed = parseBody(printWorkflowUpdateSchema, input);
   return db.$transaction(async (transaction) => {
     const existing = await transaction.printJob.findUniqueOrThrow({ where: { id }, include: printInclude });
-    if (existing.status !== 'DRAFT') apiError(409, 'PRINT_IMMUTABLE', 'errors.printImmutable');
-    const input = intentFromPrint(existing);
-    const data = persistenceData(input, await resolveCalculation(transaction, input));
+    const status = parsed.status ?? existing.status;
+    if (status === 'DRAFT' && existing.status !== 'DRAFT')
+      apiError(409, 'PRINT_IMMUTABLE', 'errors.printImmutable');
+
+    const paymentData =
+      parsed.paid === undefined ? {} : { paidAt: parsed.paid ? (existing.paidAt ?? new Date()) : null };
+
+    if (existing.status !== 'DRAFT' || status === 'DRAFT') {
+      return printDto(
+        await transaction.printJob.update({
+          where: { id },
+          data: {
+            status,
+            ...(status === 'DONE' && !existing.completedAt ? { completedAt: new Date() } : {}),
+            ...paymentData,
+          },
+          include: printInclude,
+        }),
+      );
+    }
+
+    const draft = intentFromPrint(existing);
+    const data = persistenceData(draft, await resolveCalculation(transaction, draft));
     return printDto(
       await transaction.printJob.update({
         where: { id },
         data: {
           ...data.job,
-          status: 'COMPLETED',
-          completedAt: new Date(),
+          status,
+          ...(status === 'DONE' ? { completedAt: new Date() } : {}),
+          ...paymentData,
           componentUsages: { deleteMany: {}, create: data.components },
           filamentUsages: { deleteMany: {}, create: data.filaments },
           snapshot: { update: data.snapshot },

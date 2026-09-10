@@ -31,13 +31,36 @@
               :items="themeOptions"
             />
           </UFormField>
-          <UFormField name="dateFormat" :label="t('settings.dateFormat')" required class="sm:col-span-2">
+          <UFormField name="dateFormat" :label="t('settings.dateFormat')" required>
             <USelect
               v-model="form.dateFormat"
               class="w-full"
               icon="i-tabler-calendar"
               value-key="value"
               :items="dateFormatOptions"
+            />
+          </UFormField>
+          <UFormField name="timeFormat" :label="t('settings.timeFormat')" required>
+            <USelect
+              v-model="form.timeFormat"
+              class="w-full"
+              icon="i-tabler-clock"
+              value-key="value"
+              :items="timeFormatOptions"
+            />
+          </UFormField>
+          <UFormField
+            name="durationFormat"
+            :label="t('settings.durationFormat')"
+            required
+            class="sm:col-span-2"
+          >
+            <USelect
+              v-model="form.durationFormat"
+              class="w-full"
+              icon="i-tabler-hourglass"
+              value-key="value"
+              :items="durationFormatOptions"
             />
           </UFormField>
         </div>
@@ -92,11 +115,19 @@
 
 <script setup lang="ts">
 import { settingsSchema } from '#shared/schemas/master-data';
+import {
+  DATE_FORMATS,
+  TIME_FORMATS,
+  type DateFormat,
+  type DurationFormat,
+  type TimeFormat,
+} from '~/utils/display-formatting';
 
 const { t, setLocale } = useI18n();
 const colorMode = useColorMode();
 const { user, updateLocale } = useAuth();
-const { dateFormat, setDateFormat } = useFormatting();
+const { dateFormat, timeFormat, durationFormat, setDateFormat, setTimeFormat, setDurationFormat } =
+  useFormatting();
 const pending = ref(false);
 const message = ref('');
 const messageColor = ref<'success' | 'error'>('success');
@@ -105,7 +136,9 @@ const form = reactive({
   defaultLocale: 'de-DE' as 'de-DE' | 'en-US',
   electricityPricePerKwh: '0',
   theme: 'system' as 'light' | 'dark' | 'system',
-  dateFormat: 'locale' as 'locale' | 'iso',
+  dateFormat: 'DD.MM.YYYY' as DateFormat,
+  timeFormat: 'HH:mm' as TimeFormat,
+  durationFormat: 'human' as DurationFormat,
 });
 const localeOptions = computed(() => [
   { label: 'Deutsch', value: 'de-DE' },
@@ -114,9 +147,13 @@ const localeOptions = computed(() => [
 const themeOptions = computed(() =>
   (['light', 'dark', 'system'] as const).map((value) => ({ label: t(`common.${value}`), value })),
 );
-const dateFormatOptions = computed(() => [
-  { label: t('settings.dateFormatLocale'), value: 'locale' },
-  { label: t('settings.dateFormatIso'), value: 'iso' },
+const dateFormatOptions = DATE_FORMATS.map((value) => ({ label: value, value }));
+const timeFormatOptions = TIME_FORMATS.map((value) => ({ label: value, value }));
+const durationFormatOptions = computed<Array<{ label: string; value: DurationFormat }>>(() => [
+  { label: t('settings.durationFormatHuman'), value: 'human' },
+  { label: t('settings.durationFormatCompact'), value: 'compact' },
+  { label: t('settings.durationFormatClock'), value: 'clock' },
+  { label: t('settings.durationFormatDecimal'), value: 'decimal' },
 ]);
 
 onMounted(async () => {
@@ -125,6 +162,8 @@ onMounted(async () => {
   if (colorMode.preference === 'light' || colorMode.preference === 'dark') form.theme = colorMode.preference;
   else form.theme = 'system';
   form.dateFormat = dateFormat.value;
+  form.timeFormat = timeFormat.value;
+  form.durationFormat = durationFormat.value;
 });
 
 async function save() {
@@ -147,6 +186,8 @@ async function save() {
     await updateLocale(form.defaultLocale);
     colorMode.preference = form.theme;
     setDateFormat(form.dateFormat);
+    setTimeFormat(form.timeFormat);
+    setDurationFormat(form.durationFormat);
     messageColor.value = 'success';
     message.value = t('settings.saved');
   } catch (reason) {

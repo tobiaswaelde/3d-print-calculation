@@ -147,7 +147,8 @@ try {
           name: 'PLA',
           manufacturerId: filamentManufacturer.body.id,
           material: 'PLA',
-          color: 'Black',
+          colorName: 'Black',
+          colorHex: '#111111',
           purchasePrice: '29.99',
           netWeightGrams: '1000',
           note: '',
@@ -157,7 +158,9 @@ try {
     )
   ).body;
   check(
-    filament.name === 'Maker PLA - Black' && filament.manufacturer === 'Maker',
+    filament.name === 'Maker PLA - Black' &&
+      filament.manufacturer === 'Maker' &&
+      filament.colorHex === '#111111',
     `Filament must resolve its manufacturer relation: ${JSON.stringify(filament)}`,
   );
   await json(
@@ -189,8 +192,52 @@ try {
   check(preview.body.totalCost === '1.782175', 'Preview total must match the independent expected value.');
   const draft = await json('/api/prints', { method: 'POST', body: JSON.stringify(payload) }, cookie);
   check(draft.body.snapshot.totalCost === preview.body.totalCost, 'Draft snapshot must match the preview.');
+  const printing = await json(
+    `/api/prints/${draft.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ status: 'PRINTING' }) },
+    cookie,
+  );
+  check(
+    printing.body.status === 'PRINTING' && printing.body.completedAt === null,
+    'A draft must transition to printing without being done.',
+  );
+  const printed = await json(
+    `/api/prints/${draft.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ status: 'PRINTED' }) },
+    cookie,
+  );
+  check(printed.body.status === 'PRINTED', 'A printing job must transition to printed.');
+  const shipped = await json(
+    `/api/prints/${draft.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ status: 'SHIPPED' }) },
+    cookie,
+  );
+  check(shipped.body.status === 'SHIPPED', 'A printed job must transition to shipped.');
+  const shippedList = await json('/api/prints?status=SHIPPED', {}, cookie);
+  check(
+    shippedList.body.items?.some((item: { id: string }) => item.id === draft.body.id),
+    'Print lists must filter by every workflow status.',
+  );
   const completed = await json(`/api/prints/${draft.body.id}/complete`, { method: 'POST' }, cookie);
-  check(completed.body.status === 'COMPLETED', 'Draft must complete.');
+  check(completed.body.status === 'DONE' && completed.body.completedAt, 'A print must transition to done.');
+  const paid = await json(
+    `/api/prints/${draft.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ paid: true }) },
+    cookie,
+  );
+  check(typeof paid.body.paidAt === 'string', 'Marking a print as paid must store paidAt.');
+  const unpaid = await json(
+    `/api/prints/${draft.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ paid: false }) },
+    cookie,
+  );
+  check(unpaid.body.paidAt === null, 'Marking a print as unpaid must clear paidAt.');
+  const reopened = await json(
+    `/api/prints/${draft.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ status: 'DRAFT' }) },
+    cookie,
+  );
+  check(reopened.response.status === 409, 'A finalized print must not return to draft.');
   const immutable = await json(
     `/api/prints/${draft.body.id}`,
     { method: 'PATCH', body: JSON.stringify(payload) },

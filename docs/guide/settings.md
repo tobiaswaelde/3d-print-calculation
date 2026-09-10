@@ -1,6 +1,6 @@
 ---
 title: Settings
-description: Configure language, appearance, date formatting, currency, and electricity price.
+description: Configure language, appearance, date, time, duration formatting, currency, and electricity price.
 ---
 
 # Settings
@@ -14,8 +14,12 @@ The Settings page at `/settings` combines display preferences with instance-wide
 - **Language:** German or US English. Saving updates the instance default and the signed-in account's preference.
   The user menu provides the same account-level shortcut.
 - **Appearance:** Light, Dark, or System. This browser-local preference changes immediately after saving.
-- **Date format:** Regional uses the active language's convention; ISO uses `YYYY-MM-DD`. This preference is stored
-  in the browser and affects application timestamps.
+- **Date format:** choose `DD.MM.YYYY`, `MM/DD/YYYY`, `YYYY-MM-DD`, or a localized abbreviated month.
+- **Time format:** choose 24-hour time, 12-hour time with AM/PM, or 24-hour time including seconds.
+- **Duration format:** choose human-readable words, compact units, a digital clock, or decimal hours.
+
+These browser-local preferences are applied centrally with Day.js to timestamps and print durations throughout
+the application.
 
 ## Calculation
 

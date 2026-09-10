@@ -33,7 +33,7 @@
         <UButton icon="i-tabler-plus" label="New" @click="createOpen = true" />
       </CommonEmptyState>
       <template v-else>
-        <table class="w-full min-w-180 text-sm">
+        <table class="w-full min-w-200 text-sm">
           <thead class="sticky top-0 z-10 bg-elevated text-left text-xs text-muted uppercase">
             <tr>
               <th class="px-4 py-3 font-medium sm:first:pl-6">{{ t('master.name') }}</th>
@@ -42,6 +42,7 @@
               <th class="px-4 py-3 font-medium">{{ t('prints.duration') }}</th>
               <th class="px-4 py-3 font-medium">{{ t('prints.totalCost') }}</th>
               <th class="px-4 py-3 font-medium sm:pr-6">{{ t('prints.status') }}</th>
+              <th class="px-4 py-3 font-medium sm:pr-6">{{ t('prints.payment') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -61,9 +62,14 @@
               <td class="px-4 py-2.5">{{ duration(item.totalDurationSeconds) }}</td>
               <td class="px-4 py-2.5">{{ money(item.totalCost, item.currency) }}</td>
               <td class="px-4 py-2.5 sm:pr-6">
-                <UBadge :color="item.status === 'COMPLETED' ? 'success' : 'warning'" variant="subtle">{{
-                  t(`prints.${item.status.toLowerCase()}`)
-                }}</UBadge>
+                <UBadge :color="statusColors[item.status]" variant="subtle">
+                  {{ t(`prints.${item.status.toLowerCase()}`) }}
+                </UBadge>
+              </td>
+              <td class="px-4 py-2.5 sm:pr-6">
+                <UBadge :color="item.paidAt ? 'success' : 'neutral'" variant="subtle">
+                  {{ t(item.paidAt ? 'prints.paid' : 'prints.unpaid') }}
+                </UBadge>
               </td>
             </tr>
           </tbody>
@@ -77,16 +83,19 @@
 
 <script setup lang="ts">
 import type { PaginatedResponse } from '#shared/types/master-data';
+import { printStatuses } from '#shared/schemas/prints';
 import type { PrintJobDto } from '#shared/types/prints';
 
 const { t } = useI18n();
 const route = useRoute();
-const { money } = useFormatting();
+const { money, duration } = useFormatting();
 const items = ref<PrintJobDto[]>([]);
 const search = ref('');
 type StatusFilter = 'ALL' | PrintJobDto['status'];
 const status = ref<StatusFilter>(
-  route.query.status === 'DRAFT' || route.query.status === 'COMPLETED' ? route.query.status : 'ALL',
+  printStatuses.includes(route.query.status as PrintJobDto['status'])
+    ? (route.query.status as PrintJobDto['status'])
+    : 'ALL',
 );
 const includeArchived = ref(false);
 const createOpen = ref(route.query.create === 'true');
@@ -95,12 +104,15 @@ const error = ref('');
 let timer: ReturnType<typeof setTimeout> | undefined;
 const statusOptions = computed<Array<{ label: string; value: StatusFilter }>>(() => [
   { label: t('prints.allStatuses'), value: 'ALL' },
-  { label: t('prints.draft'), value: 'DRAFT' },
-  { label: t('prints.completed'), value: 'COMPLETED' },
+  ...printStatuses.map((value) => ({ label: t(`prints.${value.toLowerCase()}`), value })),
 ]);
-const duration = (seconds: number) =>
-  `${Math.floor(seconds / 3600)} h ${Math.floor((seconds % 3600) / 60)} min`;
-
+const statusColors = {
+  DRAFT: 'neutral',
+  PRINTING: 'info',
+  PRINTED: 'primary',
+  SHIPPED: 'warning',
+  DONE: 'success',
+} as const;
 async function refresh() {
   loading.value = true;
   try {

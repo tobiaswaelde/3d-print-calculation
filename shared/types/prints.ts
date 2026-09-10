@@ -1,4 +1,5 @@
 import type { PrintCalculationResult } from '../domain/print-calculation';
+import type { PrintStatus } from '../schemas/prints';
 
 export interface PrintJobDto {
   id: string;
@@ -7,13 +8,14 @@ export interface PrintJobDto {
   customerId: string | null;
   printer: { id: string; name: string };
   printerId: string;
-  status: 'DRAFT' | 'COMPLETED';
+  status: PrintStatus;
   notes: string | null;
   totalDurationSeconds: number;
   formulaVersion: string;
   currency: string;
   totalCost: string;
   completedAt: string | null;
+  paidAt: string | null;
   archivedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -60,6 +62,7 @@ export interface DashboardDto {
   unfinishedPrints: Array<{
     id: string;
     name: string;
+    status: PrintStatus;
     customer: { id: string; name: string } | null;
     printer: { id: string; name: string };
     totalDurationSeconds: number;

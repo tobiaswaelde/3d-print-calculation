@@ -33,8 +33,8 @@ whole seconds.
 | `GET/PATCH/DELETE /api/filaments/:id`     | Yes      | Read, replace/archive, or safely delete                               |
 | `POST /api/prints/calculate`              | Yes      | Preview a print-draft DTO without persistence                         |
 | `GET/POST /api/prints`                    | Yes      | Filtered list or create a draft                                       |
-| `GET/PATCH /api/prints/:id`               | Yes      | Read, update a draft, or set `{ archived }`                           |
-| `POST /api/prints/:id/complete`           | Yes      | Recalculate and complete immutably                                    |
+| `GET/PATCH /api/prints/:id`               | Yes      | Read or update draft data, workflow, payment, or `{ archived }`       |
+| `POST /api/prints/:id/complete`           | Yes      | Compatibility action that advances a print to `DONE`                  |
 | `POST /api/prints/:id/duplicate`          | Yes      | Create a current-price draft copy                                     |
 | `GET /api/dashboard?period=30d`           | Yes      | KPIs, cost series, categories, and drafts for `30d`, `90d`, or `all`  |
 | `GET /api/search?q=…`                     | Yes      | Grouped print and inventory results for a two-or-more-character query |
@@ -43,7 +43,7 @@ whole seconds.
 ## Lists and input models
 
 Inventory lists accept `search`, one-based `page`, `pageSize` from 1–100, and `includeArchived=true|false`. Print
-lists also accept `status=DRAFT|COMPLETED` and `customerId`. Responses contain `items`, `total`, `page`, and
+lists also accept `status=DRAFT|PRINTING|PRINTED|SHIPPED|DONE` and `customerId`. Responses contain `items`, `total`, `page`, and
 `pageSize`.
 
 Setup requires `displayName`, `email`, a password of at least 12 characters, supported `locale`, `currency`, and
@@ -51,12 +51,15 @@ Setup requires `displayName`, `email`, a password of at least 12 characters, sup
 `{ componentId, durationSeconds }` hotends, optional `otherComponentIds`, one or more
 `{ filamentId, usedGrams }`, and optional `notes`.
 
-Inventory PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Authoritative
+Inventory PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Print PATCH also
+accepts `{ status }` or `{ paid }`. Leaving `DRAFT` finalizes the cost snapshot, finalized prints cannot return to
+`DRAFT`, and `{ paid: true }` records a server-generated `paidAt` timestamp while `false` clears it. Authoritative
 schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/ezprint/tree/main/shared/schemas).
 
 Component and filament inputs reference shared manufacturers with `manufacturerId`. Component references are
 optional; filament references are required. Component inputs also accept `alwaysUsed`, which defaults to `false`.
-Responses expose both this flag and the resolved manufacturer name.
+Filament inputs require `material`, `colorName`, and a `colorHex` in `#RRGGBB` format; their `name` is derived from
+manufacturer, material, and color name. Responses expose the resolved manufacturer name and the color fields.
 
 ## Errors
 
