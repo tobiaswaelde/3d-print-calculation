@@ -48,6 +48,7 @@ model Customer {
   archivedAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
+  printJobs   PrintJob[]
 
   @@index([name])
   @@index([archivedAt])
@@ -64,6 +65,7 @@ model Printer {
   note                  String?
   archivedAt            DateTime?
   components            PrinterComponent[]
+  printJobs              PrintJob[]
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
 
@@ -82,6 +84,7 @@ model Component {
   note                  String?
   archivedAt            DateTime?
   printers              PrinterComponent[]
+  usages                PrintComponentUsage[]
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
 
@@ -112,9 +115,97 @@ model Filament {
   archivedAt     DateTime?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  usages         PrintFilamentUsage[]
 
   @@index([name])
   @@index([manufacturer])
   @@index([material])
   @@index([archivedAt])
+}
+
+model PrintJob {
+  id                   String                 @id @default(cuid())
+  name                 String
+  customerId           String?
+  customer             Customer?              @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  printerId            String
+  printer              Printer                @relation(fields: [printerId], references: [id], onDelete: Restrict)
+  status               String                 @default("DRAFT")
+  notes                String?
+  totalDurationSeconds Int
+  formulaVersion       String
+  currency             String
+  totalCost            Decimal
+  completedAt          DateTime?
+  archivedAt           DateTime?
+  componentUsages      PrintComponentUsage[]
+  filamentUsages       PrintFilamentUsage[]
+  snapshot             PrintCostSnapshot?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([name])
+  @@index([status, archivedAt])
+  @@index([customerId])
+  @@index([printerId])
+  @@index([completedAt])
+}
+
+model PrintComponentUsage {
+  id                       String    @id @default(cuid())
+  printJobId               String
+  printJob                 PrintJob  @relation(fields: [printJobId], references: [id], onDelete: Cascade)
+  componentId              String
+  component                Component @relation(fields: [componentId], references: [id], onDelete: Restrict)
+  componentType            String
+  componentName            String
+  purchasePrice            Decimal
+  expectedLifetimeHours    Decimal
+  hourlyRate               Decimal
+  appliedDurationSeconds   Int
+  lineCost                 Decimal
+  createdAt                DateTime  @default(now())
+
+  @@index([printJobId])
+  @@index([componentId])
+}
+
+model PrintFilamentUsage {
+  id                    String   @id @default(cuid())
+  printJobId            String
+  printJob              PrintJob @relation(fields: [printJobId], references: [id], onDelete: Cascade)
+  filamentId            String
+  filament              Filament @relation(fields: [filamentId], references: [id], onDelete: Restrict)
+  filamentName          String
+  manufacturer          String
+  material              String
+  purchasePrice         Decimal
+  netWeightGrams        Decimal
+  costPerGram           Decimal
+  usedGrams             Decimal
+  lineCost              Decimal
+  createdAt             DateTime @default(now())
+
+  @@index([printJobId])
+  @@index([filamentId])
+}
+
+model PrintCostSnapshot {
+  id                        String   @id @default(cuid())
+  printJobId                String   @unique
+  printJob                  PrintJob @relation(fields: [printJobId], references: [id], onDelete: Cascade)
+  electricityPricePerKwh    Decimal
+  printerName               String
+  printerPurchasePrice      Decimal
+  printerExpectedLifetimeHours Decimal
+  printerHourlyRate         Decimal
+  printerPowerWatts         Int
+  printerCost               Decimal
+  componentCost             Decimal
+  filamentCost              Decimal
+  electricityCost           Decimal
+  totalCost                 Decimal
+  currency                  String
+  formulaVersion            String
+  calculatedAt              DateTime @default(now())
 }

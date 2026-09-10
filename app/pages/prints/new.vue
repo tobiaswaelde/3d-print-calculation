@@ -1,6 +1,6 @@
 <template>
-  <LayoutPagePanel panel-id="dashboard" :title="t('pages.dashboard')">
-    <ModulesDashboardOverview />
+  <LayoutPagePanel panel-id="new-print" :title="t('prints.new')">
+    <ModulesPrintsPrintEditor />
   </LayoutPagePanel>
 </template>
 

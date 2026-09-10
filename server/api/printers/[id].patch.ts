@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   await requireUser(event);
   const body = await readBody(event);
-  return 'archived' in body
+  return body && typeof body === 'object' && 'archived' in body
     ? archiveResource('printers', getRouterParam(event, 'id')!, body)
     : updateResource('printers', getRouterParam(event, 'id')!, body);
 });

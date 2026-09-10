@@ -13,6 +13,7 @@ import { canonicalDecimal } from '#shared/utils/decimal';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
 import { parseBody } from '../utils/validation';
+import { assertUnreferenced } from './prints';
 
 type Resource = 'customers' | 'printers' | 'components' | 'filaments';
 
@@ -239,6 +240,7 @@ export async function archiveResource(resource: Resource, id: string, input: unk
 }
 
 export async function deleteResource(resource: Resource, id: string) {
+  await assertUnreferenced(resource, id);
   if (resource === 'customers') await db.customer.delete({ where: { id } });
   else if (resource === 'printers') await db.printer.delete({ where: { id } });
   else if (resource === 'components') await db.component.delete({ where: { id } });
@@ -264,7 +266,8 @@ export async function updateSettings(input: unknown) {
       const count =
         (await transaction.printer.count()) +
         (await transaction.component.count()) +
-        (await transaction.filament.count());
+        (await transaction.filament.count()) +
+        (await transaction.printJob.count());
       if (count > 0) apiError(409, 'CURRENCY_LOCKED', 'errors.currencyLocked');
     }
     return transaction.appSettings.update({ where: { id: 1 }, data });

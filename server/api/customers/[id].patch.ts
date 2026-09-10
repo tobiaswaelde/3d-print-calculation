@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   await requireUser(event);
   const body = await readBody(event);
-  return 'archived' in body
+  return body && typeof body === 'object' && 'archived' in body
     ? archiveResource('customers', getRouterParam(event, 'id')!, body)
     : updateResource('customers', getRouterParam(event, 'id')!, body);
 });

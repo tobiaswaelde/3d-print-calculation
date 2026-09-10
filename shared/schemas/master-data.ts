@@ -70,9 +70,13 @@ export const filamentSchema = z.object({
 });
 
 export const archiveSchema = z.object({ archived: z.boolean() });
+const queryBoolean = z.preprocess(
+  (value) => (value === 'true' ? true : value === 'false' || value === undefined ? false : value),
+  z.boolean(),
+);
 export const listQuerySchema = z.object({
   search: z.string().trim().max(200).default(''),
   page: z.coerce.number().int().positive().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(25),
-  includeArchived: z.coerce.boolean().default(false),
+  includeArchived: queryBoolean,
 });
