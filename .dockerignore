@@ -1,0 +1,13 @@
+.git
+.github
+.nuxt
+.output
+.data
+node_modules
+coverage
+playwright-report
+test-results
+docs/.vitepress/cache
+docs/.vitepress/dist
+*.db
+.env

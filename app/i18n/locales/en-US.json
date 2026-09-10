@@ -1,0 +1,46 @@
+{
+  "app": { "name": "Print costs" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "prints": "Prints",
+    "customers": "Customers",
+    "printers": "Printers",
+    "components": "Components",
+    "filaments": "Filaments",
+    "settings": "Settings"
+  },
+  "auth": {
+    "setup": "First-run setup",
+    "setupDescription": "Create the local account and calculation defaults.",
+    "login": "Sign in",
+    "logout": "Sign out",
+    "email": "Email",
+    "password": "Password",
+    "displayName": "Display name",
+    "currency": "Currency",
+    "electricityPrice": "Electricity price per kWh",
+    "invalid": "Email or password is invalid."
+  },
+  "common": {
+    "create": "Create",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "archive": "Archive",
+    "restore": "Restore",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading…",
+    "empty": "No entries yet",
+    "confirm": "Confirm",
+    "language": "Language",
+    "theme": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "pages": {
+    "dashboard": "Overview",
+    "placeholder": "This area is prepared for the next milestone."
+  }
+}

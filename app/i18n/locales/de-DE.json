@@ -1,0 +1,46 @@
+{
+  "app": { "name": "Druckkosten" },
+  "nav": {
+    "dashboard": "Dashboard",
+    "prints": "Drucke",
+    "customers": "Kunden",
+    "printers": "Drucker",
+    "components": "Komponenten",
+    "filaments": "Filamente",
+    "settings": "Einstellungen"
+  },
+  "auth": {
+    "setup": "Ersteinrichtung",
+    "setupDescription": "Lege das lokale Konto und die Berechnungsgrundlagen an.",
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "displayName": "Anzeigename",
+    "currency": "Währung",
+    "electricityPrice": "Strompreis pro kWh",
+    "invalid": "E-Mail oder Passwort ist ungültig."
+  },
+  "common": {
+    "create": "Erstellen",
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "archive": "Archivieren",
+    "restore": "Wiederherstellen",
+    "edit": "Bearbeiten",
+    "search": "Suchen",
+    "loading": "Wird geladen …",
+    "empty": "Noch keine Einträge",
+    "confirm": "Bestätigen",
+    "language": "Sprache",
+    "theme": "Darstellung",
+    "light": "Hell",
+    "dark": "Dunkel",
+    "system": "System"
+  },
+  "pages": {
+    "dashboard": "Übersicht",
+    "placeholder": "Dieser Bereich wird im nächsten Meilenstein eingerichtet."
+  }
+}

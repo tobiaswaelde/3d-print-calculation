@@ -1,0 +1,60 @@
+{
+  "name": "3d-print-calculation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.3.4",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare && prisma generate",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "nuxt typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "db:generate": "prisma generate",
+    "db:migrate": "tsx scripts/ensure-database.ts && prisma migrate dev",
+    "db:deploy": "tsx scripts/ensure-database.ts && prisma migrate deploy",
+    "db:reset-password": "tsx scripts/reset-password.ts",
+    "changeset": "changeset",
+    "version": "changeset version && pnpm install --lockfile-only",
+    "release": "changeset publish"
+  },
+  "dependencies": {
+    "@node-rs/argon2": "2.2.1",
+    "@nuxt/ui": "4.11.1",
+    "@nuxtjs/i18n": "10.6.0",
+    "@pinia/nuxt": "1.0.2",
+    "@prisma/adapter-better-sqlite3": "7.10.0",
+    "@prisma/client": "7.10.0",
+    "decimal.js": "10.6.0",
+    "dotenv": "17.4.2",
+    "nuxt": "4.5.2",
+    "pinia": "3.0.3",
+    "zod": "4.6.1"
+  },
+  "devDependencies": {
+    "@changesets/changelog-github": "0.5.2",
+    "@changesets/cli": "2.29.7",
+    "@nuxt/eslint": "1.17.0",
+    "@nuxt/test-utils": "4.3.2",
+    "@playwright/test": "1.63.0",
+    "@types/node": "24.10.1",
+    "@vitest/coverage-v8": "5.0.0",
+    "eslint": "10.10.0",
+    "prettier": "3.6.2",
+    "prisma": "7.10.0",
+    "tsx": "4.20.6",
+    "typescript": "6.0.3",
+    "vitest": "5.0.0",
+    "vue-tsc": "3.1.0"
+  }
+}

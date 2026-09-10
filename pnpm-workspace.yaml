@@ -1,0 +1,24 @@
+minimumReleaseAgeExclude:
+  - '@node-rs/argon2-android-arm-eabi@2.2.1'
+  - '@node-rs/argon2-android-arm64@2.2.1'
+  - '@node-rs/argon2-darwin-arm64@2.2.1'
+  - '@node-rs/argon2-darwin-x64@2.2.1'
+  - '@node-rs/argon2-freebsd-x64@2.2.1'
+  - '@node-rs/argon2-linux-arm-gnueabihf@2.2.1'
+  - '@node-rs/argon2-linux-arm64-gnu@2.2.1'
+  - '@node-rs/argon2-linux-arm64-musl@2.2.1'
+  - '@node-rs/argon2-linux-x64-gnu@2.2.1'
+  - '@node-rs/argon2-linux-x64-musl@2.2.1'
+  - '@node-rs/argon2-win32-arm64-msvc@2.2.1'
+  - '@node-rs/argon2-win32-ia32-msvc@2.2.1'
+  - '@node-rs/argon2-win32-x64-msvc@2.2.1'
+  - '@node-rs/argon2@2.2.1'
+  - zod@4.6.1
+
+allowBuilds:
+  '@prisma/engines': true
+  better-sqlite3: true
+  esbuild: true
+  prisma: true
+  unrs-resolver: true
+  vue-demi: true
