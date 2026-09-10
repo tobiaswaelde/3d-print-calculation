@@ -1,17 +1,17 @@
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-wrap items-center gap-2">
-      <UInput
-        v-model="search"
-        class="min-w-56 flex-1"
-        icon="i-tabler-search"
-        :placeholder="t('common.search')"
-      />
-      <UCheckbox v-model="includeArchived" :label="t('master.includeArchived')" />
-      <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
-    </div>
+  <LayoutPagePanel :panel-id="resource" :title="title" table>
+    <template #toolbar>
+      <CommonTableToolbar v-model:search="search" :title="title">
+        <template #filters>
+          <UCheckbox v-model="includeArchived" :label="t('master.includeArchived')" />
+        </template>
+        <template #create>
+          <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
+        </template>
+      </CommonTableToolbar>
+    </template>
 
-    <UAlert v-if="error" color="error" :description="error" />
+    <UAlert v-if="error" class="m-4 shrink-0 sm:m-6" color="error" :description="error" />
 
     <UModal
       v-model:open="editing"
@@ -180,33 +180,37 @@
       </template>
     </UModal>
 
-    <div v-if="loading" class="flex min-h-40 items-center justify-center">
-      <UIcon name="i-tabler-loader-2" class="size-8 animate-spin" />
-    </div>
-    <CommonEmptyState v-else-if="!items.length" :title="t('common.empty')">
-      <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
-    </CommonEmptyState>
-    <div v-else class="overflow-x-auto rounded-lg border border-default">
-      <table class="w-full min-w-180 text-sm">
-        <thead class="bg-elevated text-left">
+    <div data-table-region class="min-h-0 flex-1 overflow-auto">
+      <div v-if="loading" class="flex min-h-full items-center justify-center">
+        <UIcon name="i-tabler-loader-2" class="size-8 animate-spin" />
+      </div>
+      <CommonEmptyState
+        v-else-if="!items.length"
+        class="min-h-full rounded-none border-0"
+        :title="t('common.empty')"
+      >
+        <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
+      </CommonEmptyState>
+      <table v-else class="w-full min-w-180 text-sm">
+        <thead class="sticky top-0 z-10 bg-elevated text-left text-xs text-muted uppercase">
           <tr>
-            <th class="p-3">{{ t('master.name') }}</th>
-            <th class="p-3">{{ t('master.details') }}</th>
-            <th class="p-3">{{ t('master.rate') }}</th>
-            <th class="p-3 text-right">{{ t('master.actions') }}</th>
+            <th class="px-4 py-3 font-medium sm:first:pl-6">{{ t('master.name') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('master.details') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('master.rate') }}</th>
+            <th class="w-1 px-4 py-3 text-right font-medium sm:pr-6">{{ t('master.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="item in items"
             :key="item.id"
-            class="border-t border-default"
+            class="border-t border-default transition-colors hover:bg-elevated/50"
             :class="item.archivedAt && 'opacity-60'"
           >
-            <td class="p-3 font-medium">{{ item.name }}</td>
-            <td class="p-3 text-muted">{{ details(item) }}</td>
-            <td class="p-3">{{ rate(item) }}</td>
-            <td class="p-3">
+            <td class="px-4 py-2.5 font-medium sm:first:pl-6">{{ item.name }}</td>
+            <td class="px-4 py-2.5 text-muted">{{ details(item) }}</td>
+            <td class="px-4 py-2.5">{{ rate(item) }}</td>
+            <td class="px-4 py-2.5 sm:pr-6">
               <div class="flex justify-end gap-1">
                 <UButton
                   color="neutral"
@@ -237,7 +241,7 @@
         </tbody>
       </table>
     </div>
-  </div>
+  </LayoutPagePanel>
 </template>
 
 <script setup lang="ts">

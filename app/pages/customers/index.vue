@@ -1,7 +1,5 @@
 <template>
-  <LayoutPagePanel panel-id="customers" :title="t('nav.customers')">
-    <ModulesMasterDataResourceManager resource="customers" :title="t('nav.customers')" />
-  </LayoutPagePanel>
+  <ModulesMasterDataResourceManager resource="customers" :title="t('nav.customers')" />
 </template>
 <script setup lang="ts">
 const { t } = useI18n();

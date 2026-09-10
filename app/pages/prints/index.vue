@@ -1,50 +1,58 @@
 <template>
-  <LayoutPagePanel panel-id="prints" :title="t('nav.prints')">
-    <template #actions><UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" /></template>
-    <div class="space-y-4">
-      <div class="flex flex-wrap gap-2">
-        <UInput
-          v-model="search"
-          class="min-w-56 flex-1"
-          icon="i-tabler-search"
-          :placeholder="t('common.search')"
-        />
-        <USelect v-model="status" class="w-44" value-key="value" :items="statusOptions" />
-        <UCheckbox v-model="includeArchived" :label="t('master.includeArchived')" />
+  <LayoutPagePanel panel-id="prints" :title="t('nav.prints')" table>
+    <template #toolbar>
+      <CommonTableToolbar v-model:search="search" :title="t('nav.prints')">
+        <template #filters>
+          <USelect v-model="status" class="w-44" value-key="value" :items="statusOptions" />
+          <UCheckbox v-model="includeArchived" :label="t('master.includeArchived')" />
+        </template>
+        <template #create>
+          <UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" />
+        </template>
+      </CommonTableToolbar>
+    </template>
+
+    <UAlert v-if="error" class="m-4 shrink-0 sm:m-6" color="error" :description="error" />
+    <div data-table-region class="min-h-0 flex-1 overflow-auto">
+      <div v-if="loading" class="flex min-h-full items-center justify-center">
+        <UIcon name="i-tabler-loader-2" class="size-8 animate-spin" />
       </div>
-      <UAlert v-if="error" color="error" :description="error" />
-      <CommonEmptyState v-if="!loading && !items.length" :title="t('common.empty')"
-        ><UButton to="/prints/new" :label="t('prints.new')"
-      /></CommonEmptyState>
-      <div v-else class="overflow-x-auto rounded-lg border border-default">
+      <CommonEmptyState
+        v-else-if="!items.length"
+        class="min-h-full rounded-none border-0"
+        :title="t('common.empty')"
+      >
+        <UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" />
+      </CommonEmptyState>
+      <template v-else>
         <table class="w-full min-w-180 text-sm">
-          <thead class="bg-elevated text-left">
+          <thead class="sticky top-0 z-10 bg-elevated text-left text-xs text-muted uppercase">
             <tr>
-              <th class="p-3">{{ t('master.name') }}</th>
-              <th class="p-3">{{ t('nav.customers') }}</th>
-              <th class="p-3">{{ t('nav.printers') }}</th>
-              <th class="p-3">{{ t('prints.duration') }}</th>
-              <th class="p-3">{{ t('prints.totalCost') }}</th>
-              <th class="p-3">{{ t('prints.status') }}</th>
+              <th class="px-4 py-3 font-medium sm:first:pl-6">{{ t('master.name') }}</th>
+              <th class="px-4 py-3 font-medium">{{ t('nav.customers') }}</th>
+              <th class="px-4 py-3 font-medium">{{ t('nav.printers') }}</th>
+              <th class="px-4 py-3 font-medium">{{ t('prints.duration') }}</th>
+              <th class="px-4 py-3 font-medium">{{ t('prints.totalCost') }}</th>
+              <th class="px-4 py-3 font-medium sm:pr-6">{{ t('prints.status') }}</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="item in items"
               :key="item.id"
-              class="border-t border-default hover:bg-elevated/50"
+              class="border-t border-default transition-colors hover:bg-elevated/50"
               :class="item.archivedAt && 'opacity-60'"
             >
-              <td class="p-3">
+              <td class="px-4 py-2.5 sm:first:pl-6">
                 <NuxtLink :to="`/prints/${item.id}`" class="font-medium text-primary hover:underline">{{
                   item.name
                 }}</NuxtLink>
               </td>
-              <td class="p-3">{{ item.customer?.name ?? '—' }}</td>
-              <td class="p-3">{{ item.printer.name }}</td>
-              <td class="p-3">{{ duration(item.totalDurationSeconds) }}</td>
-              <td class="p-3">{{ money(item.totalCost, item.currency) }}</td>
-              <td class="p-3">
+              <td class="px-4 py-2.5">{{ item.customer?.name ?? '—' }}</td>
+              <td class="px-4 py-2.5">{{ item.printer.name }}</td>
+              <td class="px-4 py-2.5">{{ duration(item.totalDurationSeconds) }}</td>
+              <td class="px-4 py-2.5">{{ money(item.totalCost, item.currency) }}</td>
+              <td class="px-4 py-2.5 sm:pr-6">
                 <UBadge :color="item.status === 'COMPLETED' ? 'success' : 'warning'" variant="subtle">{{
                   t(`prints.${item.status.toLowerCase()}`)
                 }}</UBadge>
@@ -52,7 +60,7 @@
             </tr>
           </tbody>
         </table>
-      </div>
+      </template>
     </div>
   </LayoutPagePanel>
 </template>

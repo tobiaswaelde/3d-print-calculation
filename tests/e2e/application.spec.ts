@@ -25,7 +25,14 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   ).toEqual([]);
 
   await page.getByRole('link', { name: 'Kunden' }).click();
-  await page.getByRole('button', { name: 'Erstellen' }).first().click();
+  const tableToolbar = page.locator('[data-table-toolbar]');
+  const tableRegion = page.locator('[data-table-region]');
+  await expect(tableToolbar).toBeVisible();
+  await expect(tableToolbar.getByRole('link', { name: 'Dashboard' })).toBeVisible();
+  await expect(tableToolbar.getByText('Kunden')).toBeVisible();
+  await expect(tableToolbar.getByRole('searchbox')).toBeVisible();
+  await expect(tableRegion).toBeVisible();
+  await tableToolbar.getByRole('button', { name: 'Erstellen' }).click();
   const resourceDialog = page.getByRole('dialog');
   await expect(resourceDialog).toBeVisible();
   await expect(resourceDialog.getByLabel('Name')).toBeFocused();
@@ -76,9 +83,20 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
     viewportWidth: innerWidth,
     documentWidth: document.documentElement.scrollWidth,
     bodyOverflow: getComputedStyle(document.body).overflow,
+    toolbarBottom: document.querySelector<HTMLElement>('[data-table-toolbar]')?.getBoundingClientRect()
+      .bottom,
+    tableTop: document.querySelector<HTMLElement>('[data-table-region]')?.getBoundingClientRect().top,
+    tableOverflowX: getComputedStyle(document.querySelector<HTMLElement>('[data-table-region]')!).overflowX,
+    tableOverflowY: getComputedStyle(document.querySelector<HTMLElement>('[data-table-region]')!).overflowY,
+    tableScrollWidth: document.querySelector<HTMLElement>('[data-table-region]')?.scrollWidth,
+    tableClientWidth: document.querySelector<HTMLElement>('[data-table-region]')?.clientWidth,
   }));
   expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewportWidth);
   expect(geometry.bodyOverflow).toBe('hidden');
+  expect(geometry.toolbarBottom).toBeLessThanOrEqual(geometry.tableTop!);
+  expect(geometry.tableOverflowX).toBe('auto');
+  expect(geometry.tableOverflowY).toBe('auto');
+  expect(geometry.tableScrollWidth!).toBeGreaterThan(geometry.tableClientWidth!);
   await page.keyboard.press('Tab');
   await expect(page.locator(':focus')).toBeVisible();
 });
