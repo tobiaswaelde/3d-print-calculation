@@ -65,7 +65,7 @@
             <div
               v-for="(hotend, index) in form.hotends"
               :key="index"
-              class="grid items-end gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_8rem_8rem_auto]"
+              class="grid items-start gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_8rem_8rem_auto]"
             >
               <UFormField :name="`hotends.${index}.componentId`" :label="t('master.hotend')" required>
                 <USelect
@@ -102,6 +102,7 @@
                 </UInput>
               </UFormField>
               <UButton
+                class="md:mt-6"
                 color="error"
                 variant="ghost"
                 icon="i-tabler-trash"
@@ -134,7 +135,7 @@
               <div
                 v-for="(filament, index) in form.filaments"
                 :key="index"
-                class="grid items-end gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_12rem_auto]"
+                class="grid items-start gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_12rem_auto]"
               >
                 <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required>
                   <USelect
@@ -158,6 +159,7 @@
                   </UInput>
                 </UFormField>
                 <UButton
+                  class="md:mt-6"
                   color="error"
                   variant="ghost"
                   icon="i-tabler-trash"
