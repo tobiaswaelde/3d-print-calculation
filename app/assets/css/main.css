@@ -1,12 +1,19 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@500;600;700&display=swap');
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+@theme {
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'JetBrains Mono', ui-monospace, monospace;
+}
+
 :root {
-  --ui-primary: var(--color-cyan-700);
+  --ui-primary: var(--color-blue-700);
 }
 
 .dark {
-  --ui-primary: var(--color-cyan-400);
+  --ui-primary: var(--color-blue-400);
 }
 
 html,
@@ -19,4 +26,11 @@ body,
 
 body {
   margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.025em;
 }

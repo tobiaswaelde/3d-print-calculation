@@ -2,11 +2,9 @@
   <UDashboardPanel :id="panelId" class="min-h-0">
     <template #header>
       <UDashboardNavbar :title="title">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
         <template #right>
           <slot name="actions" />
+          <LayoutAppUserMenu />
         </template>
       </UDashboardNavbar>
     </template>

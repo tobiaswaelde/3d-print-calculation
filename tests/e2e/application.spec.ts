@@ -23,14 +23,16 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('cell', { name: 'Acme' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Sprache' }).click();
-  await page.getByRole('button', { name: 'English' }).click();
+  await page.getByRole('button', { name: 'Benutzermenü öffnen' }).click();
+  await page.getByRole('menuitem', { name: 'Sprache' }).hover();
+  await page.getByRole('menuitem', { name: 'English' }).click();
   await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
 
-  await page.getByRole('button', { name: 'Appearance' }).click();
-  await page.getByRole('button', { name: 'Dark' }).click();
+  await page.getByRole('button', { name: 'Open user menu' }).click();
+  await page.getByRole('menuitem', { name: 'Appearance' }).hover();
+  await page.getByRole('menuitem', { name: 'Dark' }).click();
   await expect(page.locator('html')).toHaveClass(/dark/);
 
   await page.setViewportSize({ width: 390, height: 844 });

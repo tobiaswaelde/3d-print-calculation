@@ -7,7 +7,12 @@
     "printers": "Printers",
     "components": "Components",
     "filaments": "Filaments",
-    "settings": "Settings"
+    "settings": "Settings",
+    "sections": {
+      "workspace": "Workspace",
+      "masterData": "Master data",
+      "system": "System"
+    }
   },
   "auth": {
     "setup": "First-run setup",
@@ -38,6 +43,12 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "user": { "openMenu": "Open user menu" },
+  "sidebar": {
+    "github": "Open project on GitHub",
+    "collapse": "Collapse navigation",
+    "expand": "Expand navigation"
   },
   "pages": {
     "dashboard": "Overview",
