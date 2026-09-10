@@ -13,6 +13,7 @@ The first release does not include quotes, sales prices, margins, tax, invoices,
 ### Application stack
 
 - Nuxt 4 with TypeScript and Nuxt UI.
+- Apache ECharts, integrated through a Vue wrapper and client-only chart components, for responsive dashboard statistics.
 - Nuxt Nitro server routes provide the application API; there is no separate backend service.
 - Prisma ORM 7 with the SQLite connector and driver adapter. Prisma 7 remains pinned while the selected SQLite integration is implemented and tested.
 - pnpm with pinned Node.js and pnpm versions for reproducible local and CI builds.
@@ -64,6 +65,17 @@ Vue single-file components follow `<template>`, typed `<script setup lang="ts">`
 - Support `de-DE` and `en-US`; default to `de-DE`.
 - Persist the selected language for the user and color mode in the browser.
 - Follow the visual composition and component organization of `/mnt/projects/tt-webdev/crm/apps/tenant-web/` without copying CRM-specific behavior.
+
+### Dashboard overview
+
+- Use the dashboard landing page as an operational overview instead of an empty welcome screen.
+- Show KPI cards for active drafts, completed prints, total print duration, and total calculated cost. Completed-print KPIs use completed, non-archived jobs and clearly display the selected reporting period.
+- Render statistics with Apache ECharts: a time series for completed-print cost over time and a cost-category breakdown for printer, components, filament, and electricity.
+- Provide reporting-period controls for the last 30 days, last 90 days, and all time. The same period applies to completed-print KPIs and charts; the active-draft count and draft list remain unfiltered.
+- Show all non-archived `DRAFT` print jobs in a dedicated "unfinished prints" section, ordered by most recently updated first.
+- Each unfinished-print row shows its name, optional customer, printer, last update, total duration, and latest calculated total cost, and links directly to the print editor.
+- Include a clear empty state when no unfinished prints exist and a primary action for creating a print.
+- Charts must resize with their dashboard panel, support light and dark themes, use localized labels and tooltips, and expose the underlying values in an accessible text summary.
 
 ### Resource screens
 
@@ -160,6 +172,7 @@ The API provides `POST /api/prints/calculate` for previews. Print create/update/
 - `/api/prints/calculate` for validated, non-persisting previews.
 - `/api/prints/:id/complete` to atomically recalculate, snapshot, and lock a draft.
 - `/api/prints/:id/duplicate` to create a new draft using current master-data prices.
+- `/api/dashboard` for the reporting-period KPI summary, completed-print chart series, cost-category totals, and the unfiltered list of non-archived draft prints.
 - `/api/health` for unauthenticated container health checks without exposing business data.
 
 List endpoints support bounded pagination and text search. Responses use typed success DTOs and a consistent error payload containing a machine-readable code, localized-message key, optional field errors, and request ID.
@@ -223,6 +236,9 @@ Run on pull requests and pushes to `main`:
 - Duplicate the completed job and verify that current costs are used.
 - Verify German/English switching, theme persistence, sidebar links, keyboard operation, and narrow/mobile dashboard geometry.
 - Confirm fixed navigation/toolbars and content-only scrolling.
+- Verify that dashboard KPIs and ECharts series match completed, non-archived print snapshots for each reporting period.
+- Verify that every non-archived draft appears in the unfinished-prints section, archived or completed jobs do not appear there, and selecting a row opens its editor.
+- Verify responsive chart resizing, localized tooltips, light/dark chart colors, accessible chart summaries, and the unfinished-prints empty state.
 
 ### Container acceptance tests
 
