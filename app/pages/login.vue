@@ -24,7 +24,7 @@
 import { loginSchema } from '#shared/schemas/auth';
 
 definePageMeta({ layout: 'auth' });
-const { t, locale } = useI18n();
+const { t, setLocale } = useI18n();
 const route = useRoute();
 const { user } = useAuth();
 const form = reactive({ email: '', password: '' });
@@ -40,7 +40,7 @@ async function submit() {
       body: form,
     });
     user.value = response.user;
-    if (response.user?.locale) locale.value = response.user.locale;
+    if (response.user?.locale) await setLocale(response.user.locale);
     await navigateTo(typeof route.query.redirect === 'string' ? route.query.redirect : '/');
   } catch {
     error.value = true;
