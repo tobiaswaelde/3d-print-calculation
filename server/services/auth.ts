@@ -3,7 +3,9 @@ import { setupSchema, loginSchema } from '#shared/schemas/auth';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
 
-export async function setupApplication(input: unknown) {
+let setupQueue = Promise.resolve();
+
+async function setupApplicationLocked(input: unknown) {
   const parsed = setupSchema.safeParse(input);
   if (!parsed.success)
     apiError(422, 'VALIDATION_ERROR', 'errors.validation', parsed.error.flatten().fieldErrors);
@@ -30,6 +32,15 @@ export async function setupApplication(input: unknown) {
     if (await db.user.count()) apiError(409, 'ALREADY_INITIALIZED', 'errors.alreadyInitialized');
     throw error;
   }
+}
+
+export function setupApplication(input: unknown) {
+  const setup = setupQueue.then(() => setupApplicationLocked(input));
+  setupQueue = setup.then(
+    () => undefined,
+    () => undefined,
+  );
+  return setup;
 }
 
 export async function authenticate(input: unknown) {

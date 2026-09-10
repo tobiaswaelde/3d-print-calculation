@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-const { t, locale, locales: localeDefinitions } = useI18n();
+const { t, locales: localeDefinitions, setLocale } = useI18n();
 const colorMode = useColorMode();
 const { logout, updateLocale } = useAuth();
 
@@ -101,7 +101,7 @@ const navigation = computed(() => [
 
 async function setLanguage(value: string) {
   if (value !== 'de-DE' && value !== 'en-US') return;
-  locale.value = value;
+  await setLocale(value);
   localStorage.setItem('print-cost-locale', value);
   await updateLocale(value);
 }

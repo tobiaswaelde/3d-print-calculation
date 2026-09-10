@@ -22,7 +22,11 @@ jobs:
       - run: pnpm db:generate
       - run: pnpm format:check
       - run: pnpm lint
+      - run: pnpm i18n:check
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
-      - run: docker build .
+      - run: pnpm test:integration
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e
+      - run: sh tests/container-smoke.sh

@@ -1,6 +1,14 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+:root {
+  --ui-primary: var(--color-cyan-700);
+}
+
+.dark {
+  --ui-primary: var(--color-cyan-400);
+}
+
 html,
 body,
 #__nuxt {

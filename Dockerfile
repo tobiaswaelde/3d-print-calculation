@@ -16,6 +16,9 @@ COPY --from=build --chown=app:app /app/node_modules ./node_modules
 COPY --from=build --chown=app:app /app/package.json ./package.json
 COPY --from=build --chown=app:app /app/prisma ./prisma
 COPY --from=build --chown=app:app /app/prisma.config.ts ./prisma.config.ts
+COPY --from=build --chown=app:app /app/scripts ./scripts
+COPY --from=build --chown=app:app /app/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod 755 /app/docker-entrypoint.sh
 USER app
 EXPOSE 3000
-CMD ["node", ".output/server/index.mjs"]
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
