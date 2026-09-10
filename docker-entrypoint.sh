@@ -11,6 +11,6 @@ if [ ! -w "$data_dir" ]; then
   exit 1
 fi
 
-./node_modules/.bin/tsx scripts/ensure-database.ts
-./node_modules/.bin/prisma migrate deploy
+node scripts/ensure-database.ts
+/migration/node_modules/.bin/prisma migrate deploy --config /migration/prisma.config.ts
 exec node .output/server/index.mjs

@@ -1,3 +1,7 @@
+packages:
+  - '.'
+  - 'docker/prisma-runtime'
+
 minimumReleaseAgeExclude:
   - '@node-rs/argon2-android-arm-eabi@2.2.1'
   - '@node-rs/argon2-android-arm64@2.2.1'
