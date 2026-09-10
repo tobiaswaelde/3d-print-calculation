@@ -1,5 +1,11 @@
 # ezPrint
 
+## 0.3.1
+
+### Patch Changes
+
+- e37417a: Rename the application to ezPrint, adopt the ezSWM-inspired sidebar wordmark, and align project links with the renamed repository.
+
 ## 0.3.0
 
 ### Minor Changes
