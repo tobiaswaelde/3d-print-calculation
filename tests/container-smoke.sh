@@ -25,6 +25,7 @@ until curl --fail --silent "http://127.0.0.1:$port/api/health" >/dev/null; do
 done
 
 docker restart "$container" >/dev/null
+port="$(docker port "$container" 3000/tcp | sed 's/.*://')"
 attempt=0
 until curl --fail --silent "http://127.0.0.1:$port/api/health" >/dev/null; do
   attempt=$((attempt + 1))
