@@ -1,5 +1,19 @@
 # ezPrint
 
+## 0.3.3
+
+### Patch Changes
+
+- ecd4edc: Allow components to be marked as always used and preselect them for compatible printers in new prints.
+- 83ddf70: Derive filament names from manufacturer, material, and color, and add a color picker to the filament form.
+- 7262ad1: List customers in the workspace section of the sidebar instead of under master data.
+- 5a439bd: Keep the update indicator green while giving its label accessible color contrast.
+- b6b7c51: Load the saved translation catalog when signing in with a non-default language.
+- 36675eb: Rename the user-facing master data terminology to inventory throughout the application and documentation.
+- 62a1205: Add shared manufacturer inventory with migrated component and filament relations and dropdown selection.
+- 83ddf70: Show a green update indicator shortly after a newer GitHub release becomes available.
+- 6e2881f: Keep print editor inputs aligned when validation messages are displayed.
+
 ## 0.3.2
 
 ### Patch Changes
