@@ -15,18 +15,36 @@
         v-for="kpi in kpis"
         :key="kpi.label"
         :to="kpi.to"
-        class="rounded-lg border border-default p-4 transition hover:bg-elevated"
+        class="group relative overflow-hidden rounded-xl border border-default bg-default p-5 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
       >
-        <div class="text-sm text-muted">{{ kpi.label }}</div>
-        <div class="mt-2 text-3xl font-semibold">{{ kpi.value }}</div>
+        <div class="absolute inset-x-0 top-0 h-1" :class="kpi.accentClass" />
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <div class="text-sm font-medium text-muted">{{ kpi.label }}</div>
+            <div class="mt-3 text-3xl font-semibold tracking-tight">{{ kpi.value }}</div>
+          </div>
+          <div
+            class="flex size-11 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset transition-transform group-hover:scale-105"
+            :class="kpi.iconWellClass"
+          >
+            <UIcon :name="kpi.icon" class="size-5" />
+          </div>
+        </div>
       </NuxtLink>
     </div>
 
     <div class="grid gap-5 xl:grid-cols-2">
-      <UCard>
-        <template #header
-          ><h2 class="font-semibold">{{ t('dashboard.costOverTime') }}</h2></template
-        >
+      <UCard class="overflow-hidden" :ui="{ header: 'bg-blue-50/70 dark:bg-blue-950/20' }">
+        <template #header>
+          <div class="flex items-center gap-3">
+            <div
+              class="flex size-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-800"
+            >
+              <UIcon name="i-lucide-chart-no-axes-combined" class="size-4.5" />
+            </div>
+            <h2 class="font-semibold">{{ t('dashboard.costOverTime') }}</h2>
+          </div>
+        </template>
         <ClientOnly><VChart v-if="data" class="h-80" autoresize :option="lineOption" /></ClientOnly>
         <ul class="sr-only">
           <li v-for="point in data?.completedCostSeries" :key="point.date">
@@ -34,10 +52,17 @@
           </li>
         </ul>
       </UCard>
-      <UCard>
-        <template #header
-          ><h2 class="font-semibold">{{ t('dashboard.costCategories') }}</h2></template
-        >
+      <UCard class="overflow-hidden" :ui="{ header: 'bg-violet-50/70 dark:bg-violet-950/20' }">
+        <template #header>
+          <div class="flex items-center gap-3">
+            <div
+              class="flex size-9 items-center justify-center rounded-lg bg-violet-100 text-violet-700 ring-1 ring-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:ring-violet-800"
+            >
+              <UIcon name="i-lucide-chart-pie" class="size-4.5" />
+            </div>
+            <h2 class="font-semibold">{{ t('dashboard.costCategories') }}</h2>
+          </div>
+        </template>
         <ClientOnly><VChart v-if="data" class="h-80" autoresize :option="pieOption" /></ClientOnly>
         <ul class="sr-only">
           <li v-for="item in data?.categoryTotals" :key="item.category">
@@ -47,12 +72,20 @@
       </UCard>
     </div>
 
-    <UCard>
-      <template #header
-        ><div class="flex items-center justify-between">
-          <h2 class="font-semibold">{{ t('dashboard.unfinished') }}</h2>
-          <UButton to="/prints/new" icon="i-lucide-plus" :label="t('prints.new')" /></div
-      ></template>
+    <UCard class="overflow-hidden" :ui="{ header: 'bg-amber-50/70 dark:bg-amber-950/20' }">
+      <template #header>
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div
+              class="flex size-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-800"
+            >
+              <UIcon name="i-lucide-file-clock" class="size-4.5" />
+            </div>
+            <h2 class="font-semibold">{{ t('dashboard.unfinished') }}</h2>
+          </div>
+          <UButton to="/prints/new" icon="i-lucide-plus" :label="t('prints.new')" />
+        </div>
+      </template>
       <CommonEmptyState
         v-if="data && !data.unfinishedPrints.length"
         :title="t('dashboard.noDrafts')"
@@ -78,9 +111,13 @@
               class="border-t border-default hover:bg-elevated/50"
             >
               <td class="p-3">
-                <NuxtLink :to="`/prints/${item.id}`" class="font-medium text-primary hover:underline">{{
-                  item.name
-                }}</NuxtLink>
+                <NuxtLink
+                  :to="`/prints/${item.id}`"
+                  class="inline-flex items-center gap-2 font-medium text-primary hover:underline"
+                >
+                  <UIcon name="i-lucide-box" class="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  {{ item.name }}
+                </NuxtLink>
               </td>
               <td class="p-3">{{ item.customer?.name ?? '—' }}</td>
               <td class="p-3">{{ item.printer.name }}</td>
@@ -119,25 +156,42 @@ const kpis = computed(() => [
     label: t('dashboard.activeDrafts'),
     value: data.value?.kpis.activeDrafts ?? 0,
     to: '/prints?status=DRAFT',
+    icon: 'i-lucide-file-clock',
+    accentClass: 'bg-amber-500',
+    iconWellClass:
+      'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800',
   },
   {
     label: t('dashboard.completedPrints'),
     value: data.value?.kpis.completedPrints ?? 0,
     to: '/prints?status=COMPLETED',
+    icon: 'i-lucide-circle-check-big',
+    accentClass: 'bg-emerald-500',
+    iconWellClass:
+      'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800',
   },
   {
     label: t('dashboard.totalDuration'),
     value: duration(data.value?.kpis.totalDurationSeconds ?? 0),
     to: '/prints?status=COMPLETED',
+    icon: 'i-lucide-clock-3',
+    accentClass: 'bg-violet-500',
+    iconWellClass:
+      'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:ring-violet-800',
   },
   {
     label: t('dashboard.totalCost'),
     value: money(data.value?.kpis.totalCost ?? '0', data.value?.currency ?? 'EUR'),
     to: '/prints?status=COMPLETED',
+    icon: 'i-lucide-coins',
+    accentClass: 'bg-blue-500',
+    iconWellClass:
+      'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-800',
   },
 ]);
 const chartTextColor = computed(() => (colorMode.value === 'dark' ? '#cbd5e1' : '#334155'));
 const lineOption = computed(() => ({
+  color: ['#3b82f6'],
   textStyle: { color: chartTextColor.value },
   tooltip: { trigger: 'axis', valueFormatter: (value: number) => money(value, data.value?.currency) },
   grid: { left: 16, right: 16, top: 16, bottom: 16, containLabel: true },
@@ -147,12 +201,15 @@ const lineOption = computed(() => ({
     {
       type: 'line',
       smooth: true,
+      symbolSize: 7,
+      lineStyle: { width: 3 },
       data: data.value?.completedCostSeries.map((item) => Number(item.value)) ?? [],
-      areaStyle: {},
+      areaStyle: { color: 'rgba(59, 130, 246, 0.16)' },
     },
   ],
 }));
 const pieOption = computed(() => ({
+  color: ['#3b82f6', '#8b5cf6', '#06b6d4', '#f59e0b'],
   textStyle: { color: chartTextColor.value },
   tooltip: { trigger: 'item', valueFormatter: (value: number) => money(value, data.value?.currency) },
   legend: { bottom: 0, textStyle: { color: chartTextColor.value } },
