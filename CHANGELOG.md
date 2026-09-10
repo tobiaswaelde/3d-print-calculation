@@ -1,5 +1,11 @@
 # ezPrint
 
+## 0.3.2
+
+### Patch Changes
+
+- 551baba: Reduce the container image size by using Alpine and shipping only the Prisma migration runtime instead of all build dependencies.
+
 ## 0.3.1
 
 ### Patch Changes
