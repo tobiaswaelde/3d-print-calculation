@@ -1,17 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+
 :root {
-  --vp-c-brand-1: #0e7490;
-  --vp-c-brand-2: #155e75;
-  --vp-c-brand-3: #164e63;
-  --vp-c-brand-soft: rgb(14 116 144 / 14%);
+  --vp-c-brand-1: #2563eb;
+  --vp-c-brand-2: #1d4ed8;
+  --vp-c-brand-3: #1e40af;
+  --vp-c-brand-soft: rgb(37 99 235 / 14%);
+  --vp-font-family-base: 'IBM Plex Sans', sans-serif;
+  --vp-font-family-mono: 'IBM Plex Mono', monospace;
 }
 
 .dark {
-  --vp-c-brand-1: #67e8f9;
-  --vp-c-brand-2: #22d3ee;
-  --vp-c-brand-3: #06b6d4;
-  --vp-c-brand-soft: rgb(34 211 238 / 16%);
+  --vp-c-brand-1: #60a5fa;
+  --vp-c-brand-2: #3b82f6;
+  --vp-c-brand-3: #2563eb;
+  --vp-c-brand-soft: rgb(59 130 246 / 18%);
 }
 
 .VPImage.image-src {
   max-width: min(440px, 80vw);
+}
+
+.VPHero .name {
+  background: linear-gradient(120deg, #2563eb 20%, #7c3aed);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.VPFeature {
+  border-radius: 1rem !important;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.VPFeature:hover {
+  border-color: var(--vp-c-brand-soft);
+  box-shadow: 0 14px 32px rgb(24 24 27 / 8%);
+  transform: translateY(-2px);
+}
+
+.VPFeature .icon {
+  background-color: var(--vp-c-brand-soft);
 }

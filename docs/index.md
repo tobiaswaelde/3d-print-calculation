@@ -17,11 +17,14 @@ hero:
       text: Deployment
       link: /operations/deployment
 features:
-  - title: Deterministisch
+  - icon: 🎯
+    title: Deterministisch
     details: Decimal-Arithmetik und versionierte Formeln liefern reproduzierbare Ergebnisse.
-  - title: Betriebsbereit
+  - icon: 📦
+    title: Betriebsbereit
     details: Container, Migrationen, Healthcheck sowie sichere Backup- und Restore-Abläufe.
-  - title: Nachvollziehbar
+  - icon: 📊
+    title: Nachvollziehbar
     details: Abgeschlossene Drucke bewahren Preise, Eingaben und Ergebnis als Snapshot.
 ---
 

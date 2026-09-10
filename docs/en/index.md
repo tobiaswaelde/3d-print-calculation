@@ -17,11 +17,14 @@ hero:
       text: Deployment
       link: /en/operations/deployment
 features:
-  - title: Deterministic
+  - icon: 🎯
+    title: Deterministic
     details: Decimal arithmetic and versioned formulas produce reproducible results.
-  - title: Operable
+  - icon: 📦
+    title: Operable
     details: Containers, migrations, health checks, and safe backup and restore procedures.
-  - title: Traceable
+  - icon: 📊
+    title: Traceable
     details: Completed prints retain prices, inputs, and their result as a snapshot.
 ---
 

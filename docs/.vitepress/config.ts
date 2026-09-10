@@ -96,7 +96,7 @@ export default defineConfig({
   lastUpdated: true,
   sitemap: { hostname: site },
   head: [
-    ['meta', { name: 'theme-color', content: '#0e7490' }],
+    ['meta', { name: 'theme-color', content: '#2563eb' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: '3D Print Costing' }],
     [
@@ -119,6 +119,7 @@ export default defineConfig({
           { text: 'Handbuch', link: '/getting-started/' },
           { text: 'Betrieb', link: '/operations/deployment' },
           { text: 'Referenz', link: '/reference/architecture' },
+          { text: 'GitHub', link: repository },
         ],
         sidebar: deSidebar,
         outline: { label: 'Auf dieser Seite' },
@@ -143,6 +144,7 @@ export default defineConfig({
           { text: 'Guide', link: '/en/getting-started/' },
           { text: 'Operations', link: '/en/operations/deployment' },
           { text: 'Reference', link: '/en/reference/architecture' },
+          { text: 'GitHub', link: repository },
         ],
         sidebar: enSidebar,
         outline: { label: 'On this page' },
