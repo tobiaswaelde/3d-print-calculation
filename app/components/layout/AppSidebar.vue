@@ -41,7 +41,8 @@
           @click="changelogOpen = true"
         >
           v{{ appVersion }}
-          <UBadge v-if="updateAvailable" color="success" variant="subtle" size="sm">
+          <UBadge v-if="updateAvailable" color="neutral" variant="subtle" size="sm">
+            <span data-update-indicator class="size-1.5 rounded-full bg-success" aria-hidden="true" />
             {{ t('changelog.update') }}
           </UBadge>
         </button>

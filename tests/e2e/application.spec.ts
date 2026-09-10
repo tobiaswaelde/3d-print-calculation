@@ -35,7 +35,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   const changelogButton = page.getByRole('button', { name: 'Changelog öffnen' });
   const updateBadge = changelogButton.getByText('Update verfügbar', { exact: true });
   await expect(updateBadge).toBeVisible();
-  await expect(updateBadge).toHaveClass(/text-success/);
+  await expect(updateBadge.locator('[data-update-indicator]')).toHaveClass(/bg-success/);
   await changelogButton.click();
   await expect(page.getByRole('dialog', { name: 'Changelog' })).toContainText('v0.2.0');
   await page.keyboard.press('Escape');
