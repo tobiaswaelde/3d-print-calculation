@@ -269,7 +269,9 @@ Run on pull requests and pushes to `main`:
 - [#11 Implement the deterministic print cost calculation engine](https://github.com/tobiaswaelde/3d-print-calculation/issues/11)
 - [#12 Implement print job persistence, snapshots, and lifecycle](https://github.com/tobiaswaelde/3d-print-calculation/issues/12)
 - [#13 Build the print management and calculator UI](https://github.com/tobiaswaelde/3d-print-calculation/issues/13)
-- [#14 Build the dashboard overview and cost breakdown views](https://github.com/tobiaswaelde/3d-print-calculation/issues/14)
+- [#14 Build dashboard KPIs and ECharts statistics](https://github.com/tobiaswaelde/3d-print-calculation/issues/14)
+- [#25 Implement dashboard statistics aggregation API](https://github.com/tobiaswaelde/3d-print-calculation/issues/25)
+- [#26 Add the unfinished prints dashboard panel](https://github.com/tobiaswaelde/3d-print-calculation/issues/26)
 
 ### [M4 — Production Readiness](https://github.com/tobiaswaelde/3d-print-calculation/milestone/4)
 
