@@ -1,7 +1,7 @@
 import { defineConfig, type DefaultTheme } from 'vitepress';
 
-const repository = 'https://github.com/tobiaswaelde/3d-print-calculation';
-const site = 'https://tobiaswaelde.github.io/3d-print-calculation/';
+const repository = 'https://github.com/tobiaswaelde/ezprint';
+const site = 'https://tobiaswaelde.github.io/ezprint/';
 
 const sidebar: DefaultTheme.SidebarItem[] = [
   {
@@ -53,18 +53,18 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 ];
 
 export default defineConfig({
-  title: '3D Print Costing',
-  description: 'User, operator, and developer documentation for 3D Print Costing.',
+  title: 'ezPrint',
+  description: 'User, operator, and developer documentation for ezPrint.',
   lang: 'en-US',
-  base: '/3d-print-calculation/',
+  base: '/ezprint/',
   cleanUrls: true,
   lastUpdated: true,
   sitemap: { hostname: site },
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/3d-print-calculation/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/ezprint/favicon.svg' }],
     ['meta', { name: 'theme-color', content: '#0e7490' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:title', content: '3D Print Costing' }],
+    ['meta', { property: 'og:title', content: 'ezPrint' }],
     [
       'meta',
       { property: 'og:description', content: 'US English user, operator, and developer documentation.' },
@@ -77,7 +77,7 @@ export default defineConfig({
   },
   themeConfig: {
     logo: '/logo.svg',
-    siteTitle: '3D Print Costing',
+    siteTitle: 'ezPrint',
     nav: [
       { text: 'User guide', link: '/getting-started/' },
       { text: 'Operations', link: '/operations/deployment' },

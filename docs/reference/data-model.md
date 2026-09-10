@@ -18,4 +18,4 @@ relations and service checks prevent deletion of referenced data; join rows and 
 
 Money and quantities use Prisma `Decimal` and canonical JSON strings such as `"1.782175"`. Duration and power are
 integer seconds and watts. The authoritative model is
-[`prisma/schema.prisma`](https://github.com/tobiaswaelde/3d-print-calculation/blob/main/prisma/schema.prisma).
+[`prisma/schema.prisma`](https://github.com/tobiaswaelde/ezprint/blob/main/prisma/schema.prisma).

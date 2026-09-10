@@ -1,4 +1,4 @@
-# 3D Print Cost Calculation Application Plan
+# ezPrint Application Plan
 
 ## 1. Product Summary
 
@@ -197,7 +197,7 @@ Run on pull requests and pushes to `main`:
 - Changesets maintains the application version and `CHANGELOG.md`.
 - `changesets/action@v2` creates or updates the version pull request using `version-script`.
 - Merging the Changesets release pull request triggers the Docker release workflow.
-- The image is published to `ghcr.io/tobiaswaelde/3d-print-calculation` with `vX.Y.Z`, `latest`, and commit-SHA tags.
+- The image is published to `ghcr.io/tobiaswaelde/ezprint` with `vX.Y.Z`, `latest`, and commit-SHA tags.
 - Create the matching Git tag and GitHub release only after the versioned image push succeeds.
 - The workflow publishes an image only; it does not deploy to a host.
 
@@ -248,36 +248,36 @@ Run on pull requests and pushes to `main`:
 
 ## 9. Milestone Roadmap
 
-### [M1 — Application Foundation](https://github.com/tobiaswaelde/3d-print-calculation/milestone/1)
+### [M1 — Application Foundation](https://github.com/tobiaswaelde/ezprint/milestone/1)
 
-- [#1 Scaffold the Nuxt 4 full-stack application](https://github.com/tobiaswaelde/3d-print-calculation/issues/1)
-- [#2 Establish Prisma 7 and SQLite persistence](https://github.com/tobiaswaelde/3d-print-calculation/issues/2)
-- [#3 Implement first-run setup and single-user authentication](https://github.com/tobiaswaelde/3d-print-calculation/issues/3)
-- [#4 Build the Nuxt UI dashboard shell, localization, and theming](https://github.com/tobiaswaelde/3d-print-calculation/issues/4)
-- [#5 Add CI, Changesets, and container release foundations](https://github.com/tobiaswaelde/3d-print-calculation/issues/5)
+- [#1 Scaffold the Nuxt 4 full-stack application](https://github.com/tobiaswaelde/ezprint/issues/1)
+- [#2 Establish Prisma 7 and SQLite persistence](https://github.com/tobiaswaelde/ezprint/issues/2)
+- [#3 Implement first-run setup and single-user authentication](https://github.com/tobiaswaelde/ezprint/issues/3)
+- [#4 Build the Nuxt UI dashboard shell, localization, and theming](https://github.com/tobiaswaelde/ezprint/issues/4)
+- [#5 Add CI, Changesets, and container release foundations](https://github.com/tobiaswaelde/ezprint/issues/5)
 
-### [M2 — Cost Master Data](https://github.com/tobiaswaelde/3d-print-calculation/milestone/2)
+### [M2 — Cost Master Data](https://github.com/tobiaswaelde/ezprint/milestone/2)
 
-- [#6 Implement instance settings and electricity pricing](https://github.com/tobiaswaelde/3d-print-calculation/issues/6)
-- [#7 Implement customer management](https://github.com/tobiaswaelde/3d-print-calculation/issues/7)
-- [#8 Implement printer management with lifetime-based hourly cost](https://github.com/tobiaswaelde/3d-print-calculation/issues/8)
-- [#9 Implement component management and printer compatibility](https://github.com/tobiaswaelde/3d-print-calculation/issues/9)
-- [#10 Implement the filament catalog and per-gram cost](https://github.com/tobiaswaelde/3d-print-calculation/issues/10)
+- [#6 Implement instance settings and electricity pricing](https://github.com/tobiaswaelde/ezprint/issues/6)
+- [#7 Implement customer management](https://github.com/tobiaswaelde/ezprint/issues/7)
+- [#8 Implement printer management with lifetime-based hourly cost](https://github.com/tobiaswaelde/ezprint/issues/8)
+- [#9 Implement component management and printer compatibility](https://github.com/tobiaswaelde/ezprint/issues/9)
+- [#10 Implement the filament catalog and per-gram cost](https://github.com/tobiaswaelde/ezprint/issues/10)
 
-### [M3 — Print Costing Workflow](https://github.com/tobiaswaelde/3d-print-calculation/milestone/3)
+### [M3 — Print Costing Workflow](https://github.com/tobiaswaelde/ezprint/milestone/3)
 
-- [#11 Implement the deterministic print cost calculation engine](https://github.com/tobiaswaelde/3d-print-calculation/issues/11)
-- [#12 Implement print job persistence, snapshots, and lifecycle](https://github.com/tobiaswaelde/3d-print-calculation/issues/12)
-- [#13 Build the print management and calculator UI](https://github.com/tobiaswaelde/3d-print-calculation/issues/13)
-- [#14 Build dashboard KPIs and ECharts statistics](https://github.com/tobiaswaelde/3d-print-calculation/issues/14)
-- [#25 Implement dashboard statistics aggregation API](https://github.com/tobiaswaelde/3d-print-calculation/issues/25)
-- [#26 Add the unfinished prints dashboard panel](https://github.com/tobiaswaelde/3d-print-calculation/issues/26)
+- [#11 Implement the deterministic print cost calculation engine](https://github.com/tobiaswaelde/ezprint/issues/11)
+- [#12 Implement print job persistence, snapshots, and lifecycle](https://github.com/tobiaswaelde/ezprint/issues/12)
+- [#13 Build the print management and calculator UI](https://github.com/tobiaswaelde/ezprint/issues/13)
+- [#14 Build dashboard KPIs and ECharts statistics](https://github.com/tobiaswaelde/ezprint/issues/14)
+- [#25 Implement dashboard statistics aggregation API](https://github.com/tobiaswaelde/ezprint/issues/25)
+- [#26 Add the unfinished prints dashboard panel](https://github.com/tobiaswaelde/ezprint/issues/26)
 
-### [M4 — Production Readiness](https://github.com/tobiaswaelde/3d-print-calculation/milestone/4)
+### [M4 — Production Readiness](https://github.com/tobiaswaelde/ezprint/milestone/4)
 
-- [#15 Complete integration, component, and browser test coverage](https://github.com/tobiaswaelde/3d-print-calculation/issues/15)
-- [#16 Harden container startup, migrations, health checks, and SQLite operations](https://github.com/tobiaswaelde/3d-print-calculation/issues/16)
-- [#17 Complete accessibility, responsive UX, documentation, and release verification](https://github.com/tobiaswaelde/3d-print-calculation/issues/17)
+- [#15 Complete integration, component, and browser test coverage](https://github.com/tobiaswaelde/ezprint/issues/15)
+- [#16 Harden container startup, migrations, health checks, and SQLite operations](https://github.com/tobiaswaelde/ezprint/issues/16)
+- [#17 Complete accessibility, responsive UX, documentation, and release verification](https://github.com/tobiaswaelde/ezprint/issues/17)
 
 ## 10. Explicit Non-Goals for V1
 

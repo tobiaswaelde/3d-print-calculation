@@ -1,16 +1,10 @@
 <template>
   <UDashboardSidebar id="navigation" collapsible resizable class="bg-elevated/25">
     <template #header="{ collapsed }">
-      <UButton
-        to="/"
-        color="neutral"
-        variant="ghost"
-        icon="i-tabler-cube"
-        :label="collapsed ? undefined : t('app.name')"
-        :square="collapsed"
-        block
-        class="font-mono font-semibold"
-      />
+      <NuxtLink to="/" :aria-label="t('app.name')" class="font-display text-xl font-bold">
+        <span class="text-primary">ez</span
+        ><span v-if="!collapsed" class="tracking-tight text-highlighted">Print</span>
+      </NuxtLink>
     </template>
 
     <template #default="{ collapsed }">
@@ -20,7 +14,7 @@
     <template #footer="{ collapsed }">
       <div class="flex w-full items-center gap-1" :class="collapsed && 'flex-col'">
         <UButton
-          to="https://github.com/tobiaswaelde/3d-print-calculation"
+          to="https://github.com/tobiaswaelde/ezprint"
           target="_blank"
           color="neutral"
           variant="ghost"
@@ -30,7 +24,7 @@
           :title="t('sidebar.github')"
         />
         <UButton
-          to="https://tobiaswaelde.github.io/3d-print-calculation/"
+          to="https://tobiaswaelde.github.io/ezprint/"
           target="_blank"
           color="neutral"
           variant="ghost"

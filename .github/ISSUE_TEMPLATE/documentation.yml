@@ -37,7 +37,7 @@ body:
     attributes:
       label: Documentation location
       description: Link to the affected page or provide its repository path and section heading.
-      placeholder: https://tobiaswaelde.github.io/3d-print-calculation/operations/deployment
+      placeholder: https://tobiaswaelde.github.io/ezprint/operations/deployment
     validations:
       required: true
 

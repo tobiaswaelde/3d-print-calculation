@@ -13,7 +13,7 @@ notes and taking a verified database backup.
 ## Reporting a vulnerability
 
 Report vulnerabilities through GitHub's private
-[security advisory form](https://github.com/tobiaswaelde/3d-print-calculation/security/advisories/new). Do not open a
+[security advisory form](https://github.com/tobiaswaelde/ezprint/security/advisories/new). Do not open a
 public issue for an unpatched vulnerability and do not include real credentials, session cookies, database files,
 or personal data in reports.
 

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-image="3d-print-calculation:smoke"
+image="ezprint:smoke"
 container="print-cost-smoke-$$"
 volume="print-cost-smoke-$$"
 readonly_container="print-cost-readonly-$$"

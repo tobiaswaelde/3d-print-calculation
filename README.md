@@ -1,9 +1,9 @@
-# 🖨️ 3D Print Cost Calculation <!-- omit in toc -->
+# 🖨️ ezPrint <!-- omit in toc -->
 
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy_Me_A_Coffee-FFDD00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=000)](https://www.buymeacoffee.com/tobiaswaelde)
-[![CI](https://img.shields.io/github/actions/workflow/status/tobiaswaelde/3d-print-calculation/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white&style=for-the-badge)](https://github.com/tobiaswaelde/3d-print-calculation/actions/workflows/ci.yml)
-[![Documentation](https://img.shields.io/github/actions/workflow/status/tobiaswaelde/3d-print-calculation/docs.yml?branch=main&label=Documentation&logo=githubactions&logoColor=white&style=for-the-badge)](https://tobiaswaelde.github.io/3d-print-calculation/)
-[![Release](https://img.shields.io/github/actions/workflow/status/tobiaswaelde/3d-print-calculation/release.yml?branch=main&label=Release&logo=githubactions&logoColor=white&style=for-the-badge)](https://github.com/tobiaswaelde/3d-print-calculation/actions/workflows/release.yml)
+[![CI](https://img.shields.io/github/actions/workflow/status/tobiaswaelde/ezprint/ci.yml?branch=main&label=CI&logo=githubactions&logoColor=white&style=for-the-badge)](https://github.com/tobiaswaelde/ezprint/actions/workflows/ci.yml)
+[![Documentation](https://img.shields.io/github/actions/workflow/status/tobiaswaelde/ezprint/docs.yml?branch=main&label=Documentation&logo=githubactions&logoColor=white&style=for-the-badge)](https://tobiaswaelde.github.io/ezprint/)
+[![Release](https://img.shields.io/github/actions/workflow/status/tobiaswaelde/ezprint/release.yml?branch=main&label=Release&logo=githubactions&logoColor=white&style=for-the-badge)](https://github.com/tobiaswaelde/ezprint/actions/workflows/release.yml)
 
 A self-hosted Nuxt application for transparent, reproducible filament-print cost calculation. It combines master
 data, live draft calculations, immutable completion snapshots, and an operator-friendly dashboard in one bilingual
@@ -16,7 +16,7 @@ interface.
 - Manage customers, printers, components, filaments, and draft print jobs from a responsive UI.
 - Find prints and master data through the global application search.
 - Run the application as a single container with SQLite persistence, migrations, and a health check.
-- Use the complete US English [documentation website](https://tobiaswaelde.github.io/3d-print-calculation/), including screenshots for every application page.
+- Use the complete US English [documentation website](https://tobiaswaelde.github.io/ezprint/), including screenshots for every application page.
 
 ## 📚 Table of Contents <!-- omit in toc -->
 
@@ -44,9 +44,9 @@ should use TLS, restrict network access to the application, and regularly back u
 > The application supports one running replica. SQLite is a single-writer database and the setup lock is local to
 > the application process.
 
-Detailed instructions cover [deployment](https://tobiaswaelde.github.io/3d-print-calculation/operations/deployment),
-[backup and restore](https://tobiaswaelde.github.io/3d-print-calculation/operations/backup-restore), and
-[upgrades](https://tobiaswaelde.github.io/3d-print-calculation/operations/upgrades).
+Detailed instructions cover [deployment](https://tobiaswaelde.github.io/ezprint/operations/deployment),
+[backup and restore](https://tobiaswaelde.github.io/ezprint/operations/backup-restore), and
+[upgrades](https://tobiaswaelde.github.io/ezprint/operations/upgrades).
 
 ## 🛠️ Local development
 
@@ -74,7 +74,7 @@ pnpm test:e2e
 pnpm docs:screenshots && pnpm docs:check && pnpm docs:build && pnpm test:docs:e2e
 ```
 
-See the [contribution guide](https://tobiaswaelde.github.io/3d-print-calculation/development/contributing) for
+See the [contribution guide](https://tobiaswaelde.github.io/ezprint/development/contributing) for
 Changesets, migrations, documentation standards, and the full container verification.
 
 ## 🔒 Security

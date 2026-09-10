@@ -7,7 +7,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
     command: 'pnpm docs:dev --host 127.0.0.1 --port 4173',
-    url: 'http://127.0.0.1:4173/3d-print-calculation/',
+    url: 'http://127.0.0.1:4173/ezprint/',
     reuseExistingServer: false,
   },
 });

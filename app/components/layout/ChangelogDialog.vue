@@ -21,7 +21,7 @@
         </section>
 
         <UButton
-          to="https://github.com/tobiaswaelde/3d-print-calculation/releases"
+          to="https://github.com/tobiaswaelde/ezprint/releases"
           target="_blank"
           color="neutral"
           variant="outline"

@@ -21,4 +21,6 @@ COPY --from=build --chown=app:app /app/docker-entrypoint.sh ./docker-entrypoint.
 RUN chmod 755 /app/docker-entrypoint.sh
 USER app
 EXPOSE 3000
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \
+  CMD ["node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)})"]
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

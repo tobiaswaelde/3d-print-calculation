@@ -5,7 +5,7 @@ description: Understand the application structure and move from first-run setup 
 
 # Getting started
 
-3D Print Costing turns printer ownership, component wear, material use, electricity, and print duration into a
+ezPrint turns printer ownership, component wear, material use, electricity, and print duration into a
 single reproducible total. The normal workflow is deliberately ordered: configure the instance, create reusable
 master data, calculate a draft, and complete it only when the inputs are final.
 

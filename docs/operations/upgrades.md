@@ -7,7 +7,7 @@ description: Upgrade pinned versions safely and roll back within explicit data-s
 
 ## Upgrade
 
-1. Read all relevant [GitHub Releases](https://github.com/tobiaswaelde/3d-print-calculation/releases) between the
+1. Read all relevant [GitHub Releases](https://github.com/tobiaswaelde/ezprint/releases) between the
    installed version and target version.
 2. Create an [external, verified backup](/operations/backup-restore).
 3. Change only the pinned image tag, pull the image, and restart the service.

@@ -15,6 +15,9 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await electricityPrice.fill('0.32');
   await page.getByRole('button', { name: 'Ersteinrichtung' }).click();
   await expect(page.getByRole('heading', { name: 'Druckkosten im Zeitverlauf' })).toBeVisible();
+  await expect(page).toHaveTitle('ezPrint');
+  const brandLink = page.getByRole('link', { name: 'ezPrint' });
+  await expect(brandLink).toHaveText('ezPrint');
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toHaveCount(0);
   const collapseButton = page.getByRole('button', { name: 'Navigation einklappen' });
   const globalSearchButton = page.getByRole('button', { name: 'Globale Suche öffnen' });
@@ -25,6 +28,10 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   ]);
   expect(collapseBox!.x).toBeLessThan(searchBox!.x);
   expect(searchBox!.width).toBeGreaterThan(256);
+  await collapseButton.click();
+  await expect(brandLink).toHaveText('ez');
+  await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
+  await expect(brandLink).toHaveText('ezPrint');
   const changelogButton = page.getByRole('button', { name: 'Changelog öffnen' });
   await expect(changelogButton).toContainText('Update');
   await changelogButton.click();
@@ -32,7 +39,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.keyboard.press('Escape');
   await expect(page.getByRole('link', { name: 'Dokumentation öffnen' })).toHaveAttribute(
     'href',
-    'https://tobiaswaelde.github.io/3d-print-calculation/',
+    'https://tobiaswaelde.github.io/ezprint/',
   );
   const tablerIcon = page.locator('.iconify[class*="i-tabler:"]').first();
   await expect(tablerIcon).toBeVisible();

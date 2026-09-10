@@ -1,4 +1,4 @@
-# 3d-print-calculation
+# ezPrint
 
 ## 0.3.0
 

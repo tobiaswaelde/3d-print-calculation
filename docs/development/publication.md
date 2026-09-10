@@ -9,7 +9,7 @@ Pull requests regenerate the application screenshots, build the documentation, a
 A push to `main` runs the same Playwright screenshot generator before GitHub Pages is built with `contents: read`,
 `pages: write`, and `id-token: write`; the resulting `docs/.vitepress/dist` is deployed without repository secrets.
 
-`https://tobiaswaelde.github.io/3d-print-calculation/` documents current `main`. Changesets align the application
+`https://tobiaswaelde.github.io/ezprint/` documents current `main`. Changesets align the application
 version, Git tag, GitHub release, and container tag. Immutable historical documentation remains in `docs/` at each
 Git tag.
 

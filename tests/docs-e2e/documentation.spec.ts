@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const base = '/3d-print-calculation';
+const base = '/ezprint';
 
 test('US English docs support search, screenshots, branding, keyboard access, and narrow viewports', async ({
   page,
@@ -8,7 +8,7 @@ test('US English docs support search, screenshots, branding, keyboard access, an
   await page.goto(`${base}/guide/setup`);
   await expect(page.locator('main h1')).toContainText('Setup and sign-in');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en-US');
-  await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', '/3d-print-calculation/favicon.svg');
+  await expect(page.locator('link[rel="icon"]')).toHaveAttribute('href', '/ezprint/favicon.svg');
   await expect(page.locator('main img').first()).toHaveJSProperty('complete', true);
 
   await page.getByRole('button', { name: 'Search' }).click();

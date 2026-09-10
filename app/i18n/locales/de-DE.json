@@ -1,5 +1,5 @@
 {
-  "app": { "name": "Druckkosten" },
+  "app": { "name": "ezPrint" },
   "nav": {
     "dashboard": "Dashboard",
     "prints": "Drucke",

@@ -8,18 +8,18 @@ description: Deploy one container with pinned image tags, persistent SQLite stor
 Use a current Docker daemon with the Compose plugin, access to GHCR, and writable local storage for the persistent
 volume. Run exactly **one replica**: SQLite is a single-writer database and setup locking is process-local.
 
-The image is `ghcr.io/tobiaswaelde/3d-print-calculation`. Pin `vMAJOR.MINOR.PATCH` in production. `latest` follows
+The image is `ghcr.io/tobiaswaelde/ezprint`. Pin `vMAJOR.MINOR.PATCH` in production. `latest` follows
 the newest release, while `sha-…` identifies a specific commit build.
 
 ## Install
 
-Copy [`compose.example.yml`](https://github.com/tobiaswaelde/3d-print-calculation/blob/main/compose.example.yml) to
+Copy [`compose.example.yml`](https://github.com/tobiaswaelde/ezprint/blob/main/compose.example.yml) to
 `compose.yml`, pin the image tag, and retain the database path and volume:
 
 ```yaml
 services:
   app:
-    image: ghcr.io/tobiaswaelde/3d-print-calculation:v1.0.0
+    image: ghcr.io/tobiaswaelde/ezprint:v1.0.0
     restart: unless-stopped
     environment:
       DATABASE_URL: file:/data/app.db
@@ -47,4 +47,4 @@ database query. Restarts reuse the volume and apply only pending migrations.
 
 After a healthy start, open `http://HOST:3000` and complete [first-run setup](/guide/setup). Before changing image
 versions, follow the [upgrade procedure](/operations/upgrades). Report vulnerabilities privately under the
-[security policy](https://github.com/tobiaswaelde/3d-print-calculation/blob/main/SECURITY.md).
+[security policy](https://github.com/tobiaswaelde/ezprint/blob/main/SECURITY.md).

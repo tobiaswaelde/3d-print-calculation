@@ -1,14 +1,14 @@
 ---
-title: 3D Print Costing
+title: ezPrint
 description: Complete US English documentation for the self-hosted 3D print cost calculator.
 layout: home
 hero:
-  name: 3D Print Costing
+  name: ezPrint
   text: Know what every print costs
   tagline: A self-hosted workflow for repeatable estimates, live cost previews, and immutable completed-print records.
   image:
     src: /logo.svg
-    alt: 3D Print Costing cube logo
+    alt: ezPrint cube logo
   actions:
     - theme: brand
       text: Read the user guide

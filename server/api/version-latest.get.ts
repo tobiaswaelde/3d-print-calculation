@@ -1,6 +1,6 @@
 import { requireUser } from '../utils/auth';
 
-const releasesUrl = 'https://api.github.com/repos/tobiaswaelde/3d-print-calculation/releases/latest';
+const releasesUrl = 'https://api.github.com/repos/tobiaswaelde/ezprint/releases/latest';
 const cacheTtl = 6 * 60 * 60 * 1000;
 let cached: { latest: string | null; timestamp: number } | null = null;
 let pending: Promise<{ latest: string | null }> | null = null;
@@ -10,7 +10,7 @@ async function fetchLatestVersion() {
     const response = await fetch(releasesUrl, {
       headers: {
         Accept: 'application/vnd.github+json',
-        'User-Agent': '3d-print-calculation',
+        'User-Agent': 'ezprint',
       },
     });
     if (!response.ok) return { latest: null };

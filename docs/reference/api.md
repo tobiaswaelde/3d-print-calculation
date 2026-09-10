@@ -50,7 +50,7 @@ Setup requires `displayName`, `email`, a password of at least 12 characters, sup
 `{ filamentId, usedGrams }`, and optional `notes`.
 
 Master-data PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Authoritative
-schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/3d-print-calculation/tree/main/shared/schemas).
+schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/ezprint/tree/main/shared/schemas).
 
 ## Errors
 

@@ -48,7 +48,7 @@ body:
     attributes:
       label: Application version
       description: Enter the release version, exact container image tag, or Git commit.
-      placeholder: e.g. 0.2.0, ghcr.io/tobiaswaelde/3d-print-calculation:0.2.0, or a1b2c3d
+      placeholder: e.g. 0.3.0, ghcr.io/tobiaswaelde/ezprint:0.3.0, or a1b2c3d
     validations:
       required: true
 
