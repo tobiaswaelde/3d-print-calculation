@@ -1,5 +1,20 @@
 # 3d-print-calculation
 
+## 0.3.0
+
+### Minor Changes
+
+- 5d7974f: Adopt full-height Tenant Web list pages with fixed breadcrumb toolbars and independently scrollable compact tables.
+- 137a9eb: Open validated master-data create and edit forms in accessible responsive dialogs while keeping tables visible.
+- 661ffc1: Validate settings, master-data, and print-job forms with shared Zod schemas before submitting data.
+- d799402: Adopt a consistent Tabler-first icon language across navigation, search, dashboard, forms, and actions.
+- 6600a0c: Publish a complete US English user guide with Playwright-generated application screenshots and refreshed application branding.
+- cf1399d: Standardize form controls with numeric amount inputs, in-field units, and leading Tabler icons.
+
+### Patch Changes
+
+- fb8a0be: Stabilize generated release lockfiles and documentation screenshots in CI.
+
 ## 0.2.0
 
 ### Minor Changes
