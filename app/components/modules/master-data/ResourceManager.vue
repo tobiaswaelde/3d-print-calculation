@@ -13,155 +13,172 @@
 
     <UAlert v-if="error" color="error" :description="error" />
 
-    <UCard v-if="editing" :ui="{ body: 'space-y-4' }">
-      <template #header>
-        <h2 class="font-semibold">{{ editingId ? t('common.edit') : t('common.create') }} · {{ title }}</h2>
+    <UModal
+      v-model:open="editing"
+      :title="dialogTitle"
+      :dismissible="!saving"
+      scrollable
+      :ui="{ content: 'sm:max-w-3xl' }"
+    >
+      <template #body>
+        <UAlert v-if="dialogError" class="mb-4" color="error" :description="dialogError" />
+        <UForm :schema="formSchema" :state="form" class="grid gap-4 md:grid-cols-2" @submit="save">
+          <UFormField name="name" :label="t('master.name')" required>
+            <UInput v-model="form.name" class="w-full" icon="i-tabler-tag" autofocus />
+          </UFormField>
+          <UFormField v-if="resource === 'customers'" name="email" :label="t('master.email')">
+            <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
+          </UFormField>
+          <template v-if="resource === 'printers' || resource === 'components'">
+            <UFormField name="manufacturer" :label="t('master.manufacturer')"
+              ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
+            /></UFormField>
+            <UFormField name="model" :label="t('master.model')"
+              ><UInput v-model="form.model" class="w-full" icon="i-tabler-barcode"
+            /></UFormField>
+            <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
+              ><UInput
+                v-model="form.purchasePrice"
+                class="w-full"
+                type="number"
+                min="0"
+                step="0.01"
+                icon="i-tabler-cash"
+              >
+                <template #trailing>
+                  <span class="text-xs text-muted">{{ currency }}</span>
+                </template>
+              </UInput></UFormField
+            >
+            <UFormField name="expectedLifetimeHours" :label="t('master.lifetime')" required
+              ><UInput
+                v-model="form.expectedLifetimeHours"
+                class="w-full"
+                type="number"
+                min="0.01"
+                step="0.01"
+                icon="i-tabler-clock-hour-4"
+              >
+                <template #trailing>
+                  <span class="text-xs text-muted">h</span>
+                </template>
+              </UInput></UFormField
+            >
+            <UFormField
+              v-if="resource === 'printers'"
+              name="averagePowerWatts"
+              :label="t('master.power')"
+              required
+              ><UInput
+                v-model="form.averagePowerWatts"
+                class="w-full"
+                type="number"
+                min="0"
+                step="1"
+                icon="i-tabler-bolt"
+              >
+                <template #trailing>
+                  <span class="text-xs text-muted">W</span>
+                </template>
+              </UInput></UFormField
+            >
+            <UFormField v-if="resource === 'components'" name="type" :label="t('master.type')" required>
+              <USelect
+                v-model="form.type"
+                class="w-full"
+                icon="i-tabler-category"
+                value-key="value"
+                :items="componentTypes"
+              />
+            </UFormField>
+            <UFormField
+              v-if="resource === 'components'"
+              name="printerIds"
+              :label="t('master.compatiblePrinters')"
+              class="md:col-span-2"
+            >
+              <USelectMenu
+                v-model="form.printerIds"
+                class="w-full"
+                icon="i-tabler-printer"
+                multiple
+                value-key="value"
+                :items="printerOptions"
+              />
+            </UFormField>
+            <UAlert
+              class="md:col-span-2"
+              color="neutral"
+              variant="subtle"
+              :description="`${t('master.hourlyRate')}: ${derivedRate}`"
+            />
+          </template>
+          <template v-if="resource === 'filaments'">
+            <UFormField name="manufacturer" :label="t('master.manufacturer')" required
+              ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
+            /></UFormField>
+            <UFormField name="material" :label="t('master.material')" required
+              ><UInput v-model="form.material" class="w-full" icon="i-tabler-box"
+            /></UFormField>
+            <UFormField name="color" :label="t('master.color')"
+              ><UInput v-model="form.color" class="w-full" icon="i-tabler-palette"
+            /></UFormField>
+            <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
+              ><UInput
+                v-model="form.purchasePrice"
+                class="w-full"
+                type="number"
+                min="0"
+                step="0.01"
+                icon="i-tabler-cash"
+              >
+                <template #trailing>
+                  <span class="text-xs text-muted">{{ currency }}</span>
+                </template>
+              </UInput></UFormField
+            >
+            <UFormField name="netWeightGrams" :label="t('master.netWeight')" required
+              ><UInput
+                v-model="form.netWeightGrams"
+                class="w-full"
+                type="number"
+                min="0.01"
+                step="0.01"
+                icon="i-tabler-scale"
+              >
+                <template #trailing>
+                  <span class="text-xs text-muted">g</span>
+                </template>
+              </UInput></UFormField
+            >
+            <UAlert
+              class="md:col-span-2"
+              color="neutral"
+              variant="subtle"
+              :description="`${t('master.costPerGram')}: ${derivedRate}`"
+            />
+          </template>
+          <UFormField name="note" :label="t('master.note')" class="md:col-span-2"
+            ><UTextarea v-model="form.note" class="w-full" icon="i-tabler-notes"
+          /></UFormField>
+          <div class="flex justify-end gap-2 border-t border-default pt-4 md:col-span-2">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              :disabled="saving"
+              :label="t('common.cancel')"
+              @click="editing = false"
+            />
+            <UButton
+              type="submit"
+              icon="i-tabler-device-floppy"
+              :loading="saving"
+              :label="t('common.save')"
+            />
+          </div>
+        </UForm>
       </template>
-      <UForm :schema="formSchema" :state="form" class="grid gap-4 md:grid-cols-2" @submit="save">
-        <UFormField name="name" :label="t('master.name')" required>
-          <UInput v-model="form.name" class="w-full" icon="i-tabler-tag" />
-        </UFormField>
-        <UFormField v-if="resource === 'customers'" name="email" :label="t('master.email')">
-          <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
-        </UFormField>
-        <template v-if="resource === 'printers' || resource === 'components'">
-          <UFormField name="manufacturer" :label="t('master.manufacturer')"
-            ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
-          /></UFormField>
-          <UFormField name="model" :label="t('master.model')"
-            ><UInput v-model="form.model" class="w-full" icon="i-tabler-barcode"
-          /></UFormField>
-          <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
-            ><UInput
-              v-model="form.purchasePrice"
-              class="w-full"
-              type="number"
-              min="0"
-              step="0.01"
-              icon="i-tabler-cash"
-            >
-              <template #trailing>
-                <span class="text-xs text-muted">{{ currency }}</span>
-              </template>
-            </UInput></UFormField
-          >
-          <UFormField name="expectedLifetimeHours" :label="t('master.lifetime')" required
-            ><UInput
-              v-model="form.expectedLifetimeHours"
-              class="w-full"
-              type="number"
-              min="0.01"
-              step="0.01"
-              icon="i-tabler-clock-hour-4"
-            >
-              <template #trailing>
-                <span class="text-xs text-muted">h</span>
-              </template>
-            </UInput></UFormField
-          >
-          <UFormField
-            v-if="resource === 'printers'"
-            name="averagePowerWatts"
-            :label="t('master.power')"
-            required
-            ><UInput
-              v-model="form.averagePowerWatts"
-              class="w-full"
-              type="number"
-              min="0"
-              step="1"
-              icon="i-tabler-bolt"
-            >
-              <template #trailing>
-                <span class="text-xs text-muted">W</span>
-              </template>
-            </UInput></UFormField
-          >
-          <UFormField v-if="resource === 'components'" name="type" :label="t('master.type')" required>
-            <USelect
-              v-model="form.type"
-              class="w-full"
-              icon="i-tabler-category"
-              value-key="value"
-              :items="componentTypes"
-            />
-          </UFormField>
-          <UFormField
-            v-if="resource === 'components'"
-            name="printerIds"
-            :label="t('master.compatiblePrinters')"
-            class="md:col-span-2"
-          >
-            <USelectMenu
-              v-model="form.printerIds"
-              class="w-full"
-              icon="i-tabler-printer"
-              multiple
-              value-key="value"
-              :items="printerOptions"
-            />
-          </UFormField>
-          <UAlert
-            class="md:col-span-2"
-            color="neutral"
-            variant="subtle"
-            :description="`${t('master.hourlyRate')}: ${derivedRate}`"
-          />
-        </template>
-        <template v-if="resource === 'filaments'">
-          <UFormField name="manufacturer" :label="t('master.manufacturer')" required
-            ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
-          /></UFormField>
-          <UFormField name="material" :label="t('master.material')" required
-            ><UInput v-model="form.material" class="w-full" icon="i-tabler-box"
-          /></UFormField>
-          <UFormField name="color" :label="t('master.color')"
-            ><UInput v-model="form.color" class="w-full" icon="i-tabler-palette"
-          /></UFormField>
-          <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
-            ><UInput
-              v-model="form.purchasePrice"
-              class="w-full"
-              type="number"
-              min="0"
-              step="0.01"
-              icon="i-tabler-cash"
-            >
-              <template #trailing>
-                <span class="text-xs text-muted">{{ currency }}</span>
-              </template>
-            </UInput></UFormField
-          >
-          <UFormField name="netWeightGrams" :label="t('master.netWeight')" required
-            ><UInput
-              v-model="form.netWeightGrams"
-              class="w-full"
-              type="number"
-              min="0.01"
-              step="0.01"
-              icon="i-tabler-scale"
-            >
-              <template #trailing>
-                <span class="text-xs text-muted">g</span>
-              </template>
-            </UInput></UFormField
-          >
-          <UAlert
-            class="md:col-span-2"
-            color="neutral"
-            variant="subtle"
-            :description="`${t('master.costPerGram')}: ${derivedRate}`"
-          />
-        </template>
-        <UFormField name="note" :label="t('master.note')" class="md:col-span-2"
-          ><UTextarea v-model="form.note" class="w-full" icon="i-tabler-notes"
-        /></UFormField>
-        <div class="flex justify-end gap-2 md:col-span-2">
-          <UButton color="neutral" variant="ghost" :label="t('common.cancel')" @click="editing = false" />
-          <UButton type="submit" :loading="saving" :label="t('common.save')" />
-        </div>
-      </UForm>
-    </UCard>
+    </UModal>
 
     <div v-if="loading" class="flex min-h-40 items-center justify-center">
       <UIcon name="i-tabler-loader-2" class="size-8 animate-spin" />
@@ -240,6 +257,7 @@ const saving = ref(false);
 const editing = ref(false);
 const editingId = ref<string | null>(null);
 const error = ref('');
+const dialogError = ref('');
 const currency = ref('EUR');
 const printerOptions = ref<{ label: string; value: string }[]>([]);
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
@@ -249,6 +267,9 @@ const componentTypes = computed(() => [
   { label: t('master.buildPlate'), value: 'BUILD_PLATE' },
   { label: t('master.other'), value: 'OTHER' },
 ]);
+const dialogTitle = computed(
+  () => `${editingId.value ? t('common.edit') : t('common.create')} · ${props.title}`,
+);
 
 const formSchema = computed(() => {
   switch (props.resource) {
@@ -322,6 +343,7 @@ async function refresh() {
 function startCreate() {
   Object.assign(form, emptyForm());
   editingId.value = null;
+  dialogError.value = '';
   editing.value = true;
 }
 
@@ -329,12 +351,13 @@ function startEdit(item: MasterDataListItem) {
   Object.assign(form, emptyForm(), item);
   form.printerIds = Array.isArray(item.printerIds) ? ([...item.printerIds] as string[]) : [];
   editingId.value = item.id;
+  dialogError.value = '';
   editing.value = true;
 }
 
 async function save() {
   saving.value = true;
-  error.value = '';
+  dialogError.value = '';
   try {
     const method = editingId.value ? 'PATCH' : 'POST';
     const url = editingId.value ? `/api/${props.resource}/${editingId.value}` : `/api/${props.resource}`;
@@ -342,7 +365,7 @@ async function save() {
     editing.value = false;
     await refresh();
   } catch (reason) {
-    error.value = reason instanceof Error ? reason.message : String(reason);
+    dialogError.value = reason instanceof Error ? reason.message : String(reason);
   } finally {
     saving.value = false;
   }

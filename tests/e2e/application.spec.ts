@@ -26,10 +26,28 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
 
   await page.getByRole('link', { name: 'Kunden' }).click();
   await page.getByRole('button', { name: 'Erstellen' }).first().click();
-  await page.getByLabel('Name').fill('Acme');
-  await page.getByLabel('E-Mail').fill('hello@example.test');
-  await page.getByRole('button', { name: 'Speichern' }).click();
+  const resourceDialog = page.getByRole('dialog');
+  await expect(resourceDialog).toBeVisible();
+  await expect(resourceDialog.getByLabel('Name')).toBeFocused();
+  await resourceDialog.getByLabel('Name').fill('Acme');
+  await resourceDialog.getByLabel('E-Mail').fill('hello@example.test');
+  await resourceDialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(resourceDialog).toBeHidden();
   await expect(page.getByRole('cell', { name: 'Acme' })).toBeVisible();
+
+  const customerRow = page.getByRole('row', { name: /Acme/ });
+  await customerRow.getByRole('button', { name: 'Bearbeiten' }).click();
+  await expect(resourceDialog).toBeVisible();
+  await resourceDialog.getByLabel('Name').fill('Discarded name');
+  await page.keyboard.press('Escape');
+  await expect(resourceDialog).toBeHidden();
+  await expect(page.getByRole('cell', { name: 'Acme' })).toBeVisible();
+
+  await customerRow.getByRole('button', { name: 'Bearbeiten' }).click();
+  await resourceDialog.getByLabel('Name').fill('Acme Updated');
+  await resourceDialog.getByRole('button', { name: 'Speichern' }).click();
+  await expect(resourceDialog).toBeHidden();
+  await expect(page.getByRole('cell', { name: 'Acme Updated' })).toBeVisible();
 
   await page.getByRole('button', { name: 'Globale Suche öffnen' }).click();
   const globalSearch = page.getByRole('search', { name: 'Globale Suche' });
