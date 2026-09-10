@@ -6,7 +6,7 @@
         <span class="block truncate text-sm font-medium text-highlighted">{{ user?.displayName }}</span>
         <span class="block truncate text-xs text-muted">{{ user?.email }}</span>
       </span>
-      <UIcon name="i-lucide-chevrons-up-down" class="hidden size-4 text-muted sm:block" />
+      <UIcon name="i-tabler-selector" class="hidden size-4 text-muted sm:block" />
     </UButton>
   </UDropdownMenu>
 </template>
@@ -38,19 +38,19 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: t('common.language'),
-      icon: 'i-lucide-languages',
+      icon: 'i-tabler-language',
       children: locales.value.map((option) => ({
         label: option.name,
-        icon: user.value?.locale === option.code ? 'i-lucide-check' : undefined,
+        icon: user.value?.locale === option.code ? 'i-tabler-check' : undefined,
         onSelect: () => setLanguage(option.code),
       })),
     },
     {
       label: t('common.theme'),
-      icon: 'i-lucide-sun-moon',
+      icon: 'i-tabler-sun-moon',
       children: themes.map((theme) => ({
         label: t(`common.${theme}`),
-        icon: colorMode.preference === theme ? 'i-lucide-check' : undefined,
+        icon: colorMode.preference === theme ? 'i-tabler-check' : undefined,
         onSelect: () => {
           colorMode.preference = theme;
         },
@@ -60,7 +60,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: t('auth.logout'),
-      icon: 'i-lucide-log-out',
+      icon: 'i-tabler-logout',
       color: 'error',
       onSelect: () => logout(),
     },

@@ -13,6 +13,11 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await electricityPrice.fill('0.32');
   await page.getByRole('button', { name: 'Ersteinrichtung' }).click();
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
+  const tablerIcon = page.locator('.iconify[class*="i-tabler:"]').first();
+  await expect(tablerIcon).toBeVisible();
+  expect(await tablerIcon.evaluate((element) => getComputedStyle(element).maskImage)).toContain(
+    'data:image/svg+xml',
+  );
 
   const accessibility = await new AxeBuilder({ page }).analyze();
   expect(

@@ -5,7 +5,7 @@
         to="/"
         color="neutral"
         variant="ghost"
-        icon="i-lucide-box"
+        icon="i-tabler-cube"
         :label="collapsed ? undefined : t('app.name')"
         :square="collapsed"
         block
@@ -44,14 +44,14 @@ const { t } = useI18n();
 const appVersion = useRuntimeConfig().public.appVersion;
 const navigation = computed(() => [
   { label: t('nav.sections.workspace'), type: 'label' as const },
-  { label: t('nav.dashboard'), icon: 'i-lucide-layout-dashboard', to: '/' },
-  { label: t('nav.prints'), icon: 'i-lucide-printer', to: '/prints' },
+  { label: t('nav.dashboard'), icon: 'i-tabler-layout-dashboard', to: '/' },
+  { label: t('nav.prints'), icon: 'i-tabler-printer', to: '/prints' },
   { label: t('nav.sections.masterData'), type: 'label' as const },
-  { label: t('nav.customers'), icon: 'i-lucide-users', to: '/customers' },
-  { label: t('nav.printers'), icon: 'i-lucide-box', to: '/printers' },
-  { label: t('nav.components'), icon: 'i-lucide-component', to: '/components' },
-  { label: t('nav.filaments'), icon: 'i-lucide-circle-dot', to: '/filaments' },
+  { label: t('nav.customers'), icon: 'i-tabler-users', to: '/customers' },
+  { label: t('nav.printers'), icon: 'i-tabler-printer', to: '/printers' },
+  { label: t('nav.components'), icon: 'i-tabler-components', to: '/components' },
+  { label: t('nav.filaments'), icon: 'i-tabler-spool', to: '/filaments' },
   { label: t('nav.sections.system'), type: 'label' as const },
-  { label: t('nav.settings'), icon: 'i-lucide-settings', to: '/settings' },
+  { label: t('nav.settings'), icon: 'i-tabler-settings', to: '/settings' },
 ]);
 </script>

@@ -1,12 +1,12 @@
 <template>
   <LayoutPagePanel panel-id="prints" :title="t('nav.prints')">
-    <template #actions><UButton to="/prints/new" icon="i-lucide-plus" :label="t('prints.new')" /></template>
+    <template #actions><UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" /></template>
     <div class="space-y-4">
       <div class="flex flex-wrap gap-2">
         <UInput
           v-model="search"
           class="min-w-56 flex-1"
-          icon="i-lucide-search"
+          icon="i-tabler-search"
           :placeholder="t('common.search')"
         />
         <USelect v-model="status" class="w-44" value-key="value" :items="statusOptions" />

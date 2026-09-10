@@ -12,6 +12,6 @@
 <script setup lang="ts">
 withDefaults(defineProps<{ title: string; description?: string; icon?: string }>(), {
   description: undefined,
-  icon: 'i-lucide-inbox',
+  icon: 'i-tabler-inbox',
 });
 </script>

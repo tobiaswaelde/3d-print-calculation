@@ -6,7 +6,7 @@
       class="h-9 w-9 justify-start bg-default sm:w-64"
       :aria-label="t('search.open')"
     >
-      <UIcon name="i-lucide-terminal" class="size-4 shrink-0 text-primary" />
+      <UIcon name="i-tabler-command" class="size-4 shrink-0 text-primary" />
       <span class="hidden truncate text-muted sm:block">{{ t('search.placeholder') }}</span>
       <UKbd class="ml-auto hidden sm:inline-flex">/</UKbd>
     </UButton>
@@ -23,7 +23,7 @@
             v-model="query"
             type="search"
             autofocus
-            icon="i-lucide-search"
+            icon="i-tabler-search"
             size="lg"
             class="w-full"
             :placeholder="t('search.placeholder')"
@@ -38,7 +38,7 @@
             v-else-if="loading"
             class="flex items-center justify-center gap-2 px-3 py-8 text-sm text-muted"
           >
-            <UIcon name="i-lucide-loader-circle" class="size-4 animate-spin" />
+            <UIcon name="i-tabler-loader-2" class="size-4 animate-spin" />
             {{ t('common.loading') }}
           </div>
           <p v-else-if="error" class="px-3 py-8 text-center text-sm text-error">{{ error }}</p>
@@ -65,7 +65,7 @@
                       item.description
                     }}</span>
                   </span>
-                  <UIcon name="i-lucide-arrow-up-right" class="ml-auto size-3.5 shrink-0 text-muted" />
+                  <UIcon name="i-tabler-arrow-up-right" class="ml-auto size-3.5 shrink-0 text-muted" />
                 </NuxtLink>
               </div>
             </section>
@@ -90,11 +90,11 @@ let timer: ReturnType<typeof setTimeout> | undefined;
 let requestId = 0;
 
 const icons: Record<GlobalSearchKind, string> = {
-  prints: 'i-lucide-printer',
-  customers: 'i-lucide-users',
-  printers: 'i-lucide-box',
-  components: 'i-lucide-component',
-  filaments: 'i-lucide-circle-dot',
+  prints: 'i-tabler-printer',
+  customers: 'i-tabler-users',
+  printers: 'i-tabler-printer',
+  components: 'i-tabler-components',
+  filaments: 'i-tabler-spool',
 };
 const totalResults = computed(
   () => response.value?.groups.reduce((total, group) => total + group.items.length, 0) ?? 0,

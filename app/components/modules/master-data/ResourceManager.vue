@@ -4,11 +4,11 @@
       <UInput
         v-model="search"
         class="min-w-56 flex-1"
-        icon="i-lucide-search"
+        icon="i-tabler-search"
         :placeholder="t('common.search')"
       />
       <UCheckbox v-model="includeArchived" :label="t('master.includeArchived')" />
-      <UButton icon="i-lucide-plus" :label="t('common.create')" @click="startCreate" />
+      <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
     </div>
 
     <UAlert v-if="error" color="error" :description="error" />
@@ -164,10 +164,10 @@
     </UCard>
 
     <div v-if="loading" class="flex min-h-40 items-center justify-center">
-      <UIcon name="i-lucide-loader-circle" class="size-8 animate-spin" />
+      <UIcon name="i-tabler-loader-2" class="size-8 animate-spin" />
     </div>
     <CommonEmptyState v-else-if="!items.length" :title="t('common.empty')">
-      <UButton icon="i-lucide-plus" :label="t('common.create')" @click="startCreate" />
+      <UButton icon="i-tabler-plus" :label="t('common.create')" @click="startCreate" />
     </CommonEmptyState>
     <div v-else class="overflow-x-auto rounded-lg border border-default">
       <table class="w-full min-w-180 text-sm">
@@ -194,21 +194,21 @@
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  icon="i-lucide-pencil"
+                  icon="i-tabler-pencil"
                   :aria-label="t('common.edit')"
                   @click="startEdit(item)"
                 />
                 <UButton
                   color="neutral"
                   variant="ghost"
-                  :icon="item.archivedAt ? 'i-lucide-archive-restore' : 'i-lucide-archive'"
+                  :icon="item.archivedAt ? 'i-tabler-archive-off' : 'i-tabler-archive'"
                   :aria-label="item.archivedAt ? t('common.restore') : t('common.archive')"
                   @click="toggleArchive(item)"
                 />
                 <CommonConfirmButton
                   color="error"
                   variant="ghost"
-                  icon="i-lucide-trash-2"
+                  icon="i-tabler-trash"
                   :label="''"
                   :aria-label="t('common.delete')"
                   :confirmation="t('master.deleteConfirmation')"

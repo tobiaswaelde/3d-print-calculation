@@ -4,7 +4,7 @@
     <UAlert
       v-if="job?.status === 'COMPLETED'"
       color="success"
-      icon="i-lucide-lock"
+      icon="i-tabler-lock"
       :title="t('prints.completed')"
       :description="t('prints.immutable')"
     />
@@ -57,7 +57,7 @@
           <template #header
             ><div class="flex items-center justify-between">
               <h2 class="font-semibold">{{ t('prints.hotends') }}</h2>
-              <UButton icon="i-lucide-plus" size="sm" :label="t('common.create')" @click="addHotend" /></div
+              <UButton icon="i-tabler-plus" size="sm" :label="t('common.create')" @click="addHotend" /></div
           ></template>
           <div class="space-y-3">
             <div
@@ -105,7 +105,7 @@
               <UButton
                 color="error"
                 variant="ghost"
-                icon="i-lucide-trash-2"
+                icon="i-tabler-trash"
                 :aria-label="t('common.delete')"
                 :disabled="form.hotends.length === 1"
                 @click="form.hotends.splice(index, 1)"
@@ -135,7 +135,7 @@
           <template #header
             ><div class="flex items-center justify-between">
               <h2 class="font-semibold">{{ t('nav.filaments') }}</h2>
-              <UButton icon="i-lucide-plus" size="sm" :label="t('common.create')" @click="addFilament" /></div
+              <UButton icon="i-tabler-plus" size="sm" :label="t('common.create')" @click="addFilament" /></div
           ></template>
           <div class="space-y-3">
             <div
@@ -168,7 +168,7 @@
               <UButton
                 color="error"
                 variant="ghost"
-                icon="i-lucide-trash-2"
+                icon="i-tabler-trash"
                 :aria-label="t('common.delete')"
                 :disabled="form.filaments.length === 1"
                 @click="form.filaments.splice(index, 1)"
@@ -182,7 +182,7 @@
         <template #header
           ><div class="flex items-center gap-2">
             <h2 class="font-semibold">{{ t('prints.costPreview') }}</h2>
-            <UIcon v-if="previewPending" name="i-lucide-loader-circle" class="animate-spin" /></div
+            <UIcon v-if="previewPending" name="i-tabler-loader-2" class="animate-spin" /></div
         ></template>
         <CommonCostBreakdown v-if="costs" v-bind="costs" />
         <p v-else class="text-sm text-muted">{{ t('prints.previewHint') }}</p>
@@ -224,7 +224,7 @@
           v-if="job"
           color="neutral"
           variant="outline"
-          icon="i-lucide-copy"
+          icon="i-tabler-copy"
           :label="t('prints.duplicate')"
           @click="duplicate"
         />
@@ -233,14 +233,14 @@
           type="submit"
           color="neutral"
           variant="outline"
-          icon="i-lucide-save"
+          icon="i-tabler-device-floppy"
           :loading="saving"
           :label="t('prints.saveDraft')"
           @click="submitIntent = 'save'"
         />
         <CommonConfirmButton
           v-if="job?.status === 'DRAFT'"
-          icon="i-lucide-check"
+          icon="i-tabler-check"
           :label="t('prints.complete')"
           :confirmation="t('prints.completeConfirmation')"
           @confirm="triggerComplete"

@@ -40,7 +40,7 @@
             <div
               class="flex size-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700 ring-1 ring-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:ring-blue-800"
             >
-              <UIcon name="i-lucide-chart-no-axes-combined" class="size-4.5" />
+              <UIcon name="i-tabler-chart-line" class="size-4.5" />
             </div>
             <h2 class="font-semibold">{{ t('dashboard.costOverTime') }}</h2>
           </div>
@@ -58,7 +58,7 @@
             <div
               class="flex size-9 items-center justify-center rounded-lg bg-violet-100 text-violet-700 ring-1 ring-violet-200 dark:bg-violet-950 dark:text-violet-300 dark:ring-violet-800"
             >
-              <UIcon name="i-lucide-chart-pie" class="size-4.5" />
+              <UIcon name="i-tabler-chart-pie" class="size-4.5" />
             </div>
             <h2 class="font-semibold">{{ t('dashboard.costCategories') }}</h2>
           </div>
@@ -79,11 +79,11 @@
             <div
               class="flex size-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:ring-amber-800"
             >
-              <UIcon name="i-lucide-file-clock" class="size-4.5" />
+              <UIcon name="i-tabler-file-time" class="size-4.5" />
             </div>
             <h2 class="font-semibold">{{ t('dashboard.unfinished') }}</h2>
           </div>
-          <UButton to="/prints/new" icon="i-lucide-plus" :label="t('prints.new')" />
+          <UButton to="/prints/new" icon="i-tabler-plus" :label="t('prints.new')" />
         </div>
       </template>
       <CommonEmptyState
@@ -115,7 +115,7 @@
                   :to="`/prints/${item.id}`"
                   class="inline-flex items-center gap-2 font-medium text-primary hover:underline"
                 >
-                  <UIcon name="i-lucide-box" class="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                  <UIcon name="i-tabler-cube" class="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
                   {{ item.name }}
                 </NuxtLink>
               </td>
@@ -156,7 +156,7 @@ const kpis = computed(() => [
     label: t('dashboard.activeDrafts'),
     value: data.value?.kpis.activeDrafts ?? 0,
     to: '/prints?status=DRAFT',
-    icon: 'i-lucide-file-clock',
+    icon: 'i-tabler-file-time',
     accentClass: 'bg-amber-500',
     iconWellClass:
       'bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-800',
@@ -165,7 +165,7 @@ const kpis = computed(() => [
     label: t('dashboard.completedPrints'),
     value: data.value?.kpis.completedPrints ?? 0,
     to: '/prints?status=COMPLETED',
-    icon: 'i-lucide-circle-check-big',
+    icon: 'i-tabler-circle-check',
     accentClass: 'bg-emerald-500',
     iconWellClass:
       'bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-800',
@@ -174,7 +174,7 @@ const kpis = computed(() => [
     label: t('dashboard.totalDuration'),
     value: duration(data.value?.kpis.totalDurationSeconds ?? 0),
     to: '/prints?status=COMPLETED',
-    icon: 'i-lucide-clock-3',
+    icon: 'i-tabler-clock',
     accentClass: 'bg-violet-500',
     iconWellClass:
       'bg-violet-50 text-violet-700 ring-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:ring-violet-800',
@@ -183,7 +183,7 @@ const kpis = computed(() => [
     label: t('dashboard.totalCost'),
     value: money(data.value?.kpis.totalCost ?? '0', data.value?.currency ?? 'EUR'),
     to: '/prints?status=COMPLETED',
-    icon: 'i-lucide-coins',
+    icon: 'i-tabler-coins',
     accentClass: 'bg-blue-500',
     iconWellClass:
       'bg-blue-50 text-blue-700 ring-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-800',
