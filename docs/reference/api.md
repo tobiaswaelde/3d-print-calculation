@@ -52,6 +52,8 @@ Setup requires `displayName`, `email`, a password of at least 12 characters, sup
 Inventory PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Authoritative
 schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/ezprint/tree/main/shared/schemas).
 
+Component inputs accept `alwaysUsed`, which defaults to `false`. Component responses expose the stored flag.
+
 ## Errors
 
 Errors include an HTTP status and stable `data` with `code`, `messageKey`, optional `fieldErrors`, and `requestId`.

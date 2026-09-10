@@ -118,6 +118,13 @@
                 :items="printerOptions"
               />
             </UFormField>
+            <UFormField v-if="resource === 'components'" name="alwaysUsed" class="md:col-span-2">
+              <UCheckbox
+                v-model="form.alwaysUsed"
+                :label="t('master.alwaysUsed')"
+                :description="t('master.alwaysUsedDescription')"
+              />
+            </UFormField>
             <UAlert
               class="md:col-span-2"
               color="neutral"
@@ -336,6 +343,7 @@ function emptyForm() {
     expectedLifetimeHours: '1',
     averagePowerWatts: 0,
     type: 'HOTEND',
+    alwaysUsed: false,
     printerIds: [] as string[],
     material: '',
     color: '#FFFFFF',
@@ -434,7 +442,13 @@ function details(item: MasterDataListItem) {
   if (props.resource === 'filaments')
     return [item.manufacturer, item.material, item.color].filter(Boolean).join(' · ');
   if (props.resource === 'components')
-    return `${t(`master.${String(item.type).toLowerCase()}`)} · ${[item.manufacturer, item.model].filter(Boolean).join(' ')}`;
+    return [
+      t(`master.${String(item.type).toLowerCase()}`),
+      [item.manufacturer, item.model].filter(Boolean).join(' '),
+      item.alwaysUsed ? t('master.alwaysUsed') : '',
+    ]
+      .filter(Boolean)
+      .join(' · ');
   return `${[item.manufacturer, item.model].filter(Boolean).join(' ')} · ${item.averagePowerWatts} W`;
 }
 

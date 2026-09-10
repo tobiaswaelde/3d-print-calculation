@@ -1,0 +1,1 @@
+ALTER TABLE "Component" ADD COLUMN "alwaysUsed" BOOLEAN NOT NULL DEFAULT false;

@@ -329,6 +329,15 @@ function addFilament() {
   form.filaments.push({ filamentId: '', usedGrams: '1' });
 }
 
+function applyComponentDefaults() {
+  const defaults = getPrintComponentDefaults(components.value, form.printerId);
+  form.buildPlateId = defaults.buildPlateId;
+  form.hotends = defaults.hotendIds.length
+    ? defaults.hotendIds.map((componentId) => ({ componentId, hours: 1, minutes: 0 }))
+    : [{ componentId: '', hours: 1, minutes: 0 }];
+  form.otherComponentIds = defaults.otherComponentIds;
+}
+
 async function nextStep() {
   const fields = fieldsByStep[currentStep.value];
   if (!fields) return;
@@ -391,11 +400,9 @@ async function persist() {
 
 watch(
   () => form.printerId,
-  (_current, previous) => {
-    if (hydrating || !previous) return;
-    form.buildPlateId = '';
-    form.hotends = [{ componentId: '', hours: 1, minutes: 0 }];
-    form.otherComponentIds = [];
+  () => {
+    if (hydrating) return;
+    applyComponentDefaults();
   },
 );
 

@@ -7,6 +7,8 @@ description: Prisma models, relationships, archiving, decimal serialization, and
 
 `User` owns `Session` records; `AppSettings` is the singleton with ID `1`. `Customer`, `Printer`, `Component`, and
 `Filament` are inventory records. `PrinterComponent` represents printer/component compatibility.
+The `Component.alwaysUsed` flag controls compatible defaults in new print forms without making those selections
+mandatory.
 
 A `PrintJob` references one printer, an optional customer, and component and filament usage rows. Usage rows copy
 names, prices, lifetimes, quantities, and line costs at calculation time. `PrintCostSnapshot` also retains totals,

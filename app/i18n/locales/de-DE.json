@@ -95,6 +95,8 @@
     "power": "Durchschnittsleistung (Watt)",
     "type": "Typ",
     "compatiblePrinters": "Kompatible Drucker",
+    "alwaysUsed": "Immer verwendet",
+    "alwaysUsedDescription": "Bei neuen Drucken für kompatible Drucker automatisch vorauswählen.",
     "material": "Material",
     "color": "Farbe",
     "pickColor": "Farbe auswählen",

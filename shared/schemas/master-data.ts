@@ -63,6 +63,7 @@ export const manufacturerSchema = z.object({
 export const componentSchema = z.object({
   type: z.enum(['HOTEND', 'BUILD_PLATE', 'OTHER']),
   name: z.string().trim().min(1).max(200),
+  alwaysUsed: z.boolean().default(false),
   manufacturerId: optionalId,
   model: optionalText,
   purchasePrice: decimalSchema(),

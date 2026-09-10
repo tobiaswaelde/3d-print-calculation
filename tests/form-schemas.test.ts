@@ -26,6 +26,7 @@ describe('application form validation', () => {
       componentSchema.safeParse({
         type: 'HOTEND',
         name: 'High-flow hotend',
+        alwaysUsed: true,
         manufacturer: '',
         model: '',
         purchasePrice: 89.9,
@@ -34,6 +35,14 @@ describe('application form validation', () => {
         note: '',
       }).success,
     ).toBe(true);
+    expect(
+      componentSchema.parse({
+        type: 'OTHER',
+        name: 'Filter',
+        purchasePrice: 20,
+        expectedLifetimeHours: 500,
+      }).alwaysUsed,
+    ).toBe(false);
   });
 
   it('requires complete print references, positive material, and a non-zero duration', () => {

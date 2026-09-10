@@ -16,6 +16,10 @@ Name, purchase price, and expected lifetime are required. Manufacturer, model, a
 price must be zero or greater; lifetime must be greater than zero. The displayed hourly rate is
 `purchase price / expected lifetime hours`.
 
+Enable **Always used** to preselect the component whenever a compatible printer is chosen for a new print. The
+suggested selection remains editable in the print form. If multiple build plates are marked, the first listed
+compatible build plate is selected because a print can use only one.
+
 Choose one type:
 
 - **Build plate:** exactly one is required per print; its hourly rate applies to the total print duration.
@@ -26,8 +30,8 @@ Choose one type:
 ## Compatibility and lifecycle
 
 The multi-select **Compatible printers** controls which printer drafts can use the component. If you change the
-printer in a draft, the editor clears the build plate, hotends, and other components so incompatible selections
-cannot remain hidden in the form.
+printer in a draft, the editor replaces the build plate, hotends, and other components with that printer's
+always-used defaults so incompatible selections cannot remain hidden in the form.
 
 Use the shared search, create, edit, archive, restore, and safe-delete actions. Archiving hides a component from new
 drafts but preserves its saved usage lines and costs in existing records.

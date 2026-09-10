@@ -95,6 +95,8 @@
     "power": "Average power (watts)",
     "type": "Type",
     "compatiblePrinters": "Compatible printers",
+    "alwaysUsed": "Always used",
+    "alwaysUsedDescription": "Automatically preselect for new prints with compatible printers.",
     "material": "Material",
     "color": "Color",
     "pickColor": "Choose color",

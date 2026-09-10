@@ -64,6 +64,7 @@ function componentDto(value: ComponentWithRelations) {
   return {
     ...baseDto(value),
     type: value.type,
+    alwaysUsed: value.alwaysUsed,
     manufacturerId: value.manufacturerId,
     manufacturer: value.manufacturer?.name ?? null,
     model: value.model,

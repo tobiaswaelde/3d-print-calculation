@@ -91,6 +91,7 @@ model Component {
   id                    String             @id @default(cuid())
   type                  String
   name                  String
+  alwaysUsed            Boolean            @default(false)
   manufacturerId        String?
   manufacturer          Manufacturer?      @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
   model                 String?
