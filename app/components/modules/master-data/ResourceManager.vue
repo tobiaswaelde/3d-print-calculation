@@ -19,33 +19,72 @@
       </template>
       <UForm :schema="formSchema" :state="form" class="grid gap-4 md:grid-cols-2" @submit="save">
         <UFormField name="name" :label="t('master.name')" required>
-          <UInput v-model="form.name" class="w-full" />
+          <UInput v-model="form.name" class="w-full" icon="i-tabler-tag" />
         </UFormField>
         <UFormField v-if="resource === 'customers'" name="email" :label="t('master.email')">
-          <UInput v-model="form.email" class="w-full" type="email" />
+          <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
         </UFormField>
         <template v-if="resource === 'printers' || resource === 'components'">
           <UFormField name="manufacturer" :label="t('master.manufacturer')"
-            ><UInput v-model="form.manufacturer" class="w-full"
+            ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
           /></UFormField>
           <UFormField name="model" :label="t('master.model')"
-            ><UInput v-model="form.model" class="w-full"
+            ><UInput v-model="form.model" class="w-full" icon="i-tabler-barcode"
           /></UFormField>
           <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
-            ><UInput v-model="form.purchasePrice" class="w-full" inputmode="decimal"
-          /></UFormField>
+            ><UInput
+              v-model="form.purchasePrice"
+              class="w-full"
+              type="number"
+              min="0"
+              step="0.01"
+              icon="i-tabler-cash"
+            >
+              <template #trailing>
+                <span class="text-xs text-muted">{{ currency }}</span>
+              </template>
+            </UInput></UFormField
+          >
           <UFormField name="expectedLifetimeHours" :label="t('master.lifetime')" required
-            ><UInput v-model="form.expectedLifetimeHours" class="w-full" inputmode="decimal"
-          /></UFormField>
+            ><UInput
+              v-model="form.expectedLifetimeHours"
+              class="w-full"
+              type="number"
+              min="0.01"
+              step="0.01"
+              icon="i-tabler-clock-hour-4"
+            >
+              <template #trailing>
+                <span class="text-xs text-muted">h</span>
+              </template>
+            </UInput></UFormField
+          >
           <UFormField
             v-if="resource === 'printers'"
             name="averagePowerWatts"
             :label="t('master.power')"
             required
-            ><UInput v-model="form.averagePowerWatts" class="w-full" type="number" min="0" step="1"
-          /></UFormField>
+            ><UInput
+              v-model="form.averagePowerWatts"
+              class="w-full"
+              type="number"
+              min="0"
+              step="1"
+              icon="i-tabler-bolt"
+            >
+              <template #trailing>
+                <span class="text-xs text-muted">W</span>
+              </template>
+            </UInput></UFormField
+          >
           <UFormField v-if="resource === 'components'" name="type" :label="t('master.type')" required>
-            <USelect v-model="form.type" class="w-full" value-key="value" :items="componentTypes" />
+            <USelect
+              v-model="form.type"
+              class="w-full"
+              icon="i-tabler-category"
+              value-key="value"
+              :items="componentTypes"
+            />
           </UFormField>
           <UFormField
             v-if="resource === 'components'"
@@ -56,6 +95,7 @@
             <USelectMenu
               v-model="form.printerIds"
               class="w-full"
+              icon="i-tabler-printer"
               multiple
               value-key="value"
               :items="printerOptions"
@@ -70,20 +110,42 @@
         </template>
         <template v-if="resource === 'filaments'">
           <UFormField name="manufacturer" :label="t('master.manufacturer')" required
-            ><UInput v-model="form.manufacturer" class="w-full"
+            ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
           /></UFormField>
           <UFormField name="material" :label="t('master.material')" required
-            ><UInput v-model="form.material" class="w-full"
+            ><UInput v-model="form.material" class="w-full" icon="i-tabler-box"
           /></UFormField>
           <UFormField name="color" :label="t('master.color')"
-            ><UInput v-model="form.color" class="w-full"
+            ><UInput v-model="form.color" class="w-full" icon="i-tabler-palette"
           /></UFormField>
           <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
-            ><UInput v-model="form.purchasePrice" class="w-full" inputmode="decimal"
-          /></UFormField>
+            ><UInput
+              v-model="form.purchasePrice"
+              class="w-full"
+              type="number"
+              min="0"
+              step="0.01"
+              icon="i-tabler-cash"
+            >
+              <template #trailing>
+                <span class="text-xs text-muted">{{ currency }}</span>
+              </template>
+            </UInput></UFormField
+          >
           <UFormField name="netWeightGrams" :label="t('master.netWeight')" required
-            ><UInput v-model="form.netWeightGrams" class="w-full" inputmode="decimal"
-          /></UFormField>
+            ><UInput
+              v-model="form.netWeightGrams"
+              class="w-full"
+              type="number"
+              min="0.01"
+              step="0.01"
+              icon="i-tabler-scale"
+            >
+              <template #trailing>
+                <span class="text-xs text-muted">g</span>
+              </template>
+            </UInput></UFormField
+          >
           <UAlert
             class="md:col-span-2"
             color="neutral"
@@ -92,7 +154,7 @@
           />
         </template>
         <UFormField name="note" :label="t('master.note')" class="md:col-span-2"
-          ><UTextarea v-model="form.note" class="w-full"
+          ><UTextarea v-model="form.note" class="w-full" icon="i-tabler-notes"
         /></UFormField>
         <div class="flex justify-end gap-2 md:col-span-2">
           <UButton color="neutral" variant="ghost" :label="t('common.cancel')" @click="editing = false" />

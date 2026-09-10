@@ -4,9 +4,9 @@ import { currencySchema, supportedLocaleSchema } from './common';
 
 function decimalSchema(options: { positive?: boolean } = {}) {
   return z
-    .string()
-    .trim()
-    .regex(/^\d+(?:\.\d+)?$/)
+    .union([z.string(), z.number().finite()])
+    .transform((value) => String(value).trim())
+    .pipe(z.string().regex(/^\d+(?:\.\d+)?$/))
     .refine(
       (value) => {
         const decimal = new Decimal(value);

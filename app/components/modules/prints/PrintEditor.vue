@@ -21,23 +21,34 @@
         <UCard>
           <div class="grid gap-4 md:grid-cols-2">
             <UFormField name="name" :label="t('master.name')" required
-              ><UInput v-model="form.name" class="w-full"
+              ><UInput v-model="form.name" class="w-full" icon="i-tabler-tag"
             /></UFormField>
             <UFormField name="customerId" :label="t('nav.customers')"
-              ><USelect v-model="form.customerId" class="w-full" value-key="value" :items="customerOptions"
+              ><USelect
+                v-model="form.customerId"
+                class="w-full"
+                icon="i-tabler-user"
+                value-key="value"
+                :items="customerOptions"
             /></UFormField>
             <UFormField name="printerId" :label="t('nav.printers')" required
-              ><USelect v-model="form.printerId" class="w-full" value-key="value" :items="printerOptions"
+              ><USelect
+                v-model="form.printerId"
+                class="w-full"
+                icon="i-tabler-printer"
+                value-key="value"
+                :items="printerOptions"
             /></UFormField>
             <UFormField name="buildPlateId" :label="t('master.buildPlate')" required
               ><USelect
                 v-model="form.buildPlateId"
                 class="w-full"
+                icon="i-tabler-square"
                 value-key="value"
                 :items="buildPlateOptions"
             /></UFormField>
             <UFormField name="notes" :label="t('master.note')" class="md:col-span-2"
-              ><UTextarea v-model="form.notes" class="w-full"
+              ><UTextarea v-model="form.notes" class="w-full" icon="i-tabler-notes"
             /></UFormField>
           </div>
         </UCard>
@@ -58,15 +69,39 @@
                 ><USelect
                   v-model="hotend.componentId"
                   class="w-full"
+                  icon="i-tabler-flame"
                   value-key="value"
                   :items="hotendOptions"
               /></UFormField>
               <UFormField :name="`hotends.${index}.hours`" :label="t('prints.hours')"
-                ><UInput v-model="hotend.hours" type="number" min="0" step="1"
-              /></UFormField>
+                ><UInput
+                  v-model="hotend.hours"
+                  class="w-full"
+                  type="number"
+                  min="0"
+                  step="1"
+                  icon="i-tabler-clock-hour-4"
+                >
+                  <template #trailing>
+                    <span class="text-xs text-muted">h</span>
+                  </template>
+                </UInput></UFormField
+              >
               <UFormField :name="`hotends.${index}.minutes`" :label="t('prints.minutes')"
-                ><UInput v-model="hotend.minutes" type="number" min="0" max="59" step="1"
-              /></UFormField>
+                ><UInput
+                  v-model="hotend.minutes"
+                  class="w-full"
+                  type="number"
+                  min="0"
+                  max="59"
+                  step="1"
+                  icon="i-tabler-clock"
+                >
+                  <template #trailing>
+                    <span class="text-xs text-muted">min</span>
+                  </template>
+                </UInput></UFormField
+              >
               <UButton
                 color="error"
                 variant="ghost"
@@ -88,6 +123,7 @@
               ><USelectMenu
                 v-model="form.otherComponentIds"
                 class="w-full"
+                icon="i-tabler-components"
                 multiple
                 value-key="value"
                 :items="otherOptions"
@@ -111,12 +147,24 @@
                 ><USelect
                   v-model="filament.filamentId"
                   class="w-full"
+                  icon="i-tabler-spool"
                   value-key="value"
                   :items="filamentOptions"
               /></UFormField>
               <UFormField :name="`filaments.${index}.usedGrams`" :label="t('prints.usedGrams')" required
-                ><UInput v-model="filament.usedGrams" inputmode="decimal"
-              /></UFormField>
+                ><UInput
+                  v-model="filament.usedGrams"
+                  class="w-full"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  icon="i-tabler-scale"
+                >
+                  <template #trailing>
+                    <span class="text-xs text-muted">g</span>
+                  </template>
+                </UInput></UFormField
+              >
               <UButton
                 color="error"
                 variant="ghost"

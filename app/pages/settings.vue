@@ -3,13 +3,35 @@
     <UCard class="max-w-2xl">
       <UForm :schema="settingsSchema" :state="form" class="space-y-4" @submit="save">
         <UFormField name="currency" :label="t('auth.currency')" required :help="t('settings.currencyHelp')">
-          <USelect v-model="form.currency" class="w-full" :items="['EUR', 'USD', 'CHF', 'GBP']" />
+          <USelect
+            v-model="form.currency"
+            class="w-full"
+            icon="i-tabler-currency-euro"
+            :items="['EUR', 'USD', 'CHF', 'GBP']"
+          />
         </UFormField>
         <UFormField name="defaultLocale" :label="t('settings.defaultLocale')" required>
-          <USelect v-model="form.defaultLocale" class="w-full" value-key="value" :items="localeOptions" />
+          <USelect
+            v-model="form.defaultLocale"
+            class="w-full"
+            icon="i-tabler-language"
+            value-key="value"
+            :items="localeOptions"
+          />
         </UFormField>
         <UFormField name="electricityPricePerKwh" :label="t('auth.electricityPrice')" required>
-          <UInput v-model="form.electricityPricePerKwh" class="w-full" inputmode="decimal" />
+          <UInput
+            v-model="form.electricityPricePerKwh"
+            class="w-full"
+            type="number"
+            min="0"
+            step="0.001"
+            icon="i-tabler-bolt"
+          >
+            <template #trailing>
+              <span class="text-xs text-muted">{{ form.currency }}/kWh</span>
+            </template>
+          </UInput>
         </UFormField>
         <UAlert v-if="message" :color="messageColor" :description="message" />
         <div class="flex justify-end">

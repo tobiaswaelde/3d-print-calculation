@@ -2,9 +2,9 @@ import Decimal from 'decimal.js';
 import { z } from 'zod';
 
 const positiveDecimal = z
-  .string()
-  .trim()
-  .regex(/^\d+(?:\.\d+)?$/)
+  .union([z.string(), z.number().finite()])
+  .transform((value) => String(value).trim())
+  .pipe(z.string().regex(/^\d+(?:\.\d+)?$/))
   .refine((value) => new Decimal(value).greaterThan(0));
 
 const printDurationFormSchema = z

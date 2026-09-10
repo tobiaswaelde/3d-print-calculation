@@ -5,17 +5,17 @@ import { printDraftFormSchema } from '../shared/schemas/prints';
 describe('application form validation', () => {
   it('accepts valid settings and rejects malformed decimal input', () => {
     expect(
-      settingsSchema.safeParse({
+      settingsSchema.parse({
         currency: 'EUR',
         defaultLocale: 'de-DE',
-        electricityPricePerKwh: '0.32',
-      }).success,
-    ).toBe(true);
+        electricityPricePerKwh: 0.32,
+      }).electricityPricePerKwh,
+    ).toBe('0.32');
     expect(
       settingsSchema.safeParse({
         currency: 'EUR',
         defaultLocale: 'de-DE',
-        electricityPricePerKwh: '-0.32',
+        electricityPricePerKwh: -0.32,
       }).success,
     ).toBe(false);
   });
@@ -28,8 +28,8 @@ describe('application form validation', () => {
         name: 'High-flow hotend',
         manufacturer: '',
         model: '',
-        purchasePrice: '89.90',
-        expectedLifetimeHours: '1200',
+        purchasePrice: 89.9,
+        expectedLifetimeHours: 1200,
         printerIds: ['printer-1'],
         note: '',
       }).success,
@@ -44,7 +44,7 @@ describe('application form validation', () => {
       buildPlateId: 'plate-1',
       hotends: [{ componentId: 'hotend-1', hours: 1, minutes: 30 }],
       otherComponentIds: [],
-      filaments: [{ filamentId: 'filament-1', usedGrams: '42.5' }],
+      filaments: [{ filamentId: 'filament-1', usedGrams: 42.5 }],
       notes: '',
     };
 

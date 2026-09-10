@@ -7,7 +7,10 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByLabel('Anzeigename').fill('Browser Test');
   await page.getByLabel('E-Mail').fill('browser@example.test');
   await page.getByLabel('Passwort').fill('browser-test-password-123');
-  await page.getByLabel('Strompreis pro kWh').fill('0.32');
+  const electricityPrice = page.getByLabel('Strompreis pro kWh');
+  await expect(electricityPrice).toHaveAttribute('type', 'number');
+  await expect(electricityPrice.locator('..')).toContainText('EUR/kWh');
+  await electricityPrice.fill('0.32');
   await page.getByRole('button', { name: 'Ersteinrichtung' }).click();
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toBeVisible();
 
