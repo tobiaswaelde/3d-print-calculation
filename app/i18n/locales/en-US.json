@@ -50,6 +50,14 @@
     "collapse": "Collapse navigation",
     "expand": "Expand navigation"
   },
+  "search": {
+    "title": "Global search",
+    "open": "Open global search",
+    "placeholder": "Search prints and master data",
+    "hint": "Enter at least two characters.",
+    "empty": "No matching results found.",
+    "failed": "Search could not be loaded."
+  },
   "pages": {
     "dashboard": "Overview",
     "placeholder": "This area is prepared for the next milestone."

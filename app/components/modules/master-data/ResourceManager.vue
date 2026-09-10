@@ -158,9 +158,10 @@ import type { MasterDataListItem, MasterDataResource, PaginatedResponse } from '
 
 const props = defineProps<{ resource: MasterDataResource; title: string }>();
 const { t } = useI18n();
+const route = useRoute();
 const { money, decimal } = useFormatting();
 const items = ref<MasterDataListItem[]>([]);
-const search = ref('');
+const search = ref(typeof route.query.search === 'string' ? route.query.search : '');
 const includeArchived = ref(false);
 const loading = ref(true);
 const saving = ref(false);

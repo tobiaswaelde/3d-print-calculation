@@ -184,6 +184,14 @@ try {
     dashboard.body.kpis.totalCost === completed.body.totalCost,
     'Dashboard totals must reconcile with stored snapshots.',
   );
+  const globalSearch = await json('/api/search?q=Bracket', {}, cookie);
+  check(
+    globalSearch.body.groups?.some(
+      (group: { type: string; items: { id: string }[] }) =>
+        group.type === 'prints' && group.items.some((item) => item.id === draft.body.id),
+    ),
+    'Global search must find matching prints.',
+  );
 
   const locked = await json(
     '/api/settings',

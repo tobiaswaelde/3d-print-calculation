@@ -50,6 +50,14 @@
     "collapse": "Navigation einklappen",
     "expand": "Navigation ausklappen"
   },
+  "search": {
+    "title": "Globale Suche",
+    "open": "Globale Suche öffnen",
+    "placeholder": "Drucke und Stammdaten suchen",
+    "hint": "Gib mindestens zwei Zeichen ein.",
+    "empty": "Keine passenden Ergebnisse gefunden.",
+    "failed": "Die Suche konnte nicht geladen werden."
+  },
   "pages": {
     "dashboard": "Übersicht",
     "placeholder": "Dieser Bereich wird im nächsten Meilenstein eingerichtet."

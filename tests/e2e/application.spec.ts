@@ -23,6 +23,15 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('button', { name: 'Speichern' }).click();
   await expect(page.getByRole('cell', { name: 'Acme' })).toBeVisible();
 
+  await page.getByRole('button', { name: 'Globale Suche öffnen' }).click();
+  const globalSearch = page.getByRole('search', { name: 'Globale Suche' });
+  await globalSearch.getByRole('searchbox').fill('Acme');
+  await expect(globalSearch.getByRole('link', { name: /Acme/ })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.keyboard.press('/');
+  await expect(globalSearch.getByRole('searchbox')).toBeFocused();
+  await page.keyboard.press('Escape');
+
   await page.getByRole('button', { name: 'Benutzermenü öffnen' }).click();
   await page.getByRole('menuitem', { name: 'Sprache' }).hover();
   await page.getByRole('menuitem', { name: 'English' }).click();

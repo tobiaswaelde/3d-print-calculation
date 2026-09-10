@@ -2,6 +2,7 @@
   <UDashboardPanel :id="panelId" class="min-h-0">
     <template #header>
       <UDashboardNavbar :title="title">
+        <LayoutGlobalSearch />
         <template #right>
           <slot name="actions" />
           <LayoutAppUserMenu />
