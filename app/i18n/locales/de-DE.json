@@ -42,5 +42,36 @@
   "pages": {
     "dashboard": "Übersicht",
     "placeholder": "Dieser Bereich wird im nächsten Meilenstein eingerichtet."
+  },
+  "settings": {
+    "defaultLocale": "Standardsprache",
+    "currencyHelp": "Nach dem ersten kostenrelevanten Datensatz kann die Währung nicht mehr geändert werden.",
+    "saved": "Einstellungen gespeichert."
+  },
+  "master": {
+    "name": "Name",
+    "email": "E-Mail",
+    "manufacturer": "Hersteller",
+    "model": "Modell",
+    "purchasePrice": "Kaufpreis",
+    "lifetime": "Erwartete Lebensdauer (Stunden)",
+    "power": "Durchschnittsleistung (Watt)",
+    "type": "Typ",
+    "compatiblePrinters": "Kompatible Drucker",
+    "material": "Material",
+    "color": "Farbe",
+    "netWeight": "Nettogewicht (g)",
+    "note": "Notiz",
+    "hourlyRate": "Kosten pro Stunde",
+    "costPerGram": "Kosten pro Gramm",
+    "includeArchived": "Archivierte anzeigen",
+    "details": "Details",
+    "rate": "Kostensatz",
+    "actions": "Aktionen",
+    "hotend": "Hotend",
+    "buildPlate": "Druckplatte",
+    "build_plate": "Druckplatte",
+    "other": "Sonstige",
+    "deleteConfirmation": "Dieser Eintrag wird dauerhaft gelöscht, sofern er nicht verwendet wird."
   }
 }

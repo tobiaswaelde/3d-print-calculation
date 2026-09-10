@@ -42,5 +42,36 @@
   "pages": {
     "dashboard": "Overview",
     "placeholder": "This area is prepared for the next milestone."
+  },
+  "settings": {
+    "defaultLocale": "Default language",
+    "currencyHelp": "The currency cannot be changed after the first cost-bearing record is created.",
+    "saved": "Settings saved."
+  },
+  "master": {
+    "name": "Name",
+    "email": "Email",
+    "manufacturer": "Manufacturer",
+    "model": "Model",
+    "purchasePrice": "Purchase price",
+    "lifetime": "Expected lifetime (hours)",
+    "power": "Average power (watts)",
+    "type": "Type",
+    "compatiblePrinters": "Compatible printers",
+    "material": "Material",
+    "color": "Color",
+    "netWeight": "Net weight (g)",
+    "note": "Note",
+    "hourlyRate": "Cost per hour",
+    "costPerGram": "Cost per gram",
+    "includeArchived": "Show archived",
+    "details": "Details",
+    "rate": "Cost rate",
+    "actions": "Actions",
+    "hotend": "Hotend",
+    "buildPlate": "Build plate",
+    "build_plate": "Build plate",
+    "other": "Other",
+    "deleteConfirmation": "This record is permanently deleted if it is not referenced."
   }
 }

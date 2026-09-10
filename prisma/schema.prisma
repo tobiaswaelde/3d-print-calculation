@@ -39,3 +39,82 @@ model AppSettings {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
 }
+
+model Customer {
+  id         String    @id @default(cuid())
+  name       String
+  email      String?
+  note       String?
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([name])
+  @@index([archivedAt])
+}
+
+model Printer {
+  id                    String             @id @default(cuid())
+  name                  String
+  manufacturer          String?
+  model                 String?
+  purchasePrice         Decimal
+  expectedLifetimeHours Decimal
+  averagePowerWatts     Int
+  note                  String?
+  archivedAt            DateTime?
+  components            PrinterComponent[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([name])
+  @@index([archivedAt])
+}
+
+model Component {
+  id                    String             @id @default(cuid())
+  type                  String
+  name                  String
+  manufacturer          String?
+  model                 String?
+  purchasePrice         Decimal
+  expectedLifetimeHours Decimal
+  note                  String?
+  archivedAt            DateTime?
+  printers              PrinterComponent[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([name])
+  @@index([type])
+  @@index([archivedAt])
+}
+
+model PrinterComponent {
+  printerId   String
+  componentId String
+  printer     Printer   @relation(fields: [printerId], references: [id], onDelete: Cascade)
+  component   Component @relation(fields: [componentId], references: [id], onDelete: Cascade)
+
+  @@id([printerId, componentId])
+  @@index([componentId])
+}
+
+model Filament {
+  id             String    @id @default(cuid())
+  name           String
+  manufacturer   String
+  material       String
+  color          String?
+  purchasePrice  Decimal
+  netWeightGrams Decimal
+  note           String?
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([name])
+  @@index([manufacturer])
+  @@index([material])
+  @@index([archivedAt])
+}
