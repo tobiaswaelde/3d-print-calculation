@@ -1,4 +1,4 @@
-export type MasterDataResource = 'customers' | 'printers' | 'components' | 'filaments';
+export type MasterDataResource = 'customers' | 'printers' | 'manufacturers' | 'components' | 'filaments';
 
 export interface MasterDataListItem {
   id: string;

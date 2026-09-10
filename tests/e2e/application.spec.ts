@@ -33,7 +33,9 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
   await expect(brandLink).toHaveText('ezPrint');
   const changelogButton = page.getByRole('button', { name: 'Changelog öffnen' });
-  await expect(changelogButton).toContainText('Update');
+  const updateBadge = changelogButton.getByText('Update verfügbar', { exact: true });
+  await expect(updateBadge).toBeVisible();
+  await expect(updateBadge).toHaveClass(/text-success/);
   await changelogButton.click();
   await expect(page.getByRole('dialog', { name: 'Changelog' })).toContainText('v0.2.0');
   await page.keyboard.press('Escape');

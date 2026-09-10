@@ -23,6 +23,13 @@ const optionalText = z
   .nullish()
   .transform((value) => value || null);
 
+const optionalId = z
+  .string()
+  .trim()
+  .nullish()
+  .transform((value) => value || null)
+  .pipe(z.string().min(1).nullable());
+
 export const settingsSchema = z.object({
   currency: currencySchema,
   defaultLocale: supportedLocaleSchema,
@@ -48,10 +55,15 @@ export const printerSchema = z.object({
   note: optionalText,
 });
 
+export const manufacturerSchema = z.object({
+  name: z.string().trim().min(1).max(200),
+  note: optionalText,
+});
+
 export const componentSchema = z.object({
   type: z.enum(['HOTEND', 'BUILD_PLATE', 'OTHER']),
   name: z.string().trim().min(1).max(200),
-  manufacturer: optionalText,
+  manufacturerId: optionalId,
   model: optionalText,
   purchasePrice: decimalSchema(),
   expectedLifetimeHours: decimalSchema({ positive: true }),
@@ -59,15 +71,17 @@ export const componentSchema = z.object({
   note: optionalText,
 });
 
-export const filamentSchema = z.object({
-  name: z.string().trim().min(1).max(200),
-  manufacturer: z.string().trim().min(1).max(200),
-  material: z.string().trim().min(1).max(100),
-  color: optionalText,
-  purchasePrice: decimalSchema(),
-  netWeightGrams: decimalSchema({ positive: true }),
-  note: optionalText,
-});
+export const filamentSchema = z
+  .object({
+    name: z.string().trim().max(200).optional(),
+    manufacturerId: z.string().trim().min(1),
+    material: z.string().trim().min(1).max(100),
+    color: optionalText,
+    purchasePrice: decimalSchema(),
+    netWeightGrams: decimalSchema({ positive: true }),
+    note: optionalText,
+  })
+  .transform((value) => value);
 
 export const archiveSchema = z.object({ archived: z.boolean() });
 const queryBoolean = z.preprocess(

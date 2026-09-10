@@ -73,11 +73,26 @@ model Printer {
   @@index([archivedAt])
 }
 
+model Manufacturer {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  note       String?
+  archivedAt DateTime?
+  components Component[]
+  filaments  Filament[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([name])
+  @@index([archivedAt])
+}
+
 model Component {
   id                    String             @id @default(cuid())
   type                  String
   name                  String
-  manufacturer          String?
+  manufacturerId        String?
+  manufacturer          Manufacturer?      @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
   model                 String?
   purchasePrice         Decimal
   expectedLifetimeHours Decimal
@@ -90,6 +105,7 @@ model Component {
 
   @@index([name])
   @@index([type])
+  @@index([manufacturerId])
   @@index([archivedAt])
 }
 
@@ -106,7 +122,8 @@ model PrinterComponent {
 model Filament {
   id             String    @id @default(cuid())
   name           String
-  manufacturer   String
+  manufacturerId String
+  manufacturer   Manufacturer @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
   material       String
   color          String?
   purchasePrice  Decimal
@@ -118,7 +135,7 @@ model Filament {
   usages         PrintFilamentUsage[]
 
   @@index([name])
-  @@index([manufacturer])
+  @@index([manufacturerId])
   @@index([material])
   @@index([archivedAt])
 }

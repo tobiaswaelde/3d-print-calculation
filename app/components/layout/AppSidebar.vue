@@ -41,7 +41,7 @@
           @click="changelogOpen = true"
         >
           v{{ appVersion }}
-          <UBadge v-if="updateAvailable" color="primary" variant="subtle" size="sm">
+          <UBadge v-if="updateAvailable" color="success" variant="subtle" size="sm">
             {{ t('changelog.update') }}
           </UBadge>
         </button>
@@ -59,8 +59,8 @@ const navigation = computed(() => [
   { label: t('nav.sections.workspace'), type: 'label' as const },
   { label: t('nav.dashboard'), icon: 'i-tabler-layout-dashboard', to: '/' },
   { label: t('nav.prints'), icon: 'i-tabler-printer', to: '/prints' },
-  { label: t('nav.sections.masterData'), type: 'label' as const },
   { label: t('nav.customers'), icon: 'i-tabler-users', to: '/customers' },
+  { label: t('nav.sections.masterData'), type: 'label' as const },
   { label: t('nav.printers'), icon: 'i-tabler-printer', to: '/printers' },
   { label: t('nav.components'), icon: 'i-tabler-components', to: '/components' },
   { label: t('nav.filaments'), icon: 'i-tabler-disc', to: '/filaments' },

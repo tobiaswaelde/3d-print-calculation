@@ -30,7 +30,13 @@
           @submit="save"
         >
           <UFormField name="name" :label="t('master.name')" required>
-            <UInput v-model="form.name" class="w-full" icon="i-tabler-tag" autofocus />
+            <UInput
+              v-model="form.name"
+              class="w-full"
+              icon="i-tabler-tag"
+              :autofocus="resource !== 'filaments'"
+              :readonly="resource === 'filaments'"
+            />
           </UFormField>
           <UFormField v-if="resource === 'customers'" name="email" :label="t('master.email')">
             <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
@@ -126,9 +132,27 @@
             <UFormField name="material" :label="t('master.material')" required
               ><UInput v-model="form.material" class="w-full" icon="i-tabler-box"
             /></UFormField>
-            <UFormField name="color" :label="t('master.color')"
-              ><UInput v-model="form.color" class="w-full" icon="i-tabler-palette"
-            /></UFormField>
+            <UFormField name="color" :label="t('master.color')">
+              <div class="flex gap-2">
+                <UInput v-model="form.color" class="min-w-0 flex-1" icon="i-tabler-palette" />
+                <UPopover :content="{ align: 'end', sideOffset: 8 }">
+                  <UButton
+                    color="neutral"
+                    variant="outline"
+                    :aria-label="t('master.pickColor')"
+                    :title="t('master.pickColor')"
+                  >
+                    <span
+                      class="size-5 rounded-sm border border-default"
+                      :style="{ backgroundColor: form.color || '#ffffff' }"
+                    />
+                  </UButton>
+                  <template #content>
+                    <UColorPicker v-model="form.color" class="p-3" format="hex" />
+                  </template>
+                </UPopover>
+              </div>
+            </UFormField>
             <UFormField name="purchasePrice" :label="t('master.purchasePrice')" required
               ><UInput
                 v-model="form.purchasePrice"
@@ -314,7 +338,7 @@ function emptyForm() {
     type: 'HOTEND',
     printerIds: [] as string[],
     material: '',
-    color: '',
+    color: '#FFFFFF',
     netWeightGrams: '1000',
     note: '',
   };
@@ -365,6 +389,7 @@ function startCreate() {
 
 function startEdit(item: MasterDataListItem) {
   Object.assign(form, emptyForm(), item);
+  if (props.resource === 'filaments' && typeof item.color !== 'string') form.color = '#FFFFFF';
   form.printerIds = Array.isArray(item.printerIds) ? ([...item.printerIds] as string[]) : [];
   editingId.value = item.id;
   dialogError.value = '';
@@ -422,6 +447,13 @@ function rate(item: MasterDataListItem) {
 watch([search, includeArchived], () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(refresh, 250);
+});
+watchEffect(() => {
+  if (props.resource !== 'filaments') return;
+  const manufacturer = form.manufacturer.trim();
+  const material = form.material.trim();
+  const color = form.color.trim();
+  form.name = `${manufacturer}${manufacturer && material ? ' ' : ''}${material}${color ? ` - ${color}` : ''}`;
 });
 onMounted(refresh);
 </script>

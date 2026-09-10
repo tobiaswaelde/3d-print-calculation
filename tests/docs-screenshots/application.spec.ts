@@ -197,7 +197,7 @@ test('regenerates every application screenshot used by the documentation', async
   await capture(page, 'components.jpg');
 
   await page.goto('/filaments');
-  await expect(page.getByText('PolyTerra PLA Teal', { exact: true })).toBeVisible();
+  await expect(page.getByText('Polymaker PLA - Teal', { exact: true })).toBeVisible();
   await capture(page, 'filaments.jpg');
 
   await page.goto('/settings');
@@ -230,7 +230,7 @@ test('regenerates every application screenshot used by the documentation', async
   await dialog.getByRole('button', { name: 'Show popup' }).click();
   await page.getByRole('option', { name: 'Heated enclosure', exact: true }).click();
   await page.keyboard.press('Escape');
-  await selectOption(page, 'Filaments', 'PolyTerra PLA Teal');
+  await selectOption(page, 'Filaments', 'Polymaker PLA - Teal');
   await dialog.getByLabel('Used weight (g)', { exact: true }).fill('185');
   await dialog.getByRole('button', { name: 'Next' }).click();
   await expect(dialog.getByText('Total cost', { exact: true })).toBeVisible();

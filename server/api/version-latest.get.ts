@@ -1,7 +1,7 @@
 import { requireUser } from '../utils/auth';
 
 const releasesUrl = 'https://api.github.com/repos/tobiaswaelde/ezprint/releases/latest';
-const cacheTtl = 6 * 60 * 60 * 1000;
+const cacheTtl = 5 * 60 * 1000;
 let cached: { latest: string | null; timestamp: number } | null = null;
 let pending: Promise<{ latest: string | null }> | null = null;
 

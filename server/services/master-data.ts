@@ -6,6 +6,7 @@ import {
   customerSchema,
   filamentSchema,
   listQuerySchema,
+  manufacturerSchema,
   printerSchema,
   settingsSchema,
 } from '#shared/schemas/master-data';
@@ -15,7 +16,7 @@ import { apiError } from '../utils/http';
 import { parseBody } from '../utils/validation';
 import { assertUnreferenced } from './prints';
 
-type Resource = 'customers' | 'printers' | 'components' | 'filaments';
+type Resource = 'customers' | 'printers' | 'manufacturers' | 'components' | 'filaments';
 
 function baseDto(value: {
   id: string;
@@ -52,12 +53,19 @@ function printerDto(value: Awaited<ReturnType<typeof db.printer.findFirstOrThrow
   };
 }
 
-type ComponentWithPrinters = Prisma.ComponentGetPayload<{ include: { printers: true } }>;
-function componentDto(value: ComponentWithPrinters) {
+function manufacturerDto(value: Awaited<ReturnType<typeof db.manufacturer.findFirstOrThrow>>) {
+  return { ...baseDto(value), note: value.note };
+}
+
+type ComponentWithRelations = Prisma.ComponentGetPayload<{
+  include: { manufacturer: true; printers: true };
+}>;
+function componentDto(value: ComponentWithRelations) {
   return {
     ...baseDto(value),
     type: value.type,
-    manufacturer: value.manufacturer,
+    manufacturerId: value.manufacturerId,
+    manufacturer: value.manufacturer?.name ?? null,
     model: value.model,
     purchasePrice: canonicalDecimal(value.purchasePrice.toString()),
     expectedLifetimeHours: canonicalDecimal(value.expectedLifetimeHours.toString()),
@@ -69,10 +77,12 @@ function componentDto(value: ComponentWithPrinters) {
   };
 }
 
-function filamentDto(value: Awaited<ReturnType<typeof db.filament.findFirstOrThrow>>) {
+type FilamentWithManufacturer = Prisma.FilamentGetPayload<{ include: { manufacturer: true } }>;
+function filamentDto(value: FilamentWithManufacturer) {
   return {
     ...baseDto(value),
-    manufacturer: value.manufacturer,
+    manufacturerId: value.manufacturerId,
+    manufacturer: value.manufacturer.name,
     material: value.material,
     color: value.color,
     purchasePrice: canonicalDecimal(value.purchasePrice.toString()),
@@ -125,6 +135,17 @@ export async function listResource(resource: Resource, query: Record<string, unk
     ]);
     return { items: items.map(printerDto), total, page: input.page, pageSize: input.pageSize };
   }
+  if (resource === 'manufacturers') {
+    const where = {
+      ...archived,
+      ...(input.search ? { name: { contains: input.search } } : {}),
+    };
+    const [items, total] = await db.$transaction([
+      db.manufacturer.findMany({ where, ...pagination, orderBy: { name: 'asc' } }),
+      db.manufacturer.count({ where }),
+    ]);
+    return { items: items.map(manufacturerDto), total, page: input.page, pageSize: input.pageSize };
+  }
   if (resource === 'components') {
     const where = {
       ...archived,
@@ -132,7 +153,7 @@ export async function listResource(resource: Resource, query: Record<string, unk
         ? {
             OR: [
               { name: { contains: input.search } },
-              { manufacturer: { contains: input.search } },
+              { manufacturer: { is: { name: { contains: input.search } } } },
               { model: { contains: input.search } },
               { type: { contains: input.search } },
             ],
@@ -143,7 +164,7 @@ export async function listResource(resource: Resource, query: Record<string, unk
       db.component.findMany({
         where,
         ...pagination,
-        include: { printers: true },
+        include: { manufacturer: true, printers: true },
         orderBy: [{ type: 'asc' }, { name: 'asc' }],
       }),
       db.component.count({ where }),
@@ -156,14 +177,19 @@ export async function listResource(resource: Resource, query: Record<string, unk
       ? {
           OR: [
             { name: { contains: input.search } },
-            { manufacturer: { contains: input.search } },
+            { manufacturer: { name: { contains: input.search } } },
             { material: { contains: input.search } },
           ],
         }
       : {}),
   };
   const [items, total] = await db.$transaction([
-    db.filament.findMany({ where, ...pagination, orderBy: [{ manufacturer: 'asc' }, { name: 'asc' }] }),
+    db.filament.findMany({
+      where,
+      ...pagination,
+      include: { manufacturer: true },
+      orderBy: [{ manufacturer: { name: 'asc' } }, { name: 'asc' }],
+    }),
     db.filament.count({ where }),
   ]);
   return { items: items.map(filamentDto), total, page: input.page, pageSize: input.pageSize };
@@ -172,9 +198,18 @@ export async function listResource(resource: Resource, query: Record<string, unk
 export async function getResource(resource: Resource, id: string) {
   if (resource === 'customers') return customerDto(await db.customer.findUniqueOrThrow({ where: { id } }));
   if (resource === 'printers') return printerDto(await db.printer.findUniqueOrThrow({ where: { id } }));
+  if (resource === 'manufacturers')
+    return manufacturerDto(await db.manufacturer.findUniqueOrThrow({ where: { id } }));
   if (resource === 'components')
-    return componentDto(await db.component.findUniqueOrThrow({ where: { id }, include: { printers: true } }));
-  return filamentDto(await db.filament.findUniqueOrThrow({ where: { id } }));
+    return componentDto(
+      await db.component.findUniqueOrThrow({
+        where: { id },
+        include: { manufacturer: true, printers: true },
+      }),
+    );
+  return filamentDto(
+    await db.filament.findUniqueOrThrow({ where: { id }, include: { manufacturer: true } }),
+  );
 }
 
 async function ensureActivePrinters(printerIds: string[]) {
@@ -184,14 +219,26 @@ async function ensureActivePrinters(printerIds: string[]) {
   return uniqueIds;
 }
 
+async function ensureActiveManufacturer(id: string | null) {
+  if (!id) return null;
+  const manufacturer = await db.manufacturer.findFirst({ where: { id, archivedAt: null } });
+  if (!manufacturer) apiError(422, 'INVALID_MANUFACTURER', 'errors.invalidManufacturer');
+  return manufacturer;
+}
+
 export async function createResource(resource: Resource, input: unknown) {
   if (resource === 'customers')
     return customerDto(await db.customer.create({ data: parseBody(customerSchema, input) }));
   if (resource === 'printers')
     return printerDto(await db.printer.create({ data: parseBody(printerSchema, input) }));
+  if (resource === 'manufacturers')
+    return manufacturerDto(await db.manufacturer.create({ data: parseBody(manufacturerSchema, input) }));
   if (resource === 'components') {
     const data = parseBody(componentSchema, input);
-    const printerIds = await ensureActivePrinters(data.printerIds);
+    const [printerIds] = await Promise.all([
+      ensureActivePrinters(data.printerIds),
+      ensureActiveManufacturer(data.manufacturerId),
+    ]);
     return componentDto(
       await db.component.create({
         data: {
@@ -199,11 +246,21 @@ export async function createResource(resource: Resource, input: unknown) {
           printerIds: undefined,
           printers: { create: printerIds.map((printerId) => ({ printerId })) },
         },
-        include: { printers: true },
+        include: { manufacturer: true, printers: true },
       }),
     );
   }
-  return filamentDto(await db.filament.create({ data: parseBody(filamentSchema, input) }));
+  const data = parseBody(filamentSchema, input);
+  const manufacturer = await ensureActiveManufacturer(data.manufacturerId);
+  return filamentDto(
+    await db.filament.create({
+      data: {
+        ...data,
+        name: `${manufacturer!.name} ${data.material}${data.color ? ` - ${data.color}` : ''}`,
+      },
+      include: { manufacturer: true },
+    }),
+  );
 }
 
 export async function updateResource(resource: Resource, id: string, input: unknown) {
@@ -211,9 +268,16 @@ export async function updateResource(resource: Resource, id: string, input: unkn
     return customerDto(await db.customer.update({ where: { id }, data: parseBody(customerSchema, input) }));
   if (resource === 'printers')
     return printerDto(await db.printer.update({ where: { id }, data: parseBody(printerSchema, input) }));
+  if (resource === 'manufacturers')
+    return manufacturerDto(
+      await db.manufacturer.update({ where: { id }, data: parseBody(manufacturerSchema, input) }),
+    );
   if (resource === 'components') {
     const data = parseBody(componentSchema, input);
-    const printerIds = await ensureActivePrinters(data.printerIds);
+    const [printerIds] = await Promise.all([
+      ensureActivePrinters(data.printerIds),
+      ensureActiveManufacturer(data.manufacturerId),
+    ]);
     return componentDto(
       await db.component.update({
         where: { id },
@@ -222,11 +286,22 @@ export async function updateResource(resource: Resource, id: string, input: unkn
           printerIds: undefined,
           printers: { deleteMany: {}, create: printerIds.map((printerId) => ({ printerId })) },
         },
-        include: { printers: true },
+        include: { manufacturer: true, printers: true },
       }),
     );
   }
-  return filamentDto(await db.filament.update({ where: { id }, data: parseBody(filamentSchema, input) }));
+  const data = parseBody(filamentSchema, input);
+  const manufacturer = await ensureActiveManufacturer(data.manufacturerId);
+  return filamentDto(
+    await db.filament.update({
+      where: { id },
+      data: {
+        ...data,
+        name: `${manufacturer!.name} ${data.material}${data.color ? ` - ${data.color}` : ''}`,
+      },
+      include: { manufacturer: true },
+    }),
+  );
 }
 
 export async function archiveResource(resource: Resource, id: string, input: unknown) {
@@ -234,15 +309,26 @@ export async function archiveResource(resource: Resource, id: string, input: unk
   const data = { archivedAt: archived ? new Date() : null };
   if (resource === 'customers') return customerDto(await db.customer.update({ where: { id }, data }));
   if (resource === 'printers') return printerDto(await db.printer.update({ where: { id }, data }));
+  if (resource === 'manufacturers')
+    return manufacturerDto(await db.manufacturer.update({ where: { id }, data }));
   if (resource === 'components')
-    return componentDto(await db.component.update({ where: { id }, data, include: { printers: true } }));
-  return filamentDto(await db.filament.update({ where: { id }, data }));
+    return componentDto(
+      await db.component.update({
+        where: { id },
+        data,
+        include: { manufacturer: true, printers: true },
+      }),
+    );
+  return filamentDto(
+    await db.filament.update({ where: { id }, data, include: { manufacturer: true } }),
+  );
 }
 
 export async function deleteResource(resource: Resource, id: string) {
   await assertUnreferenced(resource, id);
   if (resource === 'customers') await db.customer.delete({ where: { id } });
   else if (resource === 'printers') await db.printer.delete({ where: { id } });
+  else if (resource === 'manufacturers') await db.manufacturer.delete({ where: { id } });
   else if (resource === 'components') await db.component.delete({ where: { id } });
   else await db.filament.delete({ where: { id } });
   return { success: true };

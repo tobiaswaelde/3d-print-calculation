@@ -36,7 +36,7 @@ whole seconds.
 | `POST /api/prints/:id/duplicate`       | Yes      | Create a current-price draft copy                                       |
 | `GET /api/dashboard?period=30d`        | Yes      | KPIs, cost series, categories, and drafts for `30d`, `90d`, or `all`    |
 | `GET /api/search?q=…`                  | Yes      | Grouped print and master-data results for a two-or-more-character query |
-| `GET /api/version-latest`              | Yes      | Latest GitHub Release version or `null`, cached for six hours           |
+| `GET /api/version-latest`              | Yes      | Latest GitHub Release version or `null`, cached for five minutes        |
 
 ## Lists and input models
 

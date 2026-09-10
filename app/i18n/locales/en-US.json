@@ -58,7 +58,7 @@
     "title": "Changelog",
     "open": "Open changelog",
     "current": "Installed",
-    "update": "Update",
+    "update": "Update available",
     "changes": "Changes",
     "viewAll": "View all releases on GitHub"
   },
@@ -97,6 +97,7 @@
     "compatiblePrinters": "Compatible printers",
     "material": "Material",
     "color": "Color",
+    "pickColor": "Choose color",
     "netWeight": "Net weight (g)",
     "note": "Note",
     "hourlyRate": "Cost per hour",

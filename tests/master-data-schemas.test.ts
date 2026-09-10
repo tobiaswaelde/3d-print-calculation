@@ -40,4 +40,17 @@ describe('master data validation', () => {
     });
     expect(result.netWeightGrams).toBe('750.5');
   });
+
+  it('derives the filament name from manufacturer, material, and color', () => {
+    const result = filamentSchema.parse({
+      name: 'Custom name',
+      manufacturer: ' Maker ',
+      material: ' PLA ',
+      color: ' #12ABEF ',
+      purchasePrice: '19.99',
+      netWeightGrams: '1000',
+    });
+
+    expect(result.name).toBe('Maker PLA - #12ABEF');
+  });
 });
