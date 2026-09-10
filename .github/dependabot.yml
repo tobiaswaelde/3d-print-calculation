@@ -1,25 +1,11 @@
 version: 2
 updates:
-  - package-ecosystem: npm
-    directory: /
-    schedule:
-      interval: weekly
-      day: monday
-      time: '04:00'
-      timezone: Europe/Berlin
-    groups:
-      production-dependencies:
-        dependency-type: production
-      development-dependencies:
-        dependency-type: development
-    open-pull-requests-limit: 10
-
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
-      time: '04:15'
+      time: '04:00'
       timezone: Europe/Berlin
     groups:
       github-actions:
@@ -31,5 +17,5 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: '04:30'
+      time: '04:15'
       timezone: Europe/Berlin
