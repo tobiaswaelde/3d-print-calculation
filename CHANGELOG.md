@@ -1,5 +1,17 @@
 # ezPrint
 
+## 0.4.0
+
+### Minor Changes
+
+- e91c0f5: Add selectable Day.js date, time, and duration display formats.
+- e91c0f5: Add structured filament colors, color avatars, and the keyboard shortcut overview.
+- e91c0f5: Add the full print workflow and track payments with a timestamp.
+
+### Patch Changes
+
+- e91c0f5: Render the new print actions in the standard dialog footer.
+
 ## 0.3.3
 
 ### Patch Changes
