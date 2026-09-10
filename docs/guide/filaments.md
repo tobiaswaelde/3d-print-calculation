@@ -14,7 +14,7 @@ Filaments at `/filaments` provide material identity and cost per usable gram.
 | Field              | Requirement                 | Use                                       |
 | ------------------ | --------------------------- | ----------------------------------------- |
 | **Name**           | Required                    | Spool label in selectors and snapshots    |
-| **Manufacturer**   | Required                    | Searchable identity                       |
+| **Manufacturer**   | Required                    | Shared manufacturer selected from a list  |
 | **Material**       | Required                    | Material family such as PLA, PETG, or ABS |
 | **Color**          | Optional                    | Searchable descriptive value              |
 | **Purchase price** | Required, zero or greater   | Full spool cost                           |
@@ -23,6 +23,9 @@ Filaments at `/filaments` provide material identity and cost per usable gram.
 
 The form and table calculate **Cost per gram** as `purchase price / net weight`. Print cost multiplies this value by
 the **Used weight (g)** entered for each selected filament. A draft may use multiple unique filaments.
+
+Manage available choices in the shared [manufacturer inventory](/guide/manufacturers). The filament name is
+derived from the selected manufacturer, material, and optional color.
 
 Use the standard search, create, edit, archive, restore, and safe-delete actions. Archived filament remains visible
 in historical usages but is not available for a new calculation.

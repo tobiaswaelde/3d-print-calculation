@@ -208,9 +208,7 @@ export async function getResource(resource: Resource, id: string) {
         include: { manufacturer: true, printers: true },
       }),
     );
-  return filamentDto(
-    await db.filament.findUniqueOrThrow({ where: { id }, include: { manufacturer: true } }),
-  );
+  return filamentDto(await db.filament.findUniqueOrThrow({ where: { id }, include: { manufacturer: true } }));
 }
 
 async function ensureActivePrinters(printerIds: string[]) {
@@ -269,10 +267,27 @@ export async function updateResource(resource: Resource, id: string, input: unkn
     return customerDto(await db.customer.update({ where: { id }, data: parseBody(customerSchema, input) }));
   if (resource === 'printers')
     return printerDto(await db.printer.update({ where: { id }, data: parseBody(printerSchema, input) }));
-  if (resource === 'manufacturers')
-    return manufacturerDto(
-      await db.manufacturer.update({ where: { id }, data: parseBody(manufacturerSchema, input) }),
-    );
+  if (resource === 'manufacturers') {
+    const data = parseBody(manufacturerSchema, input);
+    return db.$transaction(async (transaction) => {
+      const manufacturer = await transaction.manufacturer.update({ where: { id }, data });
+      const filaments = await transaction.filament.findMany({
+        where: { manufacturerId: id },
+        select: { id: true, material: true, color: true },
+      });
+      await Promise.all(
+        filaments.map((filament) =>
+          transaction.filament.update({
+            where: { id: filament.id },
+            data: {
+              name: `${manufacturer.name} ${filament.material}${filament.color ? ` - ${filament.color}` : ''}`,
+            },
+          }),
+        ),
+      );
+      return manufacturerDto(manufacturer);
+    });
+  }
   if (resource === 'components') {
     const data = parseBody(componentSchema, input);
     const [printerIds] = await Promise.all([
@@ -320,9 +335,7 @@ export async function archiveResource(resource: Resource, id: string, input: unk
         include: { manufacturer: true, printers: true },
       }),
     );
-  return filamentDto(
-    await db.filament.update({ where: { id }, data, include: { manufacturer: true } }),
-  );
+  return filamentDto(await db.filament.update({ where: { id }, data, include: { manufacturer: true } }));
 }
 
 export async function deleteResource(resource: Resource, id: string) {

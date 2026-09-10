@@ -27,7 +27,7 @@ describe('application form validation', () => {
         type: 'HOTEND',
         name: 'High-flow hotend',
         alwaysUsed: true,
-        manufacturer: '',
+        manufacturerId: '',
         model: '',
         purchasePrice: 89.9,
         expectedLifetimeHours: 1200,

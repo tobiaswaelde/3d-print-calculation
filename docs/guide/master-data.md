@@ -9,6 +9,7 @@ Inventory provides the reusable inputs for every print calculation:
 
 - [Customers](/guide/customers) provide optional ownership and contact context.
 - [Printers](/guide/printers) provide purchase price, expected lifetime, and average power.
+- [Manufacturers](/guide/manufacturers) provide reusable supplier names for components and filaments.
 - [Components](/guide/components) provide wear cost, type, and printer compatibility.
 - [Filaments](/guide/filaments) provide spool cost and usable net weight.
 

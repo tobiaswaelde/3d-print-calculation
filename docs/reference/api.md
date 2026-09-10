@@ -11,32 +11,34 @@ whole seconds.
 
 ## Endpoints
 
-| Method and path                        | Auth     | Contract                                                                |
-| -------------------------------------- | -------- | ----------------------------------------------------------------------- |
-| `GET /api/health`                      | No       | `{ status, database, version }`; 503 if the database is unreadable      |
-| `GET /api/auth/setup-status`           | No       | `{ initialized }`                                                       |
-| `POST /api/auth/setup`                 | No       | Create the first account and settings once; later calls return 409      |
-| `POST /api/auth/login`                 | No       | Validate email/password and set the session cookie                      |
-| `GET /api/auth/session`                | Optional | `{ user }` or `null`                                                    |
-| `POST /api/auth/logout`                | Yes      | Delete the current session                                              |
-| `PATCH /api/auth/preferences`          | Yes      | Update `{ locale }` for the account                                     |
-| `GET/PATCH /api/settings`              | Yes      | Read or update currency, default language, and electricity price        |
-| `GET/POST /api/customers`              | Yes      | Paginated list or create                                                |
-| `GET/PATCH/DELETE /api/customers/:id`  | Yes      | Read, replace/archive, or safely delete                                 |
-| `GET/POST /api/printers`               | Yes      | Paginated list or create                                                |
-| `GET/PATCH/DELETE /api/printers/:id`   | Yes      | Read, replace/archive, or safely delete                                 |
-| `GET/POST /api/components`             | Yes      | Paginated list or create with `printerIds`                              |
-| `GET/PATCH/DELETE /api/components/:id` | Yes      | Read, replace/archive, or safely delete                                 |
-| `GET/POST /api/filaments`              | Yes      | Paginated list or create                                                |
-| `GET/PATCH/DELETE /api/filaments/:id`  | Yes      | Read, replace/archive, or safely delete                                 |
-| `POST /api/prints/calculate`           | Yes      | Preview a print-draft DTO without persistence                           |
-| `GET/POST /api/prints`                 | Yes      | Filtered list or create a draft                                         |
-| `GET/PATCH /api/prints/:id`            | Yes      | Read, update a draft, or set `{ archived }`                             |
-| `POST /api/prints/:id/complete`        | Yes      | Recalculate and complete immutably                                      |
-| `POST /api/prints/:id/duplicate`       | Yes      | Create a current-price draft copy                                       |
-| `GET /api/dashboard?period=30d`        | Yes      | KPIs, cost series, categories, and drafts for `30d`, `90d`, or `all`    |
-| `GET /api/search?q=…`                  | Yes      | Grouped print and inventory results for a two-or-more-character query   |
-| `GET /api/version-latest`              | Yes      | Latest GitHub Release version or `null`, cached for five minutes        |
+| Method and path                           | Auth     | Contract                                                              |
+| ----------------------------------------- | -------- | --------------------------------------------------------------------- |
+| `GET /api/health`                         | No       | `{ status, database, version }`; 503 if the database is unreadable    |
+| `GET /api/auth/setup-status`              | No       | `{ initialized }`                                                     |
+| `POST /api/auth/setup`                    | No       | Create the first account and settings once; later calls return 409    |
+| `POST /api/auth/login`                    | No       | Validate email/password and set the session cookie                    |
+| `GET /api/auth/session`                   | Optional | `{ user }` or `null`                                                  |
+| `POST /api/auth/logout`                   | Yes      | Delete the current session                                            |
+| `PATCH /api/auth/preferences`             | Yes      | Update `{ locale }` for the account                                   |
+| `GET/PATCH /api/settings`                 | Yes      | Read or update currency, default language, and electricity price      |
+| `GET/POST /api/customers`                 | Yes      | Paginated list or create                                              |
+| `GET/PATCH/DELETE /api/customers/:id`     | Yes      | Read, replace/archive, or safely delete                               |
+| `GET/POST /api/printers`                  | Yes      | Paginated list or create                                              |
+| `GET/PATCH/DELETE /api/printers/:id`      | Yes      | Read, replace/archive, or safely delete                               |
+| `GET/POST /api/manufacturers`             | Yes      | Paginated list or create                                              |
+| `GET/PATCH/DELETE /api/manufacturers/:id` | Yes      | Read, replace/archive, or safely delete                               |
+| `GET/POST /api/components`                | Yes      | Paginated list or create with `printerIds`                            |
+| `GET/PATCH/DELETE /api/components/:id`    | Yes      | Read, replace/archive, or safely delete                               |
+| `GET/POST /api/filaments`                 | Yes      | Paginated list or create                                              |
+| `GET/PATCH/DELETE /api/filaments/:id`     | Yes      | Read, replace/archive, or safely delete                               |
+| `POST /api/prints/calculate`              | Yes      | Preview a print-draft DTO without persistence                         |
+| `GET/POST /api/prints`                    | Yes      | Filtered list or create a draft                                       |
+| `GET/PATCH /api/prints/:id`               | Yes      | Read, update a draft, or set `{ archived }`                           |
+| `POST /api/prints/:id/complete`           | Yes      | Recalculate and complete immutably                                    |
+| `POST /api/prints/:id/duplicate`          | Yes      | Create a current-price draft copy                                     |
+| `GET /api/dashboard?period=30d`           | Yes      | KPIs, cost series, categories, and drafts for `30d`, `90d`, or `all`  |
+| `GET /api/search?q=…`                     | Yes      | Grouped print and inventory results for a two-or-more-character query |
+| `GET /api/version-latest`                 | Yes      | Latest GitHub Release version or `null`, cached for five minutes      |
 
 ## Lists and input models
 
@@ -52,7 +54,9 @@ Setup requires `displayName`, `email`, a password of at least 12 characters, sup
 Inventory PATCH replaces its editable DTO; `{ archived: boolean }` only changes archive state. Authoritative
 schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/ezprint/tree/main/shared/schemas).
 
-Component inputs accept `alwaysUsed`, which defaults to `false`. Component responses expose the stored flag.
+Component and filament inputs reference shared manufacturers with `manufacturerId`. Component references are
+optional; filament references are required. Component inputs also accept `alwaysUsed`, which defaults to `false`.
+Responses expose both this flag and the resolved manufacturer name.
 
 ## Errors
 

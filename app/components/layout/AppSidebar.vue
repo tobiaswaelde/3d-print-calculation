@@ -62,6 +62,7 @@ const navigation = computed(() => [
   { label: t('nav.customers'), icon: 'i-tabler-users', to: '/customers' },
   { label: t('nav.sections.masterData'), type: 'label' as const },
   { label: t('nav.printers'), icon: 'i-tabler-printer', to: '/printers' },
+  { label: t('nav.manufacturers'), icon: 'i-tabler-building-factory-2', to: '/manufacturers' },
   { label: t('nav.components'), icon: 'i-tabler-components', to: '/components' },
   { label: t('nav.filaments'), icon: 'i-tabler-disc', to: '/filaments' },
   { label: t('nav.sections.system'), type: 'label' as const },

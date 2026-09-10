@@ -19,6 +19,7 @@ const sidebar: DefaultTheme.SidebarItem[] = [
       { text: 'Inventory overview', link: '/guide/master-data' },
       { text: 'Customers', link: '/guide/customers' },
       { text: 'Printers', link: '/guide/printers' },
+      { text: 'Manufacturers', link: '/guide/manufacturers' },
       { text: 'Components', link: '/guide/components' },
       { text: 'Filaments', link: '/guide/filaments' },
       { text: 'Print workflow', link: '/guide/print-workflow' },

@@ -96,7 +96,10 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
       where: { id: { in: componentIds }, archivedAt: null },
       include: { printers: true },
     }),
-    transaction.filament.findMany({ where: { id: { in: filamentIds }, archivedAt: null } }),
+    transaction.filament.findMany({
+      where: { id: { in: filamentIds }, archivedAt: null },
+      include: { manufacturer: true },
+    }),
     input.customerId
       ? transaction.customer.findFirst({ where: { id: input.customerId, archivedAt: null } })
       : Promise.resolve(null),
@@ -213,7 +216,7 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
       return {
         filamentId: source.id,
         filamentName: source.name,
-        manufacturer: source.manufacturer,
+        manufacturer: source.manufacturer.name,
         material: source.material,
         purchasePrice: source.purchasePrice,
         netWeightGrams: source.netWeightGrams,
@@ -381,12 +384,16 @@ export async function listPrints(query: Record<string, unknown>) {
 }
 
 export async function assertUnreferenced(
-  resource: 'customers' | 'printers' | 'components' | 'filaments',
+  resource: 'customers' | 'printers' | 'manufacturers' | 'components' | 'filaments',
   id: string,
 ) {
   let count: number;
   if (resource === 'customers') count = await db.printJob.count({ where: { customerId: id } });
   else if (resource === 'printers') count = await db.printJob.count({ where: { printerId: id } });
+  else if (resource === 'manufacturers')
+    count =
+      (await db.component.count({ where: { manufacturerId: id } })) +
+      (await db.filament.count({ where: { manufacturerId: id } }));
   else if (resource === 'components')
     count = await db.printComponentUsage.count({ where: { componentId: id } });
   else count = await db.printFilamentUsage.count({ where: { filamentId: id } });

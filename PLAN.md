@@ -60,7 +60,7 @@ Vue single-file components follow `<template>`, typed `<script setup lang="ts">`
 
 - Use Nuxt UI's `UDashboardGroup`, collapsible/resizable `UDashboardSidebar`, and dashboard panels.
 - Keep navigation and panel toolbars fixed while only panel content scrolls.
-- Sidebar links: Dashboard, Prints, Customers, Printers, Components, Filaments, and Settings.
+- Sidebar links: Dashboard, Prints, Customers, Printers, Manufacturers, Components, Filaments, and Settings.
 - Sidebar footer: language switcher, light/dark/system theme control, and account/logout menu.
 - Support `de-DE` and `en-US`; default to `de-DE`.
 - Persist the selected language for the user and color mode in the browser.
@@ -101,9 +101,10 @@ Vue single-file components follow `<template>`, typed `<script setup lang="ts">`
 - `AppSettings`: singleton row containing ISO 4217 currency, default locale, electricity price per kWh, and cost-calculation version.
 - `Customer`: name, optional email, optional note, archive timestamp, timestamps.
 - `Printer`: name, optional manufacturer/model, purchase price, expected lifetime hours, average power in watts, optional note, archive timestamp, timestamps.
-- `Component`: type (`HOTEND`, `BUILD_PLATE`, or `OTHER`), name, optional manufacturer/model, purchase price, expected lifetime hours, optional note, archive timestamp, timestamps.
+- `Manufacturer`: shared name and optional note for component and filament manufacturer selections, archive timestamp, timestamps.
+- `Component`: type (`HOTEND`, `BUILD_PLATE`, or `OTHER`), name, optional manufacturer relation/model, purchase price, expected lifetime hours, optional note, archive timestamp, timestamps.
 - `PrinterComponent`: many-to-many compatibility relation between printers and components.
-- `Filament`: name, manufacturer, material, optional color/note, purchase price, net weight in grams, archive timestamp, timestamps.
+- `Filament`: name, required manufacturer relation, material, optional color/note, purchase price, net weight in grams, archive timestamp, timestamps.
 - `PrintJob`: name, optional customer, printer, status (`DRAFT` or `COMPLETED`), notes, derived total duration, formula version, currency, total cost, completion/archive timestamps, timestamps.
 - `PrintComponentUsage`: referenced component, snapshotted type/name/purchase price/lifetime/hourly rate, applied duration, and line cost.
 - `PrintFilamentUsage`: referenced filament, snapshotted display fields/purchase price/net weight/per-gram rate, used weight, and line cost.
@@ -167,7 +168,7 @@ The API provides `POST /api/prints/calculate` for previews. Print create/update/
 
 - `/api/auth/setup-status`, `/api/auth/setup`, `/api/auth/login`, `/api/auth/logout`, `/api/auth/session`.
 - `/api/settings` for reading and updating instance settings subject to currency-lock rules.
-- `/api/customers`, `/api/printers`, `/api/components`, and `/api/filaments` for list/create and `/:id` read/update/archive/delete behavior.
+- `/api/customers`, `/api/printers`, `/api/manufacturers`, `/api/components`, and `/api/filaments` for list/create and `/:id` read/update/archive/delete behavior.
 - `/api/prints` for list/create and `/:id` read/update/archive behavior.
 - `/api/prints/calculate` for validated, non-persisting previews.
 - `/api/prints/:id/complete` to atomically recalculate, snapshot, and lock a draft.

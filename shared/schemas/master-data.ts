@@ -72,17 +72,15 @@ export const componentSchema = z.object({
   note: optionalText,
 });
 
-export const filamentSchema = z
-  .object({
-    name: z.string().trim().max(200).optional(),
-    manufacturerId: z.string().trim().min(1),
-    material: z.string().trim().min(1).max(100),
-    color: optionalText,
-    purchasePrice: decimalSchema(),
-    netWeightGrams: decimalSchema({ positive: true }),
-    note: optionalText,
-  })
-  .transform((value) => value);
+export const filamentSchema = z.object({
+  name: z.string().trim().max(200).optional(),
+  manufacturerId: z.string().trim().min(1),
+  material: z.string().trim().min(1).max(100),
+  color: optionalText,
+  purchasePrice: decimalSchema(),
+  netWeightGrams: decimalSchema({ positive: true }),
+  note: optionalText,
+});
 
 export const archiveSchema = z.object({ archived: z.boolean() });
 const queryBoolean = z.preprocess(

@@ -22,7 +22,7 @@ describe('master data validation', () => {
     expect(
       filamentSchema.safeParse({
         name: 'PLA',
-        manufacturer: 'Maker',
+        manufacturerId: 'manufacturer-1',
         material: 'PLA',
         purchasePrice: '20',
         netWeightGrams: '0',
@@ -33,7 +33,7 @@ describe('master data validation', () => {
   it('preserves decimal quantities as strings', () => {
     const result = filamentSchema.parse({
       name: 'PLA',
-      manufacturer: 'Maker',
+      manufacturerId: 'manufacturer-1',
       material: 'PLA',
       purchasePrice: '19.99',
       netWeightGrams: '750.5',
@@ -41,16 +41,18 @@ describe('master data validation', () => {
     expect(result.netWeightGrams).toBe('750.5');
   });
 
-  it('derives the filament name from manufacturer, material, and color', () => {
+  it('normalizes filament fields while retaining the manufacturer reference', () => {
     const result = filamentSchema.parse({
       name: 'Custom name',
-      manufacturer: ' Maker ',
+      manufacturerId: ' manufacturer-1 ',
       material: ' PLA ',
       color: ' #12ABEF ',
       purchasePrice: '19.99',
       netWeightGrams: '1000',
     });
 
-    expect(result.name).toBe('Maker PLA - #12ABEF');
+    expect(result.manufacturerId).toBe('manufacturer-1');
+    expect(result.material).toBe('PLA');
+    expect(result.color).toBe('#12ABEF');
   });
 });

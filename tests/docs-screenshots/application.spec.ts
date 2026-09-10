@@ -95,10 +95,26 @@ test('regenerates every application screenshot used by the documentation', async
     averagePowerWatts: 120,
     note: 'Primary documentation printer',
   });
+  const prusa = await api<Resource>(page, '/api/manufacturers', 'POST', {
+    name: 'Prusa Research',
+    note: null,
+  });
+  const e3d = await api<Resource>(page, '/api/manufacturers', 'POST', {
+    name: 'E3D',
+    note: null,
+  });
+  const workshop = await api<Resource>(page, '/api/manufacturers', 'POST', {
+    name: 'Workshop',
+    note: null,
+  });
+  const polymaker = await api<Resource>(page, '/api/manufacturers', 'POST', {
+    name: 'Polymaker',
+    note: null,
+  });
   const buildPlate = await api<Resource>(page, '/api/components', 'POST', {
     type: 'BUILD_PLATE',
     name: 'Textured PEI plate',
-    manufacturer: 'Prusa Research',
+    manufacturerId: prusa.id,
     model: 'MK4 textured sheet',
     purchasePrice: '44.90',
     expectedLifetimeHours: '1800',
@@ -108,7 +124,7 @@ test('regenerates every application screenshot used by the documentation', async
   const hotend = await api<Resource>(page, '/api/components', 'POST', {
     type: 'HOTEND',
     name: '0.4 mm high-flow hotend',
-    manufacturer: 'E3D',
+    manufacturerId: e3d.id,
     model: 'Revo High Flow',
     purchasePrice: '89.90',
     expectedLifetimeHours: '2500',
@@ -118,7 +134,7 @@ test('regenerates every application screenshot used by the documentation', async
   const enclosure = await api<Resource>(page, '/api/components', 'POST', {
     type: 'OTHER',
     name: 'Heated enclosure',
-    manufacturer: 'Workshop',
+    manufacturerId: workshop.id,
     model: 'Enclosure V2',
     purchasePrice: '249',
     expectedLifetimeHours: '6000',
@@ -127,7 +143,7 @@ test('regenerates every application screenshot used by the documentation', async
   });
   const filament = await api<Resource>(page, '/api/filaments', 'POST', {
     name: 'PolyTerra PLA Teal',
-    manufacturer: 'Polymaker',
+    manufacturerId: polymaker.id,
     material: 'PLA',
     color: 'Teal',
     purchasePrice: '24.99',

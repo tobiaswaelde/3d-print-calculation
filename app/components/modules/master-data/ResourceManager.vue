@@ -42,9 +42,20 @@
             <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
           </UFormField>
           <template v-if="resource === 'printers' || resource === 'components'">
-            <UFormField name="manufacturer" :label="t('master.manufacturer')"
+            <UFormField v-if="resource === 'printers'" name="manufacturer" :label="t('master.manufacturer')"
               ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
             /></UFormField>
+            <UFormField v-else name="manufacturerId" :label="t('master.manufacturer')">
+              <USelectMenu
+                v-model="form.manufacturerId"
+                class="w-full"
+                icon="i-tabler-building-factory-2"
+                :aria-label="t('master.manufacturer')"
+                value-key="value"
+                :items="manufacturerOptions"
+                clear
+              />
+            </UFormField>
             <UFormField name="model" :label="t('master.model')"
               ><UInput v-model="form.model" class="w-full" icon="i-tabler-barcode"
             /></UFormField>
@@ -133,9 +144,16 @@
             />
           </template>
           <template v-if="resource === 'filaments'">
-            <UFormField name="manufacturer" :label="t('master.manufacturer')" required
-              ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
-            /></UFormField>
+            <UFormField name="manufacturerId" :label="t('master.manufacturer')" required>
+              <USelectMenu
+                v-model="form.manufacturerId"
+                class="w-full"
+                icon="i-tabler-building-factory-2"
+                :aria-label="t('master.manufacturer')"
+                value-key="value"
+                :items="manufacturerOptions"
+              />
+            </UFormField>
             <UFormField name="material" :label="t('master.material')" required
               ><UInput v-model="form.material" class="w-full" icon="i-tabler-box"
             /></UFormField>
@@ -289,7 +307,13 @@
 
 <script setup lang="ts">
 import Decimal from 'decimal.js';
-import { componentSchema, customerSchema, filamentSchema, printerSchema } from '#shared/schemas/master-data';
+import {
+  componentSchema,
+  customerSchema,
+  filamentSchema,
+  manufacturerSchema,
+  printerSchema,
+} from '#shared/schemas/master-data';
 import type { MasterDataListItem, MasterDataResource, PaginatedResponse } from '#shared/types/master-data';
 
 const props = defineProps<{ resource: MasterDataResource; title: string }>();
@@ -307,6 +331,7 @@ const error = ref('');
 const dialogError = ref('');
 const currency = ref('EUR');
 const printerOptions = ref<{ label: string; value: string }[]>([]);
+const manufacturerOptions = ref<{ label: string; value: string }[]>([]);
 let debounceTimer: ReturnType<typeof setTimeout> | undefined;
 
 const componentTypes = computed(() => [
@@ -324,6 +349,8 @@ const formSchema = computed(() => {
       return customerSchema;
     case 'printers':
       return printerSchema;
+    case 'manufacturers':
+      return manufacturerSchema;
     case 'components':
       return componentSchema;
     case 'filaments':
@@ -338,6 +365,7 @@ function emptyForm() {
     name: '',
     email: '',
     manufacturer: '',
+    manufacturerId: '',
     model: '',
     purchasePrice: '0',
     expectedLifetimeHours: '1',
@@ -381,6 +409,12 @@ async function refresh() {
       });
       printerOptions.value = printers.items.map((item) => ({ label: item.name, value: item.id }));
     }
+    if (props.resource === 'components' || props.resource === 'filaments') {
+      const manufacturers = await $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
+        query: { pageSize: 100 },
+      });
+      manufacturerOptions.value = manufacturers.items.map((item) => ({ label: item.name, value: item.id }));
+    }
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : String(reason);
   } finally {
@@ -397,6 +431,13 @@ function startCreate() {
 
 function startEdit(item: MasterDataListItem) {
   Object.assign(form, emptyForm(), item);
+  if (
+    typeof item.manufacturerId === 'string' &&
+    typeof item.manufacturer === 'string' &&
+    !manufacturerOptions.value.some((option) => option.value === item.manufacturerId)
+  ) {
+    manufacturerOptions.value.push({ label: item.manufacturer, value: item.manufacturerId });
+  }
   if (props.resource === 'filaments' && typeof item.color !== 'string') form.color = '#FFFFFF';
   form.printerIds = Array.isArray(item.printerIds) ? ([...item.printerIds] as string[]) : [];
   editingId.value = item.id;
@@ -439,6 +480,7 @@ async function remove(item: MasterDataListItem) {
 
 function details(item: MasterDataListItem) {
   if (props.resource === 'customers') return String(item.email ?? '—');
+  if (props.resource === 'manufacturers') return String(item.note ?? '—');
   if (props.resource === 'filaments')
     return [item.manufacturer, item.material, item.color].filter(Boolean).join(' · ');
   if (props.resource === 'components')
@@ -453,7 +495,7 @@ function details(item: MasterDataListItem) {
 }
 
 function rate(item: MasterDataListItem) {
-  if (props.resource === 'customers') return '—';
+  if (props.resource === 'customers' || props.resource === 'manufacturers') return '—';
   const value = props.resource === 'filaments' ? item.costPerGram : item.hourlyRate;
   return `${money(value, currency.value)}${props.resource === 'filaments' ? '/g' : '/h'} · ${decimal(props.resource === 'filaments' ? item.netWeightGrams : item.expectedLifetimeHours)}${props.resource === 'filaments' ? ' g' : ' h'}`;
 }
@@ -464,7 +506,8 @@ watch([search, includeArchived], () => {
 });
 watchEffect(() => {
   if (props.resource !== 'filaments') return;
-  const manufacturer = form.manufacturer.trim();
+  const manufacturer =
+    manufacturerOptions.value.find((option) => option.value === form.manufacturerId)?.label ?? '';
   const material = form.material.trim();
   const color = form.color.trim();
   form.name = `${manufacturer}${manufacturer && material ? ' ' : ''}${material}${color ? ` - ${color}` : ''}`;

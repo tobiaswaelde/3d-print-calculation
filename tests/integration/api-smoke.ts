@@ -106,6 +106,16 @@ try {
     printer.body.hourlyRate === '0.2',
     `Printer hourly rate must be deterministic: ${JSON.stringify(printer.body)}`,
   );
+  const componentManufacturer = await json(
+    '/api/manufacturers',
+    { method: 'POST', body: JSON.stringify({ name: 'Test', note: '' }) },
+    cookie,
+  );
+  const filamentManufacturer = await json(
+    '/api/manufacturers',
+    { method: 'POST', body: JSON.stringify({ name: 'Maker', note: '' }) },
+    cookie,
+  );
   const component = async (name: string, type: string, price: string, lifetime: string) =>
     (
       await json(
@@ -115,7 +125,7 @@ try {
           body: JSON.stringify({
             name,
             type,
-            manufacturer: 'Test',
+            manufacturerId: componentManufacturer.body.id,
             model: '',
             purchasePrice: price,
             expectedLifetimeHours: lifetime,
@@ -135,7 +145,7 @@ try {
         method: 'POST',
         body: JSON.stringify({
           name: 'PLA',
-          manufacturer: 'Maker',
+          manufacturerId: filamentManufacturer.body.id,
           material: 'PLA',
           color: 'Black',
           purchasePrice: '29.99',
@@ -146,6 +156,20 @@ try {
       cookie,
     )
   ).body;
+  check(
+    filament.name === 'Maker PLA - Black' && filament.manufacturer === 'Maker',
+    `Filament must resolve its manufacturer relation: ${JSON.stringify(filament)}`,
+  );
+  await json(
+    `/api/manufacturers/${filamentManufacturer.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ name: 'Maker Updated', note: '' }) },
+    cookie,
+  );
+  const renamedFilament = await json(`/api/filaments/${filament.id}`, {}, cookie);
+  check(
+    renamedFilament.body.name === 'Maker Updated PLA - Black',
+    `Manufacturer renames must update derived filament names: ${JSON.stringify(renamedFilament.body)}`,
+  );
 
   const payload = {
     name: 'Bracket',
@@ -204,6 +228,15 @@ try {
   check(locked.response.status === 409, 'Currency must lock after cost-bearing data exists.');
   const referencedDelete = await json(`/api/printers/${printer.body.id}`, { method: 'DELETE' }, cookie);
   check(referencedDelete.response.status === 409, 'Referenced master data must not be hard-deleted.');
+  const referencedManufacturerDelete = await json(
+    `/api/manufacturers/${componentManufacturer.body.id}`,
+    { method: 'DELETE' },
+    cookie,
+  );
+  check(
+    referencedManufacturerDelete.response.status === 409,
+    'Referenced manufacturers must not be hard-deleted.',
+  );
 
   execFileSync('pnpm', ['db:reset-password', 'integration@example.test', 'new-integration-password-456'], {
     env: environment,

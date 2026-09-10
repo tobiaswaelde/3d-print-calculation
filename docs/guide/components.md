@@ -12,8 +12,9 @@ Components at `/components` represent reusable wear parts. A component is select
 
 ## Fields
 
-Name, purchase price, and expected lifetime are required. Manufacturer, model, and note are optional. Purchase
-price must be zero or greater; lifetime must be greater than zero. The displayed hourly rate is
+Name, purchase price, and expected lifetime are required. Manufacturer, model, and note are optional. Select a
+manufacturer from the shared [manufacturer inventory](/guide/manufacturers). Purchase price must be zero or
+greater; lifetime must be greater than zero. The displayed hourly rate is
 `purchase price / expected lifetime hours`.
 
 Enable **Always used** to preselect the component whenever a compatible printer is chosen for a new print. The
