@@ -78,8 +78,10 @@ try {
     apiReference.ok &&
       apiReferenceHtml.includes('<title>ezPrint API</title>') &&
       apiReferenceHtml.includes('&quot;theme&quot;:&quot;saturn&quot;') &&
-      apiReferenceHtml.includes('&quot;telemetry&quot;:false'),
-    'Scalar API reference must use the configured ezPrint title, Saturn theme, and disabled telemetry.',
+      apiReferenceHtml.includes('&quot;telemetry&quot;:false') &&
+      apiReferenceHtml.includes('&quot;agent&quot;:{&quot;disabled&quot;:true}') &&
+      apiReferenceHtml.includes('&quot;mcp&quot;:{&quot;disabled&quot;:true}'),
+    'Scalar API reference must use the configured ezPrint styling and disable telemetry, Ask AI, and Generate MCP.',
   );
   const setup = JSON.stringify({
     displayName: 'Integration Test',

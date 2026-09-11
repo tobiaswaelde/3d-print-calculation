@@ -14,7 +14,7 @@ whole seconds.
 Every running ezPrint instance serves a Scalar API reference at `/api-reference` and its OpenAPI 3.1 document at
 `/api/openapi.json`. The reference uses the same Saturn theme and compact client settings as the Machine Admin API.
 It lists every Nitro endpoint, groups operations by domain, describes cookie authentication, and includes request
-schemas for validated write operations.
+schemas for validated write operations. The hosted AI assistant and MCP generator are disabled.
 
 Sign in with `POST /api/auth/login` before trying protected operations. Scalar and the browser then send the
 HTTP-only session cookie automatically. Write requests must remain on the instance origin. Never paste production

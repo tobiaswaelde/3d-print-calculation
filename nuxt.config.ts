@@ -24,6 +24,8 @@ export default defineNuxtConfig({
         scalar: {
           route: '/api-reference',
           theme: 'saturn',
+          agent: { disabled: true },
+          mcp: { disabled: true },
           hideClientButton: true,
           telemetry: false,
           persistAuth: true,
