@@ -69,6 +69,7 @@ pnpm test:docs:e2e
 - Documentation is US English only. Every Markdown page under `docs/` needs `title` and `description` frontmatter.
 - Use extensionless internal documentation links, meaningful image alt text, and add new pages to the VitePress sidebar.
 - Run `pnpm docs:screenshots` when documented UI changes affect screenshots. Generated screenshots must contain only deterministic synthetic data and the US English interface.
+- Every GitHub issue for new functionality or a UI change must explicitly require the relevant documentation and screenshots to remain current as an acceptance criterion.
 
 ## Changesets and Git
 

@@ -72,3 +72,12 @@ body:
       label: Contribution
       options:
         - label: I would be willing to help implement or test this feature.
+
+  - type: checkboxes
+    id: documentation
+    attributes:
+      label: Documentation acceptance
+      description: Documentation must remain aligned with the released application.
+      options:
+        - label: New functionality and UI changes must be documented in the relevant user and reference documentation so it remains current.
+          required: true
