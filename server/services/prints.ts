@@ -20,6 +20,7 @@ import {
 import { canonicalDecimal } from '#shared/utils/decimal';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
+import { spoolManagementEnabled } from '../utils/spool-management';
 import { parseBody } from '../utils/validation';
 
 type Transaction = Prisma.TransactionClient;
@@ -626,6 +627,7 @@ export async function recordPrintOutcome(id: string, input: unknown, externalAlr
     )
       apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
     const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    const stockEnabled = await spoolManagementEnabled(transaction);
     await transaction.printOutcome.create({
       data: {
         printJobId: id,
@@ -635,23 +637,25 @@ export async function recordPrintOutcome(id: string, input: unknown, externalAlr
         note: parsed.note,
         inputSnapshot,
         costSnapshot: JSON.stringify(costs),
+        stockTracked: stockEnabled,
       },
     });
-    for (const usage of existing.filamentUsages) {
-      if (!usage.spoolId) continue;
-      const grams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      await bookPrintStock(
-        transaction,
-        {
-          spoolId: usage.spoolId,
-          kind: 'PRINT',
-          grams: new Decimal(grams).negated().toFixed(),
-          printUsageId: usage.id,
-          operationKey: `outcome:${id}:${usage.id}`,
-        },
-        externalAlreadyTracked,
-      );
-    }
+    if (stockEnabled)
+      for (const usage of existing.filamentUsages) {
+        if (!usage.spoolId) continue;
+        const grams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        await bookPrintStock(
+          transaction,
+          {
+            spoolId: usage.spoolId,
+            kind: 'PRINT',
+            grams: new Decimal(grams).negated().toFixed(),
+            printUsageId: usage.id,
+            operationKey: `outcome:${id}:${usage.id}`,
+          },
+          externalAlreadyTracked,
+        );
+      }
     if (externalAlreadyTracked && existing.bambuLink)
       await transaction.bambuPrintLink.update({
         where: { id: existing.bambuLink.id },
@@ -691,6 +695,7 @@ export async function correctPrintOutcome(id: string, input: unknown) {
     )
       apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
     const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    const stockEnabled = await spoolManagementEnabled(transaction);
     await transaction.printOutcomeCorrection.create({
       data: {
         outcomeId: existing.outcome.id,
@@ -700,25 +705,26 @@ export async function correctPrintOutcome(id: string, input: unknown) {
         costSnapshot: JSON.stringify(costs),
       },
     });
-    for (const usage of existing.filamentUsages) {
-      if (!usage.spoolId) continue;
-      const previousGrams = source.outcome!.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      const currentGrams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      const delta = new StockDecimal(previousGrams).minus(currentGrams);
-      if (!delta.isZero())
-        await bookPrintStock(
-          transaction,
-          {
-            spoolId: usage.spoolId,
-            kind: 'CORRECTION',
-            grams: delta.toFixed(),
-            note: parsed.note,
-            printUsageId: usage.id,
-            operationKey: `correction:${operationKey}:${usage.id}`,
-          },
-          !!existing.bambuLink?.importedAt,
-        );
-    }
+    if (stockEnabled && existing.outcome.stockTracked)
+      for (const usage of existing.filamentUsages) {
+        if (!usage.spoolId) continue;
+        const previousGrams = source.outcome!.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        const currentGrams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        const delta = new StockDecimal(previousGrams).minus(currentGrams);
+        if (!delta.isZero())
+          await bookPrintStock(
+            transaction,
+            {
+              spoolId: usage.spoolId,
+              kind: 'CORRECTION',
+              grams: delta.toFixed(),
+              note: parsed.note,
+              printUsageId: usage.id,
+              operationKey: `correction:${operationKey}:${usage.id}`,
+            },
+            !!existing.bambuLink?.importedAt,
+          );
+      }
     await transaction.printOutcome.update({
       where: { id: existing.outcome.id },
       data: {
@@ -726,6 +732,7 @@ export async function correctPrintOutcome(id: string, input: unknown) {
         durationSeconds: parsed.durationSeconds,
         note: parsed.note,
         failureReason: parsed.failureReason,
+        ...(!stockEnabled ? { stockTracked: false } : {}),
       },
     });
     await refreshSeriesProgress(transaction, existing.seriesId);

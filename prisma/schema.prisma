@@ -278,6 +278,7 @@ model PrintOutcome {
   note            String?
   inputSnapshot   String
   costSnapshot    String
+  stockTracked    Boolean  @default(true)
   recordedAt      DateTime @default(now())
 }
 

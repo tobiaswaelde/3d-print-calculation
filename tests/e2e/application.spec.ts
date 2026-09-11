@@ -163,6 +163,29 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page.getByText('Integrationseinstellungen gespeichert.')).toBeVisible();
   await page.getByRole('link', { name: 'Allgemein', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Allgemein' })).toBeVisible();
+  const spoolManagement = page.getByRole('switch', { name: 'Spulenverwaltung aktivieren' });
+  await expect(spoolManagement).toBeChecked();
+  await spoolManagement.click();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Spulen' })).toHaveCount(0);
+  await page.goto('/spools');
+  await expect(page).toHaveURL(/\/filaments$/);
+  await page.getByRole('link', { name: 'Einstellungen' }).click();
+  await page.getByRole('link', { name: 'Integrationen', exact: true }).click();
+  await expect(page.getByText('Aktiviere zuerst die Spulenverwaltung unter Allgemein.')).toBeVisible();
+  await expect(page.locator('#integration-spoolman')).toHaveCount(0);
+  await page.getByRole('link', { name: 'Allgemein', exact: true }).click();
+  await page.getByRole('switch', { name: 'Spulenverwaltung aktivieren' }).click();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Spulen' })).toBeVisible();
+  await page.request.patch('/api/settings/integrations', {
+    headers: { origin: 'http://127.0.0.1:3000' },
+    data: {
+      spoolman: { enabled: false, url: 'http://spoolman:7912' },
+      bambubuddy: { enabled: false, url: 'http://bambubuddy:8000' },
+    },
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('link', { name: 'Berechnung', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Integrationen', exact: true })).toBeVisible();
