@@ -178,6 +178,10 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page.getByRole('heading', { name: 'Druckserien' })).toBeVisible();
   await page.getByRole('switch', { name: 'Druckserien' }).click();
   await page.getByRole('switch', { name: 'Spulenverwaltung' }).click();
+  const featureAlertIcons = page.locator(
+    '[data-slot="root"].ring-inset.ring-accented > [data-slot="icon"].i-tabler\\:info-circle',
+  );
+  await expect(featureAlertIcons).toHaveCount(2);
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Druckserien', exact: true })).toHaveCount(0);

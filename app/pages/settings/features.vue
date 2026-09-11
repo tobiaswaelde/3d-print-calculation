@@ -26,6 +26,8 @@
             v-if="!form.printSeriesEnabled"
             class="mt-4"
             color="neutral"
+            icon="i-tabler-info-circle"
+            variant="subtle"
             :description="t('settings.printSeriesDisabledHelp')"
           />
         </UCard>
@@ -45,6 +47,8 @@
             v-if="!form.spoolManagementEnabled"
             class="mt-4"
             color="neutral"
+            icon="i-tabler-info-circle"
+            variant="subtle"
             :description="t('settings.spoolManagementDisabledHelp')"
           />
         </UCard>
