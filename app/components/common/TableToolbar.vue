@@ -2,9 +2,9 @@
   <UDashboardToolbar
     data-table-toolbar
     :ui="{
-      root: 'overflow-x-auto',
+      root: 'flex-wrap items-center gap-3 py-3',
       left: 'shrink-0',
-      right: 'ml-auto min-w-max',
+      right: 'ml-auto min-w-0 basis-full flex-wrap justify-end gap-2 xl:basis-auto',
     }"
   >
     <template #left>
@@ -13,15 +13,17 @@
     <template #right>
       <UInput
         v-model="search"
-        class="w-52 sm:w-64"
+        class="w-full min-w-0 sm:w-auto sm:flex-1 xl:w-64 xl:flex-none"
         type="search"
         icon="i-tabler-search"
         :aria-label="t('common.search')"
         :placeholder="t('common.search')"
       />
-      <slot name="filters" />
-      <slot name="options" />
-      <slot name="create" />
+      <div class="flex max-w-full items-center justify-end gap-2">
+        <slot name="filters" />
+        <slot name="options" />
+        <slot name="create" />
+      </div>
     </template>
   </UDashboardToolbar>
 </template>

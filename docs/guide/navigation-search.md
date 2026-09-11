@@ -17,6 +17,17 @@ search filters only the current resource. **Table options → Show archived** ad
 Press <kbd>Shift</kbd>+<kbd>N</kbd> on a list page to open its create dialog. Open the keyboard-shortcut dialog
 with <kbd>?</kbd> or from the user menu for a compact overview of all available shortcuts.
 
+On smaller screens, the toolbar wraps below the breadcrumb. Search uses its own row on phones,
+while filters, table options, and **New** stay together and align to the right.
+
+## Install the app
+
+The production build includes a web app manifest and service worker. In a supported browser,
+open your HTTPS instance and use the browser's install or **Add to Home Screen** action to launch
+ezPrint in a standalone window. Installation availability depends on the browser and operating system.
+An active connection to your ezPrint server is still required to sign in, load data, and save changes.
+The development server does not enable the service worker.
+
 ## Global search
 
 Select the search field in the top bar or press <kbd>/</kbd> while focus is outside a form control. Enter at least

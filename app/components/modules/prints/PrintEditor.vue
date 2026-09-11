@@ -265,7 +265,7 @@
       </UCard>
 
       <div
-        class="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-default bg-default/95 py-3 backdrop-blur"
+        class="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-default bg-default/95 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur"
       >
         <UButton
           v-if="job"

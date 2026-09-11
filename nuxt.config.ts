@@ -3,7 +3,7 @@ import packageJson from './package.json' with { type: 'json' };
 export default defineNuxtConfig({
   compatibilityDate: '2026-09-01',
   ssr: false,
-  modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt', '@nuxt/eslint'],
+  modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt', '@nuxt/eslint', '@vite-pwa/nuxt'],
   css: ['~/assets/css/main.css'],
   devtools: { enabled: true },
   nitro: {
@@ -28,6 +28,17 @@ export default defineNuxtConfig({
     preference: 'system',
     fallback: 'light',
     storageKey: 'print-cost-color-mode',
+  },
+  pwa: {
+    registerType: 'autoUpdate',
+    manifest: {
+      name: 'ezPrint',
+      short_name: 'ezPrint',
+      theme_color: '#1d4ed8',
+      background_color: '#ffffff',
+      display: 'standalone',
+      icons: [{ src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any maskable' }],
+    },
   },
   typescript: { strict: true, typeCheck: true },
 });
