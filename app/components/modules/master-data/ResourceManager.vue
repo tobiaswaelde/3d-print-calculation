@@ -42,10 +42,11 @@
             <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
           </UFormField>
           <template v-if="resource === 'printers' || resource === 'components'">
-            <UFormField v-if="resource === 'printers'" name="manufacturer" :label="t('master.manufacturer')"
-              ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
-            /></UFormField>
-            <UFormField v-else name="manufacturerId" :label="t('master.manufacturer')">
+            <UFormField
+              name="manufacturerId"
+              :label="t('master.manufacturer')"
+              :required="resource === 'printers'"
+            >
               <USelectMenu
                 v-model="form.manufacturerId"
                 class="w-full"
@@ -53,7 +54,7 @@
                 :aria-label="t('master.manufacturer')"
                 value-key="value"
                 :items="manufacturerOptions"
-                clear
+                :clear="resource === 'components'"
               />
             </UFormField>
             <UFormField name="model" :label="t('master.model')"
@@ -319,10 +320,10 @@
 import Decimal from 'decimal.js';
 import {
   componentSchema,
+  createPrinterSchema,
   customerSchema,
   filamentSchema,
   manufacturerSchema,
-  printerSchema,
 } from '#shared/schemas/master-data';
 import type { MasterDataListItem, MasterDataResource, PaginatedResponse } from '#shared/types/master-data';
 
@@ -352,13 +353,16 @@ const componentTypes = computed(() => [
 const dialogTitle = computed(
   () => `${editingId.value ? t('common.edit') : t('common.create')} · ${props.title}`,
 );
+const printerValidationMessages = computed(() => ({
+  manufacturerRequired: t('validation.printerManufacturerRequired'),
+}));
 
 const formSchema = computed(() => {
   switch (props.resource) {
     case 'customers':
       return customerSchema;
     case 'printers':
-      return printerSchema;
+      return createPrinterSchema(printerValidationMessages.value);
     case 'manufacturers':
       return manufacturerSchema;
     case 'components':
@@ -402,6 +406,23 @@ const derivedRate = computed(() => {
   }
 });
 
+async function loadManufacturerOptions() {
+  const firstPage = await $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
+    query: { page: 1, pageSize: 100 },
+  });
+  const pageCount = Math.ceil(firstPage.total / firstPage.pageSize);
+  const remainingPages = await Promise.all(
+    Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) =>
+      $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
+        query: { page: index + 2, pageSize: 100 },
+      }),
+    ),
+  );
+  manufacturerOptions.value = [firstPage, ...remainingPages].flatMap((page) =>
+    page.items.map((item) => ({ label: item.name, value: item.id })),
+  );
+}
+
 async function refresh() {
   loading.value = true;
   error.value = '';
@@ -420,11 +441,8 @@ async function refresh() {
       });
       printerOptions.value = printers.items.map((item) => ({ label: item.name, value: item.id }));
     }
-    if (props.resource === 'components' || props.resource === 'filaments') {
-      const manufacturers = await $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
-        query: { pageSize: 100 },
-      });
-      manufacturerOptions.value = manufacturers.items.map((item) => ({ label: item.name, value: item.id }));
+    if (props.resource === 'printers' || props.resource === 'components' || props.resource === 'filaments') {
+      await loadManufacturerOptions();
     }
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : String(reason);

@@ -24,7 +24,6 @@
 </template>
 <script setup lang="ts">
 import type { SpoolDto } from '#shared/types/spools';
-
 definePageMeta({ layout: false, middleware: 'spool-management' });
 const { t } = useI18n();
 const id = String(useRoute().params.id);

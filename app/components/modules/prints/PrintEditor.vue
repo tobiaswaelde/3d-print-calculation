@@ -242,16 +242,8 @@
               "
             >
               <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required
-                ><CommonFilamentSelect
-                  v-model="filament.filamentId"
-                  class="w-full"
-                  :items="filamentOptions"
-                /><span
-                  v-if="!spoolManagementEnabled && job?.filamentUsages[index]?.spoolCode"
-                  class="mt-1 block text-xs text-muted"
-                  >{{ job.filamentUsages[index]?.spoolCode }}</span
-                ></UFormField
-              >
+                ><CommonFilamentSelect v-model="filament.filamentId" class="w-full" :items="filamentOptions"
+              /></UFormField>
               <UFormField
                 v-if="spoolManagementEnabled"
                 :name="`filaments.${index}.spoolId`"
@@ -397,7 +389,8 @@ import type { PrintJobDto } from '#shared/types/prints';
 
 const props = defineProps<{ printId?: string }>();
 const { t } = useI18n();
-const { load: loadFeatures, printSeriesEnabled, spoolManagementEnabled } = useFeatures();
+const { enabled: spoolManagementEnabled, load: loadSpoolManagement } = useSpoolManagement();
+const { load: loadFeatures, printSeriesEnabled } = useFeatures();
 const { money, dateTime } = useFormatting();
 const job = ref<PrintJobDto | null>(null);
 const loading = ref(true);
@@ -525,7 +518,7 @@ function hydrate(value: PrintJobDto) {
 }
 
 async function load() {
-  await loadFeatures();
+  await Promise.all([loadFeatures(), loadSpoolManagement()]);
   const [customerResponse, printerResponse, componentResponse, filamentResponse] = await Promise.all([
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/customers', { query: { pageSize: 100 } }),
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/printers', { query: { pageSize: 100 } }),

@@ -13,6 +13,12 @@ A push to `main` runs the same Playwright screenshot generator before GitHub Pag
 version, Git tag, GitHub release, and container tag. Immutable historical documentation remains in `docs/` at each
 Git tag.
 
+The release workflow uses the `CHANGESETS_PR_TOKEN` repository secret only to create and update the
+`Version Packages` pull request. Configure it with a fine-grained personal access token limited to this repository,
+with read and write access to **Contents** and **Pull requests**. This lets the pull request workflows start without
+manual approval. Image publication, Git tags, and GitHub Releases continue to use the short-lived `GITHUB_TOKEN`.
+Rotate the personal access token before it expires and update the secret without committing or logging its value.
+
 ## Verify publication
 
 1. Confirm the Playwright screenshot generator, documentation check, build, and browser smoke test passed in CI.

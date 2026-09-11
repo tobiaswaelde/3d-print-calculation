@@ -157,13 +157,18 @@ try {
     { method: 'POST', body: JSON.stringify({ name: 'Acme', email: 'hello@example.test', note: '' }) },
     cookie,
   );
+  const printerManufacturer = await json(
+    '/api/manufacturers',
+    { method: 'POST', body: JSON.stringify({ name: 'Prusa', note: '' }) },
+    cookie,
+  );
   const printer = await json(
     '/api/printers',
     {
       method: 'POST',
       body: JSON.stringify({
         name: 'MK4',
-        manufacturer: 'Prusa',
+        manufacturerId: printerManufacturer.body.id,
         model: 'MK4S',
         purchasePrice: '1200',
         expectedLifetimeHours: '6000',
@@ -174,9 +179,91 @@ try {
     cookie,
   );
   check(
-    printer.body.hourlyRate === '0.2',
-    `Printer hourly rate must be deterministic: ${JSON.stringify(printer.body)}`,
+    printer.body.hourlyRate === '0.2' &&
+      printer.body.manufacturerId === printerManufacturer.body.id &&
+      printer.body.manufacturer === 'Prusa',
+    `Printer must resolve its manufacturer relation and hourly rate: ${JSON.stringify(printer.body)}`,
   );
+  const printersByManufacturer = await json('/api/printers?search=Prusa', {}, cookie);
+  check(
+    printersByManufacturer.body.items?.some((item: { id: string }) => item.id === printer.body.id),
+    'Printer inventory search must include the related manufacturer name.',
+  );
+  const printerGlobalSearch = await json('/api/search?q=Prusa', {}, cookie);
+  check(
+    printerGlobalSearch.body.groups?.some(
+      (group: { type: string; items: { id: string }[] }) =>
+        group.type === 'printers' && group.items.some((item) => item.id === printer.body.id),
+    ),
+    'Global search must include printer manufacturer names.',
+  );
+  const invalidPrinter = await json(
+    '/api/printers',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Invalid manufacturer',
+        manufacturerId: 'missing',
+        model: '',
+        purchasePrice: '100',
+        expectedLifetimeHours: '1000',
+        averagePowerWatts: 100,
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  check(invalidPrinter.response.status === 422, 'Printer manufacturer IDs must reference active records.');
+  const archivedPrinterManufacturer = await json(
+    '/api/manufacturers',
+    { method: 'POST', body: JSON.stringify({ name: 'Archived printer maker', note: '' }) },
+    cookie,
+  );
+  await json(
+    `/api/manufacturers/${archivedPrinterManufacturer.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ archived: true }) },
+    cookie,
+  );
+  const archivedManufacturerPrinter = await json(
+    '/api/printers',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Archived manufacturer',
+        manufacturerId: archivedPrinterManufacturer.body.id,
+        model: '',
+        purchasePrice: '100',
+        expectedLifetimeHours: '1000',
+        averagePowerWatts: 100,
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  check(archivedManufacturerPrinter.response.status === 422, 'Archived manufacturers cannot be assigned.');
+  const legacyPrinter = await json(
+    '/api/printers',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Legacy printer',
+        manufacturer: 'Legacy printer maker',
+        model: '',
+        purchasePrice: '100',
+        expectedLifetimeHours: '1000',
+        averagePowerWatts: 100,
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  check(
+    legacyPrinter.response.ok &&
+      legacyPrinter.body.manufacturer === 'Legacy printer maker' &&
+      typeof legacyPrinter.body.manufacturerId === 'string',
+    'Legacy printer manufacturer text must create and resolve a manufacturer.',
+  );
+  await json(`/api/printers/${legacyPrinter.body.id}`, { method: 'DELETE' }, cookie);
   const componentManufacturer = await json(
     '/api/manufacturers',
     { method: 'POST', body: JSON.stringify({ name: 'Test', note: '' }) },
@@ -872,7 +959,12 @@ try {
     '/api/settings',
     {
       method: 'PATCH',
-      body: JSON.stringify({ currency: 'USD', defaultLocale: 'de-DE', electricityPricePerKwh: '0.32' }),
+      body: JSON.stringify({
+        currency: 'USD',
+        defaultLocale: 'de-DE',
+        electricityPricePerKwh: '0.32',
+        spoolManagementEnabled: true,
+      }),
     },
     cookie,
   );
@@ -882,13 +974,13 @@ try {
   const referencedFilamentDelete = await json(`/api/filaments/${filament.id}`, { method: 'DELETE' }, cookie);
   check(referencedFilamentDelete.response.status === 409, 'Used filaments must not be hard-deleted.');
   const referencedManufacturerDelete = await json(
-    `/api/manufacturers/${componentManufacturer.body.id}`,
+    `/api/manufacturers/${printerManufacturer.body.id}`,
     { method: 'DELETE' },
     cookie,
   );
   check(
     referencedManufacturerDelete.response.status === 409,
-    'Referenced manufacturers must not be hard-deleted.',
+    'Manufacturers referenced by printers must not be hard-deleted.',
   );
 
   const sm = (body: unknown) =>
@@ -1236,18 +1328,41 @@ try {
   );
   check(fake.state.authenticated > 0, 'Remote calls authenticate through server-only credentials.');
 
-  const disabledFeatures = await json(
+  const deferredManagedDraft = await json(
+    '/api/prints',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        ...payload,
+        name: 'Deferred managed outcome',
+        filaments: [{ ...payload.filaments[0], spoolId: otherSpool.body.id }],
+      }),
+    },
+    cookie,
+  );
+  const deferredManagedDone = await json(
+    `/api/prints/${deferredManagedDraft.body.id}/complete`,
+    { method: 'POST' },
+    cookie,
+  );
+  check(deferredManagedDone.response.ok, 'Managed print can be completed before disabling spool management.');
+  const deferredSpoolId = deferredManagedDone.body.filamentUsages[0].spoolId;
+  const deferredBalance = (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).body.remainingGrams;
+
+  const disabledSettings = await json(
     '/api/settings/features',
     {
       method: 'PATCH',
-      body: JSON.stringify({ printSeriesEnabled: false, spoolManagementEnabled: false }),
+      body: JSON.stringify({
+        printSeriesEnabled: false,
+        spoolManagementEnabled: false,
+      }),
     },
     cookie,
   );
   check(
-    disabledFeatures.body.printSeriesEnabled === false &&
-      disabledFeatures.body.spoolManagementEnabled === false,
-    'Feature settings persist independently.',
+    !disabledSettings.body.printSeriesEnabled && !disabledSettings.body.spoolManagementEnabled,
+    'Optional features can be disabled together.',
   );
   check(
     (await json(`/api/series/${series.body.id}`, {}, cookie)).response.status === 409,
@@ -1267,60 +1382,133 @@ try {
     (await json(`/api/prints/${seriesDone.body.id}`, {}, cookie)).body.series?.name === 'Bracket batch',
     'Historical print DTOs retain their series text while the feature is disabled.',
   );
+  const disabledIntegrations = await json('/api/settings/integrations', {}, cookie);
   check(
-    (await json(`/api/spools/${otherSpool.body.id}`, {}, cookie)).response.status === 409,
+    !disabledIntegrations.body.spoolman.enabled &&
+      disabledIntegrations.body.bambubuddy.enabled &&
+      disabledIntegrations.body.spoolman.authorizationConfigured,
+    'Disabling spool management disables Spoolman without deleting its credential or disabling BambuBuddy.',
+  );
+  await json(
+    `/api/prints/${deferredManagedDraft.body.id}/outcome`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        status: 'SUCCESS',
+        durationSeconds: 60,
+        filaments: [{ usageId: deferredManagedDone.body.filamentUsages[0].id, usedGrams: '7' }],
+      }),
+    },
+    cookie,
+  );
+  check(
+    (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).response.status === 409,
     'Disabled spool management rejects direct API access.',
   );
-  check(
-    (await json('/api/integrations/spoolman', {}, cookie)).response.status === 409,
-    'Disabling spool management also blocks Spoolman operations.',
-  );
-  const disabledSearch = await json('/api/search?q=Bracket', {}, cookie);
-  check(
-    !disabledSearch.body.groups.some((group: { type: string }) => ['series', 'spools'].includes(group.type)),
-    'Disabled features disappear from global search.',
-  );
-  const featureFilament = await json(
+  const unmanagedFilament = await json(
     '/api/filaments',
     {
       method: 'POST',
       body: JSON.stringify({
         manufacturerId: filamentManufacturer.body.id,
         material: 'ASA',
-        colorName: 'Feature test',
-        colorHex: '#223344',
-        purchasePrice: '30',
-        netWeightGrams: '1000',
+        colorName: 'Natural',
+        colorHex: '#EEEEEE',
+        purchasePrice: '20',
+        netWeightGrams: '500',
         note: '',
       }),
     },
     cookie,
   );
-  const featurePreview = await json(
-    '/api/prints/calculate',
+  check(
+    (await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie)).response.status === 409,
+    'Disabled spool management rejects inventory list access.',
+  );
+  const unmanagedPayload = {
+    ...payload,
+    name: 'Unmanaged spool print',
+    filaments: [{ filamentId: unmanagedFilament.body.id, usedGrams: '10' }],
+  };
+  const unmanagedDraft = await json(
+    '/api/prints',
+    { method: 'POST', body: JSON.stringify(unmanagedPayload) },
+    cookie,
+  );
+  check(
+    unmanagedDraft.body.filamentUsages[0].spoolId === null &&
+      unmanagedDraft.body.filamentUsages[0].spoolCode === null &&
+      unmanagedDraft.body.snapshot.filamentCost === '0.4',
+    'Unmanaged prints use filament pricing and persist no spool identity.',
+  );
+  const unmanagedDone = await json(
+    `/api/prints/${unmanagedDraft.body.id}/complete`,
+    { method: 'POST' },
+    cookie,
+  );
+  await json(
+    `/api/prints/${unmanagedDraft.body.id}/outcome`,
     {
       method: 'POST',
       body: JSON.stringify({
-        ...payload,
-        name: 'Feature-disabled print',
-        customerId: null,
-        seriesId: null,
-        filaments: [{ filamentId: featureFilament.body.id, usedGrams: '10' }],
+        status: 'SUCCESS',
+        durationSeconds: 60,
+        filaments: [{ usageId: unmanagedDone.body.filamentUsages[0].id, usedGrams: '9' }],
       }),
     },
     cookie,
   );
-  check(featurePreview.response.ok, 'Print calculations use filament pricing while spools are disabled.');
-  await json(
+  check(
+    (await json('/api/spools', { method: 'POST', body: JSON.stringify({}) }, cookie)).body.data?.code ===
+      'SPOOL_MANAGEMENT_DISABLED',
+    'Spool writes are rejected while spool management is disabled.',
+  );
+  const disabledSearch = await json('/api/search?q=Unmanaged', {}, cookie);
+  check(
+    !disabledSearch.body.groups.some((group: { type: string }) =>
+      ['series', 'spools'].includes(group.type),
+    ) && (await json('/api/dashboard?period=all', {}, cookie)).body.lowStock.length === 0,
+    'Disabled features remove series and spool search results plus low-stock warnings.',
+  );
+  const enabledSettings = await json(
     '/api/settings/features',
     {
       method: 'PATCH',
-      body: JSON.stringify({ printSeriesEnabled: true, spoolManagementEnabled: true }),
+      body: JSON.stringify({
+        printSeriesEnabled: true,
+        spoolManagementEnabled: true,
+      }),
     },
     cookie,
   );
-  const backfilledSpools = await json(`/api/spools?filamentId=${featureFilament.body.id}`, {}, cookie);
-  check(backfilledSpools.body.items.length === 1, 'Re-enabling spool management backfills an opening spool.');
+  const restoredSpools = await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie);
+  check(
+    enabledSettings.body.printSeriesEnabled &&
+      enabledSettings.body.spoolManagementEnabled &&
+      restoredSpools.body.items.length === 1 &&
+      restoredSpools.body.items[0].remainingGrams === '500' &&
+      !(await json('/api/settings/integrations', {}, cookie)).body.spoolman.enabled,
+    'Re-enabling creates missing opening spools without re-enabling Spoolman.',
+  );
+  await json(
+    `/api/prints/${deferredManagedDraft.body.id}/outcome/correct`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        status: 'SUCCESS',
+        durationSeconds: 60,
+        filaments: [{ usageId: deferredManagedDone.body.filamentUsages[0].id, usedGrams: '8' }],
+        note: 'Correct an untracked outcome',
+        expectedRevision: 1,
+        operationKey: '77777777-7777-4777-8777-777777777777',
+      }),
+    },
+    cookie,
+  );
+  check(
+    (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).body.remainingGrams === deferredBalance,
+    'Later corrections do not partially book an outcome recorded while stock tracking was disabled.',
+  );
 
   execFileSync('pnpm', ['db:reset-password', 'integration@example.test', 'new-integration-password-456'], {
     env: environment,

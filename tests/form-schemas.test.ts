@@ -14,6 +14,7 @@ describe('application form validation', () => {
         currency: 'EUR',
         defaultLocale: 'de-DE',
         electricityPricePerKwh: 0.32,
+        spoolManagementEnabled: true,
       }).electricityPricePerKwh,
     ).toBe('0.32');
     expect(
@@ -21,6 +22,7 @@ describe('application form validation', () => {
         currency: 'EUR',
         defaultLocale: 'de-DE',
         electricityPricePerKwh: -0.32,
+        spoolManagementEnabled: true,
       }).success,
     ).toBe(false);
   });

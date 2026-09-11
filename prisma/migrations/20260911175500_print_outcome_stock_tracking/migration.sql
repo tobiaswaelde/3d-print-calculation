@@ -1,0 +1,1 @@
+ALTER TABLE "PrintOutcome" ADD COLUMN "stockTracked" BOOLEAN NOT NULL DEFAULT true;

@@ -51,7 +51,7 @@
             {{ selected.syncedAt }}
           </p>
           <UAlert
-            v-if="selected.state?.mappingWarning"
+            v-if="spoolManagementEnabled && selected.state?.mappingWarning"
             color="warning"
             :description="t('integration.mappingWarning')"
           />
@@ -167,7 +167,7 @@ import type { BambuLog, BambuStatus } from '#shared/types/integrations';
 import type { PrintJobDto } from '#shared/types/prints';
 import type { SpoolDto } from '#shared/types/spools';
 const { t } = useI18n();
-const { spoolManagementEnabled } = useFeatures();
+const { enabled: spoolManagementEnabled } = useSpoolManagement();
 const route = useRoute();
 const printId = typeof route.query.printId === 'string' ? route.query.printId : undefined;
 const printerId = ref(typeof route.query.printerId === 'string' ? route.query.printerId : '');

@@ -19,6 +19,9 @@ Electricity   = total_h × (printer_watts / 1000) × price_per_kWh
 Total         = printer + components + filament + electricity
 ```
 
+When spool management is disabled, `spool_price` and `spool_net_g` are taken from the selected filament's catalog
+price and net weight. The resulting usage has no spool identity and produces no stock movement.
+
 One printer and build plate, at least one hotend, and at least one filament are required. Total duration sums
 positive whole hotend seconds. Used weight and lifetimes are positive; prices and watts may be zero but not
 negative. Resources must be active, unique, and compatible.

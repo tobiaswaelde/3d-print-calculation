@@ -71,7 +71,8 @@ model Printer {
   trayMappings BambuTrayMapping[]
   id                    String             @id @default(cuid())
   name                  String
-  manufacturer          String?
+  manufacturerId        String
+  manufacturer          Manufacturer       @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
   model                 String?
   purchasePrice         Decimal
   expectedLifetimeHours Decimal
@@ -84,6 +85,7 @@ model Printer {
   updatedAt             DateTime           @updatedAt
 
   @@index([name])
+  @@index([manufacturerId])
   @@index([archivedAt])
 }
 
@@ -95,6 +97,7 @@ model Manufacturer {
   archivedAt DateTime?
   components Component[]
   filaments  Filament[]
+  printers   Printer[]
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
 
@@ -279,6 +282,7 @@ model PrintOutcome {
   note            String?
   inputSnapshot   String
   costSnapshot    String
+  stockTracked    Boolean  @default(true)
   recordedAt      DateTime @default(now())
 }
 

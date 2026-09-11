@@ -1,6 +1,7 @@
 import type { FeatureSettings } from '#shared/schemas/features';
 
 export function useFeatures() {
+  const { setEnabled: setSpoolManagementEnabled } = useSpoolManagement();
   const flags = useState<FeatureSettings>('feature-settings', () => ({
     printSeriesEnabled: false,
     spoolManagementEnabled: false,
@@ -10,6 +11,7 @@ export function useFeatures() {
   async function load(force = false) {
     if (!loaded.value || force) {
       flags.value = await $fetch<FeatureSettings>('/api/settings/features');
+      setSpoolManagementEnabled(flags.value.spoolManagementEnabled);
       loaded.value = true;
     }
     return flags.value;
@@ -17,6 +19,7 @@ export function useFeatures() {
 
   function set(value: FeatureSettings) {
     flags.value = value;
+    setSpoolManagementEnabled(value.spoolManagementEnabled);
     loaded.value = true;
   }
 

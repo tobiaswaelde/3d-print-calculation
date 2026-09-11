@@ -98,7 +98,7 @@
 import { integrationSettingsSchema, type IntegrationSettingsDto } from '#shared/schemas/integration-settings';
 
 const { t } = useI18n();
-const { spoolManagementEnabled } = useFeatures();
+const { enabled: spoolManagementEnabled } = useSpoolManagement();
 const settings = ref<IntegrationSettingsDto | null>(null);
 const pending = ref(false);
 const message = ref('');

@@ -2,4 +2,4 @@
 'ezprint': minor
 ---
 
-Add instance-wide feature settings for print series and spool management.
+Add a Features settings tab for print series and move the optional spool-management control there.

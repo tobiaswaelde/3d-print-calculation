@@ -6,14 +6,19 @@ description: Prisma models, relationships, archiving, decimal serialization, and
 # Data model
 
 `User` owns `Session` records; `AppSettings` is the singleton with ID `1`. `Customer`, `Printer`, `Manufacturer`,
-`Component`, and `Filament` are inventory records. Components optionally and filaments obligatorily reference a
-shared `Manufacturer`; `PrinterComponent` represents printer/component compatibility.
+`Component`, and `Filament` are inventory records. Printers and filaments obligatorily reference a shared
+`Manufacturer`; components reference one optionally. `PrinterComponent` represents printer/component compatibility.
 Filaments store a required descriptive color name and `#RRGGBB` value; their display name is derived from the
 manufacturer, material, and color name.
 The `Component.alwaysUsed` flag controls compatible defaults in new print forms without making those selections
 mandatory.
 
-`AppSettings` stores instance-wide `printSeriesEnabled` and `spoolManagementEnabled` feature flags. Both default to true; changing them preserves all series, spool, usage, and snapshot records. It also stores explicit Spoolman and BambuBuddy enablement, server URLs, and server-only credentials. Nullable values preserve environment-variable defaults for deployments upgraded from earlier versions. Credentials are never serialized in settings or integration responses; database files and backups still require secret-level protection.
+`AppSettings` stores the instance-wide `printSeriesEnabled` and `spoolManagementEnabled` feature flags. Both
+default to true, and disabling them preserves existing series, spool, usage, and snapshot records. The spool flag
+controls new spool selection, stock writes, and filament pricing behavior. `AppSettings` also stores explicit
+Spoolman and BambuBuddy enablement, server URLs, and server-only credentials. Nullable values preserve
+environment-variable defaults for deployments upgraded from earlier versions. Credentials are never serialized
+in settings or integration responses; database files and backups still require secret-level protection.
 
 A `PrintJob` references one printer, an optional customer, and component and filament usage rows. Its workflow
 status is one of `DRAFT`, `PRINTING`, `PRINTED`, `SHIPPED`, or `DONE`; payment is tracked independently with the
@@ -22,9 +27,15 @@ names, prices, lifetimes, quantities, and line costs at calculation time. `Print
 electricity price, printer inputs, currency, and formula version. A `DRAFT` may be recalculated; leaving Draft
 finalizes the snapshot and makes print inputs immutable through the service contract.
 
+`PrintFilamentUsage.spoolId` and `spoolCode` remain nullable. With spool management disabled, new usages copy the
+filament catalog price and net weight without a spool relation or stock movement. Re-enabling inventory does not
+retroactively attach those usages or reinterpret their snapshots. `PrintOutcome.stockTracked` prevents later
+corrections from partially booking an outcome whose stock history was intentionally skipped while management was
+disabled.
+
 Archiving sets `archivedAt`, hiding records from new selections while preserving historical prints. Restrictive
-relations and service checks prevent deletion of referenced data, including manufacturers used by components or
-filaments; join rows and sessions may cascade with owners.
+relations and service checks prevent deletion of referenced data, including manufacturers used by printers,
+components, or filaments; join rows and sessions may cascade with owners.
 
 Money and quantities use Prisma `Decimal` and canonical JSON strings such as `"1.782175"`. Duration and power are
 integer seconds and watts. The authoritative model is

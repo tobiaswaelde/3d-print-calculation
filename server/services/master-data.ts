@@ -39,10 +39,12 @@ function customerDto(value: Awaited<ReturnType<typeof db.customer.findFirstOrThr
   return { ...baseDto(value), email: value.email, note: value.note };
 }
 
-function printerDto(value: Awaited<ReturnType<typeof db.printer.findFirstOrThrow>>) {
+type PrinterWithManufacturer = Prisma.PrinterGetPayload<{ include: { manufacturer: true } }>;
+function printerDto(value: PrinterWithManufacturer) {
   return {
     ...baseDto(value),
-    manufacturer: value.manufacturer,
+    manufacturerId: value.manufacturerId,
+    manufacturer: value.manufacturer.name,
     model: value.model,
     purchasePrice: canonicalDecimal(value.purchasePrice.toString()),
     expectedLifetimeHours: canonicalDecimal(value.expectedLifetimeHours.toString()),
@@ -126,14 +128,19 @@ export async function listResource(resource: Resource, query: Record<string, unk
         ? {
             OR: [
               { name: { contains: input.search } },
-              { manufacturer: { contains: input.search } },
+              { manufacturer: { name: { contains: input.search } } },
               { model: { contains: input.search } },
             ],
           }
         : {}),
     };
     const [items, total] = await db.$transaction([
-      db.printer.findMany({ where, ...pagination, orderBy: { name: 'asc' } }),
+      db.printer.findMany({
+        where,
+        ...pagination,
+        include: { manufacturer: true },
+        orderBy: { name: 'asc' },
+      }),
       db.printer.count({ where }),
     ]);
     return { items: items.map(printerDto), total, page: input.page, pageSize: input.pageSize };
@@ -200,7 +207,8 @@ export async function listResource(resource: Resource, query: Record<string, unk
 
 export async function getResource(resource: Resource, id: string) {
   if (resource === 'customers') return customerDto(await db.customer.findUniqueOrThrow({ where: { id } }));
-  if (resource === 'printers') return printerDto(await db.printer.findUniqueOrThrow({ where: { id } }));
+  if (resource === 'printers')
+    return printerDto(await db.printer.findUniqueOrThrow({ where: { id }, include: { manufacturer: true } }));
   if (resource === 'manufacturers')
     return manufacturerDto(await db.manufacturer.findUniqueOrThrow({ where: { id } }));
   if (resource === 'components')
@@ -227,11 +235,31 @@ async function ensureActiveManufacturer(id: string | null) {
   return manufacturer;
 }
 
+async function resolvePrinterManufacturer(manufacturerId: string | null, legacyName: string | null) {
+  if (manufacturerId) return ensureActiveManufacturer(manufacturerId);
+  const manufacturer = await db.manufacturer.upsert({
+    where: { name: legacyName! },
+    create: { name: legacyName! },
+    update: {},
+  });
+  if (manufacturer.archivedAt) apiError(422, 'INVALID_MANUFACTURER', 'errors.invalidManufacturer');
+  return manufacturer;
+}
+
 export async function createResource(resource: Resource, input: unknown) {
   if (resource === 'customers')
     return customerDto(await db.customer.create({ data: parseBody(customerSchema, input) }));
-  if (resource === 'printers')
-    return printerDto(await db.printer.create({ data: parseBody(printerSchema, input) }));
+  if (resource === 'printers') {
+    const data = parseBody(printerSchema, input);
+    const manufacturer = await resolvePrinterManufacturer(data.manufacturerId, data.manufacturer);
+    const { manufacturerId: _manufacturerId, manufacturer: _manufacturer, ...printer } = data;
+    return printerDto(
+      await db.printer.create({
+        data: { ...printer, manufacturerId: manufacturer!.id },
+        include: { manufacturer: true },
+      }),
+    );
+  }
   if (resource === 'manufacturers')
     return manufacturerDto(await db.manufacturer.create({ data: parseBody(manufacturerSchema, input) }));
   if (resource === 'components') {
@@ -253,16 +281,13 @@ export async function createResource(resource: Resource, input: unknown) {
   }
   const data = parseBody(filamentSchema, input);
   const manufacturer = await ensureActiveManufacturer(data.manufacturerId);
-  const features = await db.appSettings.findUniqueOrThrow({
-    where: { id: 1 },
-    select: { spoolManagementEnabled: true },
-  });
+  const settings = await db.appSettings.findUniqueOrThrow({ where: { id: 1 } });
   return filamentDto(
     await db.filament.create({
       data: {
         ...data,
         name: `${manufacturer!.name} ${data.material} - ${data.colorName}`,
-        ...(features.spoolManagementEnabled
+        ...(settings.spoolManagementEnabled
           ? {
               spools: {
                 create: {
@@ -289,8 +314,18 @@ export async function createResource(resource: Resource, input: unknown) {
 export async function updateResource(resource: Resource, id: string, input: unknown) {
   if (resource === 'customers')
     return customerDto(await db.customer.update({ where: { id }, data: parseBody(customerSchema, input) }));
-  if (resource === 'printers')
-    return printerDto(await db.printer.update({ where: { id }, data: parseBody(printerSchema, input) }));
+  if (resource === 'printers') {
+    const data = parseBody(printerSchema, input);
+    const manufacturer = await resolvePrinterManufacturer(data.manufacturerId, data.manufacturer);
+    const { manufacturerId: _manufacturerId, manufacturer: _manufacturer, ...printer } = data;
+    return printerDto(
+      await db.printer.update({
+        where: { id },
+        data: { ...printer, manufacturerId: manufacturer!.id },
+        include: { manufacturer: true },
+      }),
+    );
+  }
   if (resource === 'manufacturers') {
     const data = parseBody(manufacturerSchema, input);
     return db.$transaction(async (transaction) => {
@@ -348,7 +383,8 @@ export async function archiveResource(resource: Resource, id: string, input: unk
   const { archived } = parseBody(archiveSchema, input);
   const data = { archivedAt: archived ? new Date() : null };
   if (resource === 'customers') return customerDto(await db.customer.update({ where: { id }, data }));
-  if (resource === 'printers') return printerDto(await db.printer.update({ where: { id }, data }));
+  if (resource === 'printers')
+    return printerDto(await db.printer.update({ where: { id }, data, include: { manufacturer: true } }));
   if (resource === 'manufacturers')
     return manufacturerDto(await db.manufacturer.update({ where: { id }, data }));
   if (resource === 'components')
@@ -418,6 +454,7 @@ export async function readSettings() {
     defaultLocale: value.defaultLocale,
     electricityPricePerKwh: canonicalDecimal(value.electricityPricePerKwh.toString()),
     calculationVersion: value.calculationVersion,
+    spoolManagementEnabled: value.spoolManagementEnabled,
   };
 }
 
@@ -433,12 +470,53 @@ export async function updateSettings(input: unknown) {
         (await transaction.printJob.count());
       if (count > 0) apiError(409, 'CURRENCY_LOCKED', 'errors.currencyLocked');
     }
-    return transaction.appSettings.update({ where: { id: 1 }, data });
+    if (data.spoolManagementEnabled && !current.spoolManagementEnabled) {
+      const filaments = (
+        await transaction.filament.findMany({
+          where: { archivedAt: null },
+          select: {
+            id: true,
+            purchasePrice: true,
+            netWeightGrams: true,
+            spools: { where: { archivedAt: null }, select: { remoteState: true } },
+          },
+        })
+      ).filter((filament) =>
+        filament.spools.every((spool) => ['ARCHIVED', 'MISSING'].includes(spool.remoteState ?? '')),
+      );
+      for (const filament of filaments) {
+        const spoolId = randomUUID();
+        await transaction.spool.create({
+          data: {
+            id: spoolId,
+            code: `S-${spoolId}`,
+            filamentId: filament.id,
+            purchasePrice: filament.purchasePrice.toString(),
+            initialNetWeightGrams: filament.netWeightGrams.toString(),
+            movements: {
+              create: {
+                kind: 'RECEIPT',
+                grams: filament.netWeightGrams.toString(),
+                operationKey: `opening:${spoolId}`,
+              },
+            },
+          },
+        });
+      }
+    }
+    return transaction.appSettings.update({
+      where: { id: 1 },
+      data: {
+        ...data,
+        ...(!data.spoolManagementEnabled ? { spoolmanEnabled: false } : {}),
+      },
+    });
   });
   return {
     currency: value.currency,
     defaultLocale: value.defaultLocale,
     electricityPricePerKwh: canonicalDecimal(value.electricityPricePerKwh.toString()),
     calculationVersion: value.calculationVersion,
+    spoolManagementEnabled: value.spoolManagementEnabled,
   };
 }

@@ -13,10 +13,19 @@ export async function updateFeatureSettings(input: unknown) {
   return db.$transaction(async (transaction) => {
     const current = await readFeatureFlags(transaction);
     if (data.spoolManagementEnabled && !current.spoolManagementEnabled) {
-      const filaments = await transaction.filament.findMany({
-        where: { archivedAt: null, spools: { none: { archivedAt: null } } },
-        select: { id: true, purchasePrice: true, netWeightGrams: true },
-      });
+      const filaments = (
+        await transaction.filament.findMany({
+          where: { archivedAt: null },
+          select: {
+            id: true,
+            purchasePrice: true,
+            netWeightGrams: true,
+            spools: { where: { archivedAt: null }, select: { remoteState: true } },
+          },
+        })
+      ).filter((filament) =>
+        filament.spools.every((spool) => ['ARCHIVED', 'MISSING'].includes(spool.remoteState ?? '')),
+      );
       for (const filament of filaments) {
         const spoolId = randomUUID();
         await transaction.spool.create({

@@ -2,19 +2,32 @@
   <UForm :schema="seriesSchema" :state="form" class="grid gap-4 sm:grid-cols-2" @submit="save">
     <UAlert v-if="error" color="error" :description="error" class="sm:col-span-2" />
     <UFormField name="name" :label="t('master.name')" required
-      ><UInput v-model="form.name" class="w-full"
+      ><UInput v-model="form.name" class="w-full" icon="i-tabler-tag" autofocus
     /></UFormField>
     <UFormField name="customerId" :label="t('nav.customers')"
-      ><USelect v-model="form.customerId" :items="customers" class="w-full"
+      ><USelect v-model="form.customerId" :items="customers" class="w-full" icon="i-tabler-user"
     /></UFormField>
     <UFormField name="targetQuantity" :label="t('series.target')"
-      ><UInput v-model="form.targetQuantity" type="number" min="1" max="1000000" step="1" class="w-full"
+      ><UInput
+        v-model="form.targetQuantity"
+        type="number"
+        min="1"
+        max="1000000"
+        step="1"
+        class="w-full"
+        icon="i-tabler-target-arrow"
     /></UFormField>
     <UCheckbox v-model="form.autoComplete" :label="t('series.autoComplete')" class="self-center" />
     <UFormField name="notes" :label="t('master.note')" class="sm:col-span-2"
-      ><UTextarea v-model="form.notes" class="w-full"
+      ><UTextarea v-model="form.notes" class="w-full" icon="i-tabler-notes"
     /></UFormField>
-    <UButton type="submit" :label="t('common.save')" :loading="saving" class="justify-center sm:col-span-2" />
+    <UButton
+      type="submit"
+      :label="t('common.save')"
+      icon="i-tabler-device-floppy"
+      :loading="saving"
+      class="justify-center sm:col-span-2"
+    />
   </UForm>
 </template>
 <script setup lang="ts">

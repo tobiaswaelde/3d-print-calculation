@@ -57,16 +57,23 @@ accepts `{ status }` or `{ paid }`. Leaving `DRAFT` finalizes the cost snapshot,
 `DRAFT`, and `{ paid: true }` records a server-generated `paidAt` timestamp while `false` clears it. Authoritative
 schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/ezprint/tree/main/shared/schemas).
 
-Component and filament inputs reference shared manufacturers with `manufacturerId`. Component references are
-optional; filament references are required. Component inputs also accept `alwaysUsed`, which defaults to `false`.
+Printer, component, and filament inputs reference shared manufacturers with `manufacturerId`. Printer and filament
+references are required; component references are optional. For compatibility, printer requests may still send the
+legacy `manufacturer` name, which resolves an existing active manufacturer or creates one. Component inputs also
+accept `alwaysUsed`, which defaults to `false`.
 Filament inputs require `material`, `colorName`, and a `colorHex` in `#RRGGBB` format; their `name` is derived from
-manufacturer, material, and color name. Responses expose the resolved manufacturer name and the color fields.
+manufacturer, material, and color name. Printer, component, and filament responses expose `manufacturerId` and the
+resolved manufacturer name.
 
 ## Errors
 
 Errors include an HTTP status and stable `data` with `code`, `messageKey`, optional `fieldErrors`, and `requestId`.
 Expect 401 without a session, 403 for a foreign origin, 409 for disabled features, immutability, references, currency, or setup
 conflicts, and 422 for invalid or incompatible input. API clients should branch on `code`, not parse messages.
+
+`GET /api/settings` exposes `spoolManagementEnabled`. `PATCH /api/settings` requires the boolean alongside the
+other application settings. Disabling it also disables Spoolman without clearing its URL or credential. Enabling
+it creates one opening spool for every active filament without an active spool.
 
 Print draft and calculation requests accept `quantity`, a whole number from 1 to 1,000,000, defaulting to 1. Print DTOs, previews, and snapshots expose `quantity` and canonical decimal `costPerUnit`. Material quantities and duration remain run totals.
 
@@ -83,6 +90,10 @@ Authenticated `GET /api/spools` supports search, page, pageSize (1–100), inclu
 `POST /api/spools/:id/archive` takes `{ archived }`. `POST /api/spools/:id/movements` takes `{ kind: RECEIPT|CORRECTION, grams, note, operationKey }`; operationKey is a UUID reused only for identical retries. Grams use canonical decimals, up to 12 whole and six fractional digits. Corrections are signed nonzero deltas; receipts are positive. `GET /api/filaments/:id/stock` returns the active total and threshold; `PATCH` on the same route accepts `{ minimumStockGrams }`. `GET /api/spools/:id/qr` requires authentication and returns an SVG encoding the local spool route.
 
 Draft filament lines accept `spoolId`. Older clients may omit it only when exactly one active spool can be resolved. Finalized usage DTOs preserve `spoolId` and `spoolCode`; historical usages without a spool remain null.
+
+When spool management is disabled, draft `spoolId` values are ignored and new usages store null spool fields.
+Calculations use the selected filament's catalog price and net weight. Spool and stock endpoints, Spoolman actions,
+and BambuBuddy tray mapping return `409 SPOOL_MANAGEMENT_DISABLED`; historical print usage remains readable.
 
 `POST /api/prints/:id/outcome/correct` accepts the outcome fields plus a required correction note, `expectedRevision`, and a UUID `operationKey`. It appends an immutable revision, updates current result metrics, and books only consumption deltas atomically. Matching retries are idempotent; stale revisions return 409. Print DTOs expose the current revision and history containing the original plus the latest 20 corrections. The full stock ledger remains paginated on the spool detail API.
 

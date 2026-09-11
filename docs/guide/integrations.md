@@ -5,6 +5,11 @@ description: Configure optional server-only integrations, preview imports, assig
 
 # Spoolman and BambuBuddy
 
+Spoolman requires spool management under **Settings → Features**. Turning spool management off disables the
+integration without clearing its URL or authorization value; it is not automatically re-enabled later.
+BambuBuddy remains available without spool management, but tray-to-spool mapping is hidden and rejected by the
+API until inventory is enabled again.
+
 Both integrations are optional. Open **Settings → Integrations** to enable each service and enter its server URL and credentials. Changes apply without a restart. Credentials are sent once, stored server-side, and never returned to the browser, exports, or error messages. Protect the SQLite database and its backups because they contain stored credentials.
 
 An administrator must choose a trusted HTTP or HTTPS origin, optionally with a base path. URL user information, query strings, fragments, and redirects are rejected. Private container-network hosts and LAN addresses are supported. Permit network access only to the intended services. Do not repoint an existing connection to an unrelated database with reused numeric IDs: unlink and reconcile its records first.

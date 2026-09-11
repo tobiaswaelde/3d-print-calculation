@@ -9,7 +9,8 @@
 
 <script setup lang="ts">
 const changelogOpen = useState('changelog-open', () => false);
+const { load: loadSpoolManagement } = useSpoolManagement();
 const { load: loadFeatures } = useFeatures();
 
-onMounted(loadFeatures);
+onMounted(() => Promise.all([loadFeatures(), loadSpoolManagement()]));
 </script>

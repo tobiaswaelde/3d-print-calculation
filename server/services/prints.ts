@@ -20,6 +20,7 @@ import {
 import { canonicalDecimal } from '#shared/utils/decimal';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
+import { spoolManagementEnabled } from '../utils/spool-management';
 import { parseBody } from '../utils/validation';
 import { requireFeature } from '../utils/features';
 
@@ -152,8 +153,8 @@ async function resolveCalculation(
   input: PrintDraftInput,
   allowedDisabledSeriesId?: string | null,
 ) {
-  const features = await transaction.appSettings.findUniqueOrThrow({ where: { id: 1 } });
-  if (input.seriesId && !features.printSeriesEnabled && input.seriesId !== allowedDisabledSeriesId)
+  const settings = await transaction.appSettings.findUniqueOrThrow({ where: { id: 1 } });
+  if (input.seriesId && !settings.printSeriesEnabled && input.seriesId !== allowedDisabledSeriesId)
     apiError(409, 'PRINT_SERIES_DISABLED', 'errors.printSeriesDisabled');
   if (input.seriesId) {
     const series = await transaction.printSeries.findFirst({
@@ -195,12 +196,12 @@ async function resolveCalculation(
     apiError(422, 'INVALID_COMPONENT', 'errors.invalidComponent');
   if (filaments.length !== filamentIds.length) apiError(422, 'INVALID_FILAMENT', 'errors.invalidFilament');
 
-  const spools = features.spoolManagementEnabled
+  const spools = settings.spoolManagementEnabled
     ? await transaction.spool.findMany({
         where: { filamentId: { in: filamentIds }, archivedAt: null },
       })
     : [];
-  if (features.spoolManagementEnabled) {
+  if (settings.spoolManagementEnabled) {
     for (const line of input.filaments) {
       const candidates = spools.filter(
         (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
@@ -283,10 +284,10 @@ async function resolveCalculation(
         usedGrams: entry.usedGrams,
       };
     }),
-    electricityPricePerKwh: features.electricityPricePerKwh.toString(),
-    currency: features.currency,
+    electricityPricePerKwh: settings.electricityPricePerKwh.toString(),
+    currency: settings.currency,
   });
-  return { settings: features, printer, componentMap, filamentMap, spoolMap, result };
+  return { settings, printer, componentMap, filamentMap, spoolMap, result };
 }
 
 function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<typeof resolveCalculation>>) {
@@ -607,6 +608,7 @@ export async function assertUnreferenced(
   else if (resource === 'printers') count = await db.printJob.count({ where: { printerId: id } });
   else if (resource === 'manufacturers')
     count =
+      (await db.printer.count({ where: { manufacturerId: id } })) +
       (await db.component.count({ where: { manufacturerId: id } })) +
       (await db.filament.count({ where: { manufacturerId: id } }));
   else if (resource === 'components')
@@ -638,6 +640,7 @@ export async function recordPrintOutcome(id: string, input: unknown, externalAlr
     )
       apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
     const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    const stockEnabled = await spoolManagementEnabled(transaction);
     await transaction.printOutcome.create({
       data: {
         printJobId: id,
@@ -647,23 +650,25 @@ export async function recordPrintOutcome(id: string, input: unknown, externalAlr
         note: parsed.note,
         inputSnapshot,
         costSnapshot: JSON.stringify(costs),
+        stockTracked: stockEnabled,
       },
     });
-    for (const usage of existing.filamentUsages) {
-      if (!usage.spoolId) continue;
-      const grams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      await bookPrintStock(
-        transaction,
-        {
-          spoolId: usage.spoolId,
-          kind: 'PRINT',
-          grams: new Decimal(grams).negated().toFixed(),
-          printUsageId: usage.id,
-          operationKey: `outcome:${id}:${usage.id}`,
-        },
-        externalAlreadyTracked,
-      );
-    }
+    if (stockEnabled)
+      for (const usage of existing.filamentUsages) {
+        if (!usage.spoolId) continue;
+        const grams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        await bookPrintStock(
+          transaction,
+          {
+            spoolId: usage.spoolId,
+            kind: 'PRINT',
+            grams: new Decimal(grams).negated().toFixed(),
+            printUsageId: usage.id,
+            operationKey: `outcome:${id}:${usage.id}`,
+          },
+          externalAlreadyTracked,
+        );
+      }
     if (externalAlreadyTracked && existing.bambuLink)
       await transaction.bambuPrintLink.update({
         where: { id: existing.bambuLink.id },
@@ -703,6 +708,7 @@ export async function correctPrintOutcome(id: string, input: unknown) {
     )
       apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
     const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    const stockEnabled = await spoolManagementEnabled(transaction);
     await transaction.printOutcomeCorrection.create({
       data: {
         outcomeId: existing.outcome.id,
@@ -712,25 +718,26 @@ export async function correctPrintOutcome(id: string, input: unknown) {
         costSnapshot: JSON.stringify(costs),
       },
     });
-    for (const usage of existing.filamentUsages) {
-      if (!usage.spoolId) continue;
-      const previousGrams = source.outcome!.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      const currentGrams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      const delta = new StockDecimal(previousGrams).minus(currentGrams);
-      if (!delta.isZero())
-        await bookPrintStock(
-          transaction,
-          {
-            spoolId: usage.spoolId,
-            kind: 'CORRECTION',
-            grams: delta.toFixed(),
-            note: parsed.note,
-            printUsageId: usage.id,
-            operationKey: `correction:${operationKey}:${usage.id}`,
-          },
-          !!existing.bambuLink?.importedAt,
-        );
-    }
+    if (stockEnabled && existing.outcome.stockTracked)
+      for (const usage of existing.filamentUsages) {
+        if (!usage.spoolId) continue;
+        const previousGrams = source.outcome!.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        const currentGrams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        const delta = new StockDecimal(previousGrams).minus(currentGrams);
+        if (!delta.isZero())
+          await bookPrintStock(
+            transaction,
+            {
+              spoolId: usage.spoolId,
+              kind: 'CORRECTION',
+              grams: delta.toFixed(),
+              note: parsed.note,
+              printUsageId: usage.id,
+              operationKey: `correction:${operationKey}:${usage.id}`,
+            },
+            !!existing.bambuLink?.importedAt,
+          );
+      }
     await transaction.printOutcome.update({
       where: { id: existing.outcome.id },
       data: {
@@ -738,6 +745,7 @@ export async function correctPrintOutcome(id: string, input: unknown) {
         durationSeconds: parsed.durationSeconds,
         note: parsed.note,
         failureReason: parsed.failureReason,
+        ...(!stockEnabled ? { stockTracked: false } : {}),
       },
     });
     await refreshSeriesProgress(transaction, existing.seriesId);

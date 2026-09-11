@@ -5,14 +5,14 @@ import {
   syncSpoolman,
   reconcileSpoolOperation,
 } from '../../services/spoolman';
+import { requireSpoolManagement } from '../../utils/spool-management';
 import { requireUser } from '../../utils/auth';
 import { requireSameOrigin } from '../../utils/http';
 import { parseBody } from '../../utils/validation';
-import { requireFeature } from '../../utils/features';
 export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   await requireUser(event);
-  await requireFeature('spoolManagementEnabled');
+  await requireSpoolManagement();
   const input = parseBody(spoolmanActionSchema, await readBody(event));
   if (input.action === 'IMPORT') return importSpoolman(input.data);
   if (input.action === 'UNLINK') return unlinkSpoolman(input.data);

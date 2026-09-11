@@ -1,4 +1,4 @@
 export default defineNuxtRouteMiddleware(async () => {
-  const { load } = useFeatures();
-  if (!(await load()).spoolManagementEnabled) return navigateTo('/filaments');
+  const { load } = useSpoolManagement();
+  if (!(await load(true))) return navigateTo('/filaments');
 });

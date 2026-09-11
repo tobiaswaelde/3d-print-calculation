@@ -256,7 +256,8 @@ const {
 }>();
 
 const { t } = useI18n();
-const { load: loadFeatures, printSeriesEnabled, spoolManagementEnabled } = useFeatures();
+const { enabled: spoolManagementEnabled, load: loadSpoolManagement } = useSpoolManagement();
+const { load: loadFeatures, printSeriesEnabled } = useFeatures();
 const formRef = ref<{
   validate: (options: { name?: string[] }) => Promise<unknown>;
 } | null>(null);
@@ -388,7 +389,7 @@ const lastStep = computed(() => stepperItems.value.length - 1);
 defineExpose({ currentStep, lastStep, loading, saving, nextStep, previousStep });
 
 async function load() {
-  await loadFeatures();
+  await Promise.all([loadFeatures(), loadSpoolManagement()]);
   const [customerResponse, printerResponse, componentResponse, filamentResponse] = await Promise.all([
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/customers', { query: { pageSize: 100 } }),
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/printers', { query: { pageSize: 100 } }),

@@ -14,7 +14,7 @@ Printers at `/printers` supply the machine wear rate and electrical load for a p
 | Field                         | Requirement                       | Calculation role                                   |
 | ----------------------------- | --------------------------------- | -------------------------------------------------- |
 | **Name**                      | Required                          | Printer label in selectors and completed snapshots |
-| **Manufacturer**              | Optional                          | Descriptive and searchable metadata                |
+| **Manufacturer**              | Required                          | Shared manufacturer selected from the inventory    |
 | **Model**                     | Optional                          | Descriptive and searchable metadata                |
 | **Purchase price**            | Required, zero or greater         | Numerator of the machine wear rate                 |
 | **Expected lifetime (hours)** | Required, greater than zero       | Divisor of the machine wear rate                   |
@@ -24,6 +24,9 @@ Printers at `/printers` supply the machine wear rate and electrical load for a p
 The form and table display `purchase price / expected lifetime` as **Cost per hour**. During a print, that rate is
 multiplied by total hotend duration. Electricity cost uses total duration, watts converted to kilowatts, and the
 configured electricity price.
+
+Create manufacturers in the shared [manufacturer inventory](/guide/manufacturers), then select one when creating
+or editing a printer. Archived manufacturers cannot be assigned to new or updated printers.
 
 ## Page functions
 

@@ -9,7 +9,7 @@ Inventory provides the reusable inputs for every print calculation:
 
 - [Customers](/guide/customers) provide optional ownership and contact context.
 - [Printers](/guide/printers) provide purchase price, expected lifetime, and average power.
-- [Manufacturers](/guide/manufacturers) provide reusable supplier names for components and filaments.
+- [Manufacturers](/guide/manufacturers) provide reusable supplier names for printers, components, and filaments.
 - [Components](/guide/components) provide wear cost, type, and printer compatibility.
 - [Filaments](/guide/filaments) provide spool cost and usable net weight.
 
@@ -30,3 +30,5 @@ fields accept decimal values; negative values are rejected, and lifetimes and ne
 
 Printer/component cost per hour and filament cost per gram update in the form before saving. Display formatting
 uses the selected application language and currency; the HTTP API serializes decimal values as strings.
+Printer and filament forms require a manufacturer from the shared inventory; component manufacturers remain
+optional.
