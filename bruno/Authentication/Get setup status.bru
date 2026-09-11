@@ -1,0 +1,11 @@
+meta {
+  name: Get setup status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/auth/setup-status
+  body: none
+  auth: inherit
+}

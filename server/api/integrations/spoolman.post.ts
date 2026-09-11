@@ -9,6 +9,18 @@ import { requireSpoolManagement } from '../../utils/spool-management';
 import { requireUser } from '../../utils/auth';
 import { requireSameOrigin } from '../../utils/http';
 import { parseBody } from '../../utils/validation';
+defineRouteMeta({
+  openAPI: {
+    summary: 'Run a Spoolman action',
+    tags: ['Integrations'],
+    security: [{ cookieAuth: [] }],
+    requestBody: {
+      required: true,
+      content: { 'application/json': { schema: { $ref: '#/components/schemas/SpoolmanActionInput' } } },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   await requireUser(event);

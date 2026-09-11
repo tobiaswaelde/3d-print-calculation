@@ -64,6 +64,23 @@ async function json(path: string, options: RequestInit = {}, cookie?: string) {
 
 try {
   await waitUntilReady();
+  const openApi = await json('/api/openapi.json');
+  check(openApi.response.ok && openApi.body.openapi === '3.1.0', 'OpenAPI 3.1 document must be available.');
+  check(
+    openApi.body.paths?.['/api/auth/login']?.post?.summary === 'Sign in' &&
+      openApi.body.paths?.['/api/prints/{id}/outcome']?.post?.requestBody &&
+      openApi.body.components?.securitySchemes?.cookieAuth?.name === 'print-cost-session',
+    'OpenAPI document must expose operation metadata, request schemas, and session-cookie authentication.',
+  );
+  const apiReference = await fetch(`${origin}/api-reference`);
+  const apiReferenceHtml = await apiReference.text();
+  check(
+    apiReference.ok &&
+      apiReferenceHtml.includes('<title>ezPrint API</title>') &&
+      apiReferenceHtml.includes('&quot;theme&quot;:&quot;saturn&quot;') &&
+      apiReferenceHtml.includes('&quot;telemetry&quot;:false'),
+    'Scalar API reference must use the configured ezPrint title, Saturn theme, and disabled telemetry.',
+  );
   const setup = JSON.stringify({
     displayName: 'Integration Test',
     email: 'integration@example.test',

@@ -3,6 +3,18 @@ import { requireSpoolManagement } from '../../utils/spool-management';
 import { requireUser } from '../../utils/auth';
 import { requireSameOrigin } from '../../utils/http';
 
+defineRouteMeta({
+  openAPI: {
+    summary: 'Create a spool',
+    tags: ['Spools'],
+    security: [{ cookieAuth: [] }],
+    requestBody: {
+      required: true,
+      content: { 'application/json': { schema: { $ref: '#/components/schemas/SpoolInput' } } },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   await requireUser(event);

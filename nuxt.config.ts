@@ -10,6 +10,32 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'node-server',
     externals: { external: ['better-sqlite3'] },
+    experimental: { openAPI: true },
+    openAPI: {
+      production: 'runtime',
+      route: '/api/openapi.json',
+      meta: {
+        title: 'ezPrint API',
+        description:
+          'HTTP API for ezPrint. Sign in through /api/auth/login; the resulting print-cost-session cookie authenticates subsequent requests.',
+        version: packageJson.version,
+      },
+      ui: {
+        scalar: {
+          route: '/api-reference',
+          theme: 'saturn',
+          hideClientButton: true,
+          telemetry: false,
+          persistAuth: true,
+          expandAllResponses: true,
+          showDeveloperTools: 'never',
+          defaultHttpClient: { targetKey: 'node', clientKey: 'axios' },
+          pageTitle: 'ezPrint API',
+          tagsSorter: 'alpha',
+        },
+        swagger: false,
+      },
+    },
   },
   runtimeConfig: {
     sessionTtlHours: 168,

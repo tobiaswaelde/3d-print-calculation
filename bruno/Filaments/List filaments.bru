@@ -1,0 +1,18 @@
+meta {
+  name: List filaments
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/filaments?page=1&pageSize=25&includeArchived=false
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  pageSize: 25
+  includeArchived: false
+  ~search:
+}

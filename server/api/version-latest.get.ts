@@ -21,6 +21,10 @@ async function fetchLatestVersion() {
   }
 }
 
+defineRouteMeta({
+  openAPI: { summary: 'Get the latest released version', tags: ['Version'], security: [{ cookieAuth: [] }] },
+});
+
 export default defineEventHandler(async (event) => {
   await requireUser(event);
   if (cached && Date.now() - cached.timestamp < cacheTtl) return { latest: cached.latest };

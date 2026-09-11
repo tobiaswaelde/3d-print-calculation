@@ -9,6 +9,21 @@ All routes share the web interface origin. Authentication uses the `print-cost-s
 require a matching `Origin`. Decimal values are JSON strings, timestamps are ISO 8601 strings, and durations are
 whole seconds.
 
+## Interactive API reference
+
+Every running ezPrint instance serves a Scalar API reference at `/api-reference` and its OpenAPI 3.1 document at
+`/api/openapi.json`. The reference uses the same Saturn theme and compact client settings as the Machine Admin API.
+It lists every Nitro endpoint, groups operations by domain, describes cookie authentication, and includes request
+schemas for validated write operations.
+
+Sign in with `POST /api/auth/login` before trying protected operations. Scalar and the browser then send the
+HTTP-only session cookie automatically. Write requests must remain on the instance origin. Never paste production
+cookies or credentials into shared screenshots or issue reports.
+
+The repository also includes a Bruno collection under `bruno/`. Select its `Local` environment, set the secret
+`email` and `password` environment values locally, and run **Authentication → Login** first. Bruno retains the
+session cookie in its cookie jar. The committed collection contains no credentials or session values.
+
 ## Endpoints
 
 | Method and path                           | Auth     | Contract                                                              |

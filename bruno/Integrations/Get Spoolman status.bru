@@ -1,0 +1,11 @@
+meta {
+  name: Get Spoolman status
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/integrations/spoolman
+  body: none
+  auth: inherit
+}

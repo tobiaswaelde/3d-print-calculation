@@ -2,6 +2,10 @@ import { completePrint } from '../../../services/prints';
 import { requireUser } from '../../../utils/auth';
 import { requireSameOrigin } from '../../../utils/http';
 
+defineRouteMeta({
+  openAPI: { summary: 'Complete a print', tags: ['Prints'], security: [{ cookieAuth: [] }] },
+});
+
 export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   await requireUser(event);

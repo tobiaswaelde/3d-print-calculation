@@ -15,6 +15,7 @@ interface.
 - Keep completed calculations reproducible through immutable, versioned snapshots.
 - Manage customers, printers, components, filaments, and draft print jobs from a responsive UI.
 - Find prints and inventory through the global application search.
+- Explore and try the complete HTTP API through the built-in Scalar reference at `/api-reference`.
 - Run the application as a single container with SQLite persistence, migrations, and a health check.
 - Use the complete US English [documentation website](https://tobiaswaelde.github.io/ezprint/), including screenshots for every application page.
 
@@ -72,6 +73,10 @@ pnpm dev
 
 The optional seed command creates a complete synthetic demonstration dataset in an otherwise empty development
 database. It refuses production environments and databases that already contain application data.
+
+Open `http://localhost:3000/api-reference` for the interactive Scalar documentation, or load the repository's
+`bruno/` collection and select its `Local` environment. The OpenAPI 3.1 document is available at
+`http://localhost:3000/api/openapi.json`.
 
 Run the main verification suite before committing:
 

@@ -1,0 +1,37 @@
+meta {
+  name: Calculate print
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/prints/calculate
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "API calculation",
+    "quantity": 1,
+    "salesValue": null,
+    "seriesId": null,
+    "customerId": null,
+    "printerId": "{{printerId}}",
+    "buildPlateId": "{{buildPlateId}}",
+    "hotends": [
+      {
+        "componentId": "{{hotendId}}",
+        "durationSeconds": 3600
+      }
+    ],
+    "otherComponentIds": [],
+    "filaments": [
+      {
+        "filamentId": "{{filamentId}}",
+        "usedGrams": "10"
+      }
+    ],
+    "notes": null
+  }
+}

@@ -3,6 +3,26 @@ import { db } from '../../utils/db';
 import { requireUser } from '../../utils/auth';
 import { apiError, requireSameOrigin } from '../../utils/http';
 
+defineRouteMeta({
+  openAPI: {
+    summary: 'Update current user preferences',
+    tags: ['Authentication'],
+    security: [{ cookieAuth: [] }],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['locale'],
+            properties: { locale: { type: 'string', enum: ['de-DE', 'en-US'] } },
+          },
+        },
+      },
+    },
+  },
+});
+
 export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   const user = await requireUser(event);

@@ -1,0 +1,20 @@
+meta {
+  name: List spools
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/spools?page=1&pageSize=25&includeArchived=false&availableOnly=false
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  pageSize: 25
+  includeArchived: false
+  availableOnly: false
+  ~search:
+  ~filamentId:
+}

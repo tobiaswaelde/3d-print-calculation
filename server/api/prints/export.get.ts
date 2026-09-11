@@ -6,6 +6,10 @@ import { requireUser } from '../../utils/auth';
 import { apiError } from '../../utils/http';
 import { parseBody } from '../../utils/validation';
 
+defineRouteMeta({
+  openAPI: { summary: 'Export completed prints', tags: ['Prints'], security: [{ cookieAuth: [] }] },
+});
+
 export default defineEventHandler(async (event) => {
   await requireUser(event);
   const query = parseBody(printListQuerySchema, getQuery(event));

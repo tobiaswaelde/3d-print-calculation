@@ -1,0 +1,10 @@
+{
+  "version": "1",
+  "name": "ezPrint API",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"],
+  "presets": {
+    "requestType": "http",
+    "requestUrl": "{{host}}/api"
+  }
+}

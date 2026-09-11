@@ -1,6 +1,10 @@
 import { getPrint } from '../../../services/prints';
 import { requireUser } from '../../../utils/auth';
 import { apiError } from '../../../utils/http';
+defineRouteMeta({
+  openAPI: { summary: 'Get a print report', tags: ['Prints'], security: [{ cookieAuth: [] }] },
+});
+
 export default defineEventHandler(async (event) => {
   await requireUser(event);
   const print = await getPrint(getRouterParam(event, 'id')!);

@@ -1,0 +1,25 @@
+meta {
+  name: List prints
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/prints?page=1&pageSize=25&includeArchived=false
+  body: none
+  auth: inherit
+}
+
+params:query {
+  page: 1
+  pageSize: 25
+  includeArchived: false
+  ~search:
+  ~status:
+  ~outcome:
+  ~customerId:
+  ~printerId:
+  ~seriesId:
+  ~dateFrom:
+  ~dateTo:
+}

@@ -3,6 +3,10 @@ import { requireUser } from '../../../utils/auth';
 import { db } from '../../../utils/db';
 import { requireFeature } from '../../../utils/features';
 
+defineRouteMeta({
+  openAPI: { summary: 'Get a spool QR code', tags: ['Spools'], security: [{ cookieAuth: [] }] },
+});
+
 export default defineEventHandler(async (event) => {
   await requireUser(event);
   await requireFeature('spoolManagementEnabled');

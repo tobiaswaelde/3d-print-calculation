@@ -1,0 +1,25 @@
+meta {
+  name: Login
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{host}}/api/auth/login
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "email": "{{email}}",
+    "password": "{{password}}"
+  }
+}
+
+tests {
+  test("sets a session cookie", function () {
+    expect(res.getStatus()).to.equal(200);
+    expect(res.getHeader("set-cookie")).to.include("print-cost-session=");
+  });
+}
