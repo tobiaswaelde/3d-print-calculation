@@ -7,7 +7,9 @@ import AxeBuilder from '@axe-core/playwright';
 import { mkdirSync } from 'node:fs';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
-const appUrl = 'http://127.0.0.1:3001';
+const appPort = process.env.PRINT_COST_SCREENSHOT_APP_PORT ?? '3001';
+const integrationPort = Number(process.env.PRINT_COST_SCREENSHOT_INTEGRATION_PORT ?? '3003');
+const appUrl = `http://127.0.0.1:${appPort}`;
 const screenshotDirectory = resolve('docs/public/screenshots');
 const screenshotOptions = {
   animations: 'disabled' as const,
@@ -68,7 +70,7 @@ async function selectOption(page: Page, label: string, option: string) {
 
 let fake: Awaited<ReturnType<typeof startFakeIntegrations>>;
 test.beforeAll(async () => {
-  fake = await startFakeIntegrations(3003);
+  fake = await startFakeIntegrations(integrationPort);
 });
 test.afterAll(() => fake?.close());
 
