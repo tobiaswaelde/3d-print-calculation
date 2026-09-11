@@ -70,6 +70,10 @@ Errors include an HTTP status and stable `data` with `code`, `messageKey`, optio
 Expect 401 without a session, 403 for a foreign origin, 409 for immutability, references, currency, or setup
 conflicts, and 422 for invalid or incompatible input. API clients should branch on `code`, not parse messages.
 
+`GET /api/settings` exposes `spoolManagementEnabled`. `PATCH /api/settings` requires the boolean alongside the
+other application settings. Disabling it also disables Spoolman without clearing its URL or credential. Enabling
+it creates one opening spool for every active filament without an active spool.
+
 Print draft and calculation requests accept `quantity`, a whole number from 1 to 1,000,000, defaulting to 1. Print DTOs, previews, and snapshots expose `quantity` and canonical decimal `costPerUnit`. Material quantities and duration remain run totals.
 
 ## Outcomes and retries
@@ -85,6 +89,11 @@ Authenticated `GET /api/spools` supports search, page, pageSize (1–100), inclu
 `POST /api/spools/:id/archive` takes `{ archived }`. `POST /api/spools/:id/movements` takes `{ kind: RECEIPT|CORRECTION, grams, note, operationKey }`; operationKey is a UUID reused only for identical retries. Grams use canonical decimals, up to 12 whole and six fractional digits. Corrections are signed nonzero deltas; receipts are positive. `GET /api/filaments/:id/stock` returns the active total and threshold; `PATCH` on the same route accepts `{ minimumStockGrams }`. `GET /api/spools/:id/qr` requires authentication and returns an SVG encoding the local spool route.
 
 Draft filament lines accept `spoolId`. Older clients may omit it only when exactly one active spool can be resolved. Finalized usage DTOs preserve `spoolId` and `spoolCode`; historical usages without a spool remain null.
+
+When spool management is disabled, draft `spoolId` values are ignored and new usages store null spool fields.
+Calculations use the selected filament's catalog price and net weight. Spool and stock reads remain available for
+history; spool creation/update/archive/movement, stock-threshold updates, Spoolman actions, and BambuBuddy tray
+mapping return `409 SPOOL_MANAGEMENT_DISABLED`.
 
 `POST /api/prints/:id/outcome/correct` accepts the outcome fields plus a required correction note, `expectedRevision`, and a UUID `operationKey`. It appends an immutable revision, updates current result metrics, and books only consumption deltas atomically. Matching retries are idempotent; stale revisions return 409. Print DTOs expose the current revision and history containing the original plus the latest 20 corrections. The full stock ledger remains paginated on the spool detail API.
 

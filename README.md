@@ -66,8 +66,12 @@ corepack enable
 cp .env.example .env
 pnpm install
 pnpm db:migrate
+pnpm db:seed -- --email demo@example.test --password 'local-demo-password-123'
 pnpm dev
 ```
+
+The optional seed command creates a complete synthetic demonstration dataset in an otherwise empty development
+database. It refuses production environments and databases that already contain application data.
 
 Run the main verification suite before committing:
 

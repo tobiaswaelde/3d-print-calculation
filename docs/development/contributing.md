@@ -16,8 +16,19 @@ pnpm db:migrate
 pnpm dev
 ```
 
-There is intentionally no seed script; setup and inventory are created through the UI or API. Prisma changes
-require a migration from `pnpm db:migrate`; production startup only runs `pnpm db:deploy`.
+To create a local operator account and a complete synthetic demonstration dataset, run this after the migration:
+
+```bash
+pnpm db:seed -- --email demo@example.test --password 'local-demo-password-123'
+```
+
+The seed covers master data, spool inventory, a series, every print workflow status, payment states, and successful,
+failed, and pending outcomes. It only accepts an empty, migrated database and refuses to run when
+`NODE_ENV=production`; it never deletes or replaces existing data. The email and password are supplied at runtime,
+and the password is stored only as an Argon2id hash. Use synthetic local credentials only and avoid placing real
+passwords in shell history.
+
+Prisma changes require a migration from `pnpm db:migrate`; production startup only runs `pnpm db:deploy`.
 
 ## Verification
 

@@ -305,10 +305,28 @@ test('regenerates every application screenshot used by the documentation', async
   await capture(page, 'filaments.jpg');
 
   await page.goto('/spools');
+  await expect(page.locator('[data-table-toolbar]')).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Stock source' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'DOC-PLA-001', exact: true })).toBeVisible();
+  await page.locator('[data-table-toolbar]').getByRole('button', { name: 'New' }).click();
+  const newSpoolDialog = page.getByRole('dialog', { name: 'New spool' });
+  await expect(newSpoolDialog.getByLabel('Spool code')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(newSpoolDialog).toBeHidden();
+  await page.mouse.move(640, 400);
+  const spoolRow = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'DOC-PLA-001' }) });
+  await expect(spoolRow.getByRole('link', { name: 'QR label' })).toBeVisible();
   await capture(page, 'spools.jpg');
   await page.getByRole('link', { name: 'DOC-PLA-001', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'DOC-PLA-001', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Spool details' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Movement history' })).toBeVisible();
+  await page.getByRole('button', { name: 'Edit' }).click();
+  const editSpoolDialog = page.getByRole('dialog', { name: 'Edit spool' });
+  await expect(editSpoolDialog.getByLabel('Purchase price')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(editSpoolDialog).toBeHidden();
+  await page.mouse.move(640, 400);
   await capture(page, 'spool-detail.jpg');
   await page.getByRole('link', { name: 'QR label', exact: true }).click();
   await expect(page.getByAltText('QR code for spool DOC-PLA-001')).toBeVisible();
@@ -375,10 +393,30 @@ test('regenerates every application screenshot used by the documentation', async
   await capture(page, 'print-draft.jpg');
 
   await page.goto('/series');
+  await expect(page.locator('[data-table-toolbar]')).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Production progress' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Studio collection', exact: true })).toBeVisible();
+  await page.locator('[data-table-toolbar]').getByRole('button', { name: 'New' }).click();
+  const newSeriesDialog = page.getByRole('dialog', { name: 'New series' });
+  await expect(newSeriesDialog.getByLabel('Name')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(newSeriesDialog).toBeHidden();
+  await page.mouse.move(640, 400);
+  const seriesRow = page
+    .getByRole('row')
+    .filter({ has: page.getByRole('link', { name: 'Studio collection', exact: true }) });
+  await expect(seriesRow.getByRole('button', { name: 'New print' })).toBeVisible();
   await capture(page, 'series.jpg');
   await page.goto(`/series/${series.id}`);
   await expect(page.getByRole('heading', { name: 'Studio collection', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Series details' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Print history' })).toBeVisible();
+  await page.getByRole('button', { name: 'Edit' }).click();
+  const editSeriesDialog = page.getByRole('dialog', { name: 'Edit series' });
+  await expect(editSeriesDialog.getByLabel('Name')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(editSeriesDialog).toBeHidden();
+  await page.mouse.move(640, 400);
   await capture(page, 'series-detail.jpg');
   await page.goto(`/customers/${customer.id}`);
   await expect(page.getByRole('heading', { name: 'Studio North', exact: true })).toBeVisible();

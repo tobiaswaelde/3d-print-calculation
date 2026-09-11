@@ -281,25 +281,30 @@ export async function createResource(resource: Resource, input: unknown) {
   }
   const data = parseBody(filamentSchema, input);
   const manufacturer = await ensureActiveManufacturer(data.manufacturerId);
+  const settings = await db.appSettings.findUniqueOrThrow({ where: { id: 1 } });
   return filamentDto(
     await db.filament.create({
       data: {
         ...data,
         name: `${manufacturer!.name} ${data.material} - ${data.colorName}`,
-        spools: {
-          create: {
-            code: `S-${randomUUID()}`,
-            purchasePrice: data.purchasePrice,
-            initialNetWeightGrams: data.netWeightGrams,
-            movements: {
-              create: {
-                kind: 'RECEIPT',
-                grams: data.netWeightGrams,
-                operationKey: `opening:${randomUUID()}`,
+        ...(settings.spoolManagementEnabled
+          ? {
+              spools: {
+                create: {
+                  code: `S-${randomUUID()}`,
+                  purchasePrice: data.purchasePrice,
+                  initialNetWeightGrams: data.netWeightGrams,
+                  movements: {
+                    create: {
+                      kind: 'RECEIPT',
+                      grams: data.netWeightGrams,
+                      operationKey: `opening:${randomUUID()}`,
+                    },
+                  },
+                },
               },
-            },
-          },
-        },
+            }
+          : {}),
       },
       include: { manufacturer: true },
     }),
@@ -449,6 +454,7 @@ export async function readSettings() {
     defaultLocale: value.defaultLocale,
     electricityPricePerKwh: canonicalDecimal(value.electricityPricePerKwh.toString()),
     calculationVersion: value.calculationVersion,
+    spoolManagementEnabled: value.spoolManagementEnabled,
   };
 }
 
@@ -464,12 +470,53 @@ export async function updateSettings(input: unknown) {
         (await transaction.printJob.count());
       if (count > 0) apiError(409, 'CURRENCY_LOCKED', 'errors.currencyLocked');
     }
-    return transaction.appSettings.update({ where: { id: 1 }, data });
+    if (data.spoolManagementEnabled && !current.spoolManagementEnabled) {
+      const filaments = (
+        await transaction.filament.findMany({
+          where: { archivedAt: null },
+          select: {
+            id: true,
+            purchasePrice: true,
+            netWeightGrams: true,
+            spools: { where: { archivedAt: null }, select: { remoteState: true } },
+          },
+        })
+      ).filter((filament) =>
+        filament.spools.every((spool) => ['ARCHIVED', 'MISSING'].includes(spool.remoteState ?? '')),
+      );
+      for (const filament of filaments) {
+        const spoolId = randomUUID();
+        await transaction.spool.create({
+          data: {
+            id: spoolId,
+            code: `S-${spoolId}`,
+            filamentId: filament.id,
+            purchasePrice: filament.purchasePrice.toString(),
+            initialNetWeightGrams: filament.netWeightGrams.toString(),
+            movements: {
+              create: {
+                kind: 'RECEIPT',
+                grams: filament.netWeightGrams.toString(),
+                operationKey: `opening:${spoolId}`,
+              },
+            },
+          },
+        });
+      }
+    }
+    return transaction.appSettings.update({
+      where: { id: 1 },
+      data: {
+        ...data,
+        ...(!data.spoolManagementEnabled ? { spoolmanEnabled: false } : {}),
+      },
+    });
   });
   return {
     currency: value.currency,
     defaultLocale: value.defaultLocale,
     electricityPricePerKwh: canonicalDecimal(value.electricityPricePerKwh.toString()),
     calculationVersion: value.calculationVersion,
+    spoolManagementEnabled: value.spoolManagementEnabled,
   };
 }

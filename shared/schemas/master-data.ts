@@ -34,6 +34,7 @@ export const settingsSchema = z.object({
   currency: currencySchema,
   defaultLocale: supportedLocaleSchema,
   electricityPricePerKwh: decimalSchema(),
+  spoolManagementEnabled: z.boolean(),
 });
 
 export const customerSchema = z.object({

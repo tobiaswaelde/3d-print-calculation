@@ -20,6 +20,7 @@ import {
 import { canonicalDecimal } from '#shared/utils/decimal';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
+import { spoolManagementEnabled } from '../utils/spool-management';
 import { parseBody } from '../utils/validation';
 
 type Transaction = Prisma.TransactionClient;
@@ -188,24 +189,32 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     apiError(422, 'INVALID_COMPONENT', 'errors.invalidComponent');
   if (filaments.length !== filamentIds.length) apiError(422, 'INVALID_FILAMENT', 'errors.invalidFilament');
 
-  const spools = await transaction.spool.findMany({
-    where: { filamentId: { in: filamentIds }, archivedAt: null },
-  });
-  for (const line of input.filaments) {
-    const candidates = spools.filter(
-      (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
-    );
-    const balance = candidates.length === 1 ? await spoolBalance(transaction, candidates[0]!.id) : null;
-    if (
-      candidates.length !== 1 ||
-      ['ARCHIVED', 'MISSING'].includes(candidates[0]!.remoteState ?? '') ||
-      (balance !== null && new Decimal(balance).lte(0))
-    )
-      apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
-    line.spoolId = candidates[0]!.id;
+  const spools = settings.spoolManagementEnabled
+    ? await transaction.spool.findMany({
+        where: { filamentId: { in: filamentIds }, archivedAt: null },
+      })
+    : [];
+  if (settings.spoolManagementEnabled) {
+    for (const line of input.filaments) {
+      const candidates = spools.filter(
+        (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
+      );
+      const balance = candidates.length === 1 ? await spoolBalance(transaction, candidates[0]!.id) : null;
+      if (
+        candidates.length !== 1 ||
+        ['ARCHIVED', 'MISSING'].includes(candidates[0]!.remoteState ?? '') ||
+        (balance !== null && new Decimal(balance).lte(0))
+      )
+        apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
+      line.spoolId = candidates[0]!.id;
+    }
+    if (new Set(input.filaments.map((line) => line.spoolId)).size !== input.filaments.length)
+      apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
+  } else {
+    for (const line of input.filaments) line.spoolId = undefined;
+    if (new Set(input.filaments.map((line) => line.filamentId)).size !== input.filaments.length)
+      apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
   }
-  if (new Set(input.filaments.map((line) => line.spoolId)).size !== input.filaments.length)
-    apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
   const spoolMap = new Map(spools.map((spool) => [spool.id, spool]));
   const componentMap = new Map(components.map((entry) => [entry.id, entry]));
   const filamentMap = new Map(filaments.map((entry) => [entry.id, entry]));
@@ -259,12 +268,12 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
-      const spool = spoolMap.get(entry.spoolId!)!;
+      const spool = entry.spoolId ? spoolMap.get(entry.spoolId) : undefined;
       return {
-        id: spool.id,
-        name: `${source.name} · ${spool.code}`,
-        purchasePrice: spool.purchasePrice,
-        netWeightGrams: spool.initialNetWeightGrams,
+        id: spool?.id ?? source.id,
+        name: spool ? `${source.name} · ${spool.code}` : source.name,
+        purchasePrice: (spool?.purchasePrice ?? source.purchasePrice).toString(),
+        netWeightGrams: (spool?.initialNetWeightGrams ?? source.netWeightGrams).toString(),
         usedGrams: entry.usedGrams,
       };
     }),
@@ -314,17 +323,17 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
-      const spool = spoolMap.get(entry.spoolId!)!;
-      const line = lineMap.get(spool.id)!;
+      const spool = entry.spoolId ? spoolMap.get(entry.spoolId) : undefined;
+      const line = lineMap.get(spool?.id ?? source.id)!;
       return {
         filamentId: source.id,
-        spoolId: spool.id,
-        spoolCode: spool.code,
+        spoolId: spool?.id ?? null,
+        spoolCode: spool?.code ?? null,
         filamentName: source.name,
         manufacturer: source.manufacturer.name,
         material: source.material,
-        purchasePrice: spool.purchasePrice,
-        netWeightGrams: spool.initialNetWeightGrams,
+        purchasePrice: spool?.purchasePrice ?? source.purchasePrice,
+        netWeightGrams: spool?.initialNetWeightGrams ?? source.netWeightGrams,
         costPerGram: line.unitRate,
         usedGrams: entry.usedGrams,
         lineCost: line.cost,
@@ -619,6 +628,7 @@ export async function recordPrintOutcome(id: string, input: unknown, externalAlr
     )
       apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
     const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    const stockEnabled = await spoolManagementEnabled(transaction);
     await transaction.printOutcome.create({
       data: {
         printJobId: id,
@@ -628,23 +638,25 @@ export async function recordPrintOutcome(id: string, input: unknown, externalAlr
         note: parsed.note,
         inputSnapshot,
         costSnapshot: JSON.stringify(costs),
+        stockTracked: stockEnabled,
       },
     });
-    for (const usage of existing.filamentUsages) {
-      if (!usage.spoolId) continue;
-      const grams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      await bookPrintStock(
-        transaction,
-        {
-          spoolId: usage.spoolId,
-          kind: 'PRINT',
-          grams: new Decimal(grams).negated().toFixed(),
-          printUsageId: usage.id,
-          operationKey: `outcome:${id}:${usage.id}`,
-        },
-        externalAlreadyTracked,
-      );
-    }
+    if (stockEnabled)
+      for (const usage of existing.filamentUsages) {
+        if (!usage.spoolId) continue;
+        const grams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        await bookPrintStock(
+          transaction,
+          {
+            spoolId: usage.spoolId,
+            kind: 'PRINT',
+            grams: new Decimal(grams).negated().toFixed(),
+            printUsageId: usage.id,
+            operationKey: `outcome:${id}:${usage.id}`,
+          },
+          externalAlreadyTracked,
+        );
+      }
     if (externalAlreadyTracked && existing.bambuLink)
       await transaction.bambuPrintLink.update({
         where: { id: existing.bambuLink.id },
@@ -684,6 +696,7 @@ export async function correctPrintOutcome(id: string, input: unknown) {
     )
       apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
     const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    const stockEnabled = await spoolManagementEnabled(transaction);
     await transaction.printOutcomeCorrection.create({
       data: {
         outcomeId: existing.outcome.id,
@@ -693,25 +706,26 @@ export async function correctPrintOutcome(id: string, input: unknown) {
         costSnapshot: JSON.stringify(costs),
       },
     });
-    for (const usage of existing.filamentUsages) {
-      if (!usage.spoolId) continue;
-      const previousGrams = source.outcome!.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      const currentGrams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
-      const delta = new StockDecimal(previousGrams).minus(currentGrams);
-      if (!delta.isZero())
-        await bookPrintStock(
-          transaction,
-          {
-            spoolId: usage.spoolId,
-            kind: 'CORRECTION',
-            grams: delta.toFixed(),
-            note: parsed.note,
-            printUsageId: usage.id,
-            operationKey: `correction:${operationKey}:${usage.id}`,
-          },
-          !!existing.bambuLink?.importedAt,
-        );
-    }
+    if (stockEnabled && existing.outcome.stockTracked)
+      for (const usage of existing.filamentUsages) {
+        if (!usage.spoolId) continue;
+        const previousGrams = source.outcome!.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        const currentGrams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+        const delta = new StockDecimal(previousGrams).minus(currentGrams);
+        if (!delta.isZero())
+          await bookPrintStock(
+            transaction,
+            {
+              spoolId: usage.spoolId,
+              kind: 'CORRECTION',
+              grams: delta.toFixed(),
+              note: parsed.note,
+              printUsageId: usage.id,
+              operationKey: `correction:${operationKey}:${usage.id}`,
+            },
+            !!existing.bambuLink?.importedAt,
+          );
+      }
     await transaction.printOutcome.update({
       where: { id: existing.outcome.id },
       data: {
@@ -719,6 +733,7 @@ export async function correctPrintOutcome(id: string, input: unknown) {
         durationSeconds: parsed.durationSeconds,
         note: parsed.note,
         failureReason: parsed.failureReason,
+        ...(!stockEnabled ? { stockTracked: false } : {}),
       },
     });
     await refreshSeriesProgress(transaction, existing.seriesId);

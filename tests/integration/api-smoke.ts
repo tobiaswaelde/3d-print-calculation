@@ -959,7 +959,12 @@ try {
     '/api/settings',
     {
       method: 'PATCH',
-      body: JSON.stringify({ currency: 'USD', defaultLocale: 'de-DE', electricityPricePerKwh: '0.32' }),
+      body: JSON.stringify({
+        currency: 'USD',
+        defaultLocale: 'de-DE',
+        electricityPricePerKwh: '0.32',
+        spoolManagementEnabled: true,
+      }),
     },
     cookie,
   );
@@ -1322,6 +1327,174 @@ try {
     'Explicit unlink preserves identity and reconciles native opening stock.',
   );
   check(fake.state.authenticated > 0, 'Remote calls authenticate through server-only credentials.');
+
+  const deferredManagedDraft = await json(
+    '/api/prints',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        ...payload,
+        name: 'Deferred managed outcome',
+        filaments: [{ ...payload.filaments[0], spoolId: otherSpool.body.id }],
+      }),
+    },
+    cookie,
+  );
+  const deferredManagedDone = await json(
+    `/api/prints/${deferredManagedDraft.body.id}/complete`,
+    { method: 'POST' },
+    cookie,
+  );
+  check(deferredManagedDone.response.ok, 'Managed print can be completed before disabling spool management.');
+  const deferredSpoolId = deferredManagedDone.body.filamentUsages[0].spoolId;
+  const deferredBalance = (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).body.remainingGrams;
+
+  const disabledSettings = await json(
+    '/api/settings',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        currency: 'EUR',
+        defaultLocale: 'de-DE',
+        electricityPricePerKwh: '0.32',
+        spoolManagementEnabled: false,
+      }),
+    },
+    cookie,
+  );
+  check(!disabledSettings.body.spoolManagementEnabled, 'Spool management can be disabled.');
+  const disabledIntegrations = await json('/api/settings/integrations', {}, cookie);
+  check(
+    !disabledIntegrations.body.spoolman.enabled &&
+      disabledIntegrations.body.bambubuddy.enabled &&
+      disabledIntegrations.body.spoolman.authorizationConfigured,
+    'Disabling spool management disables Spoolman without deleting its credential or disabling BambuBuddy.',
+  );
+  await json(
+    `/api/prints/${deferredManagedDraft.body.id}/outcome`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        status: 'SUCCESS',
+        durationSeconds: 60,
+        filaments: [{ usageId: deferredManagedDone.body.filamentUsages[0].id, usedGrams: '7' }],
+      }),
+    },
+    cookie,
+  );
+  check(
+    (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).body.remainingGrams === deferredBalance,
+    'Recording an outcome while spool management is disabled does not change existing spool stock.',
+  );
+  const unmanagedFilament = await json(
+    '/api/filaments',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        manufacturerId: filamentManufacturer.body.id,
+        material: 'ASA',
+        colorName: 'Natural',
+        colorHex: '#EEEEEE',
+        purchasePrice: '20',
+        netWeightGrams: '500',
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  const unmanagedSpools = await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie);
+  check(
+    unmanagedSpools.body.items.length === 0,
+    'Disabled spool management creates filaments without spools.',
+  );
+  const unmanagedPayload = {
+    ...payload,
+    name: 'Unmanaged spool print',
+    filaments: [{ filamentId: unmanagedFilament.body.id, usedGrams: '10' }],
+  };
+  const unmanagedDraft = await json(
+    '/api/prints',
+    { method: 'POST', body: JSON.stringify(unmanagedPayload) },
+    cookie,
+  );
+  check(
+    unmanagedDraft.body.filamentUsages[0].spoolId === null &&
+      unmanagedDraft.body.filamentUsages[0].spoolCode === null &&
+      unmanagedDraft.body.snapshot.filamentCost === '0.4',
+    'Unmanaged prints use filament pricing and persist no spool identity.',
+  );
+  const unmanagedDone = await json(
+    `/api/prints/${unmanagedDraft.body.id}/complete`,
+    { method: 'POST' },
+    cookie,
+  );
+  await json(
+    `/api/prints/${unmanagedDraft.body.id}/outcome`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        status: 'SUCCESS',
+        durationSeconds: 60,
+        filaments: [{ usageId: unmanagedDone.body.filamentUsages[0].id, usedGrams: '9' }],
+      }),
+    },
+    cookie,
+  );
+  check(
+    (await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie)).body.items.length === 0,
+    'Outcomes without a spool do not create stock movements.',
+  );
+  check(
+    (await json('/api/spools', { method: 'POST', body: JSON.stringify({}) }, cookie)).body.data?.code ===
+      'SPOOL_MANAGEMENT_DISABLED',
+    'Spool writes are rejected while spool management is disabled.',
+  );
+  const disabledSearch = await json('/api/search?q=Unmanaged', {}, cookie);
+  check(
+    !disabledSearch.body.groups.some((group: { type: string }) => group.type === 'spools') &&
+      (await json('/api/dashboard?period=all', {}, cookie)).body.lowStock.length === 0,
+    'Disabled spool management removes spool search results and low-stock warnings.',
+  );
+  const enabledSettings = await json(
+    '/api/settings',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        currency: 'EUR',
+        defaultLocale: 'de-DE',
+        electricityPricePerKwh: '0.32',
+        spoolManagementEnabled: true,
+      }),
+    },
+    cookie,
+  );
+  const restoredSpools = await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie);
+  check(
+    enabledSettings.body.spoolManagementEnabled &&
+      restoredSpools.body.items.length === 1 &&
+      restoredSpools.body.items[0].remainingGrams === '500' &&
+      !(await json('/api/settings/integrations', {}, cookie)).body.spoolman.enabled,
+    'Re-enabling creates missing opening spools without re-enabling Spoolman.',
+  );
+  await json(
+    `/api/prints/${deferredManagedDraft.body.id}/outcome/correct`,
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        status: 'SUCCESS',
+        durationSeconds: 60,
+        filaments: [{ usageId: deferredManagedDone.body.filamentUsages[0].id, usedGrams: '8' }],
+        note: 'Correct an untracked outcome',
+        expectedRevision: 1,
+        operationKey: '77777777-7777-4777-8777-777777777777',
+      }),
+    },
+    cookie,
+  );
+  check(
+    (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).body.remainingGrams === deferredBalance,
+    'Later corrections do not partially book an outcome recorded while stock tracking was disabled.',
+  );
 
   execFileSync('pnpm', ['db:reset-password', 'integration@example.test', 'new-integration-password-456'], {
     env: environment,
