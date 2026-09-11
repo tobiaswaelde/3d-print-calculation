@@ -68,6 +68,8 @@ export async function updateIntegrationSettings(input: unknown) {
   const bambubuddyApiKey =
     data.bambubuddy.apiKey === undefined ? current.bambubuddyApiKey : data.bambubuddy.apiKey || null;
 
+  if (data.spoolman.enabled && !current.spoolManagementEnabled)
+    apiError(409, 'SPOOL_MANAGEMENT_DISABLED', 'errors.spoolManagementDisabled');
   if (data.spoolman.enabled && !spoolmanUrl) apiError(422, 'INTEGRATION_CONFIG', 'errors.integrationConfig');
   if (data.bambubuddy.enabled && (!bambubuddyUrl || !(bambubuddyApiKey ?? process.env.BAMBUBUDDY_API_KEY)))
     apiError(422, 'INTEGRATION_CONFIG', 'errors.integrationConfig');

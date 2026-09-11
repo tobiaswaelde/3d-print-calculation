@@ -18,7 +18,8 @@ function masterDataTarget(type: Exclude<GlobalSearchKind, 'prints'>, title: stri
 
 export async function searchApplication(query: Record<string, unknown>) {
   const { q } = parseBody(globalSearchQuerySchema, query);
-  const [prints, customers, printers, components, filaments, spools, series] = await db.$transaction([
+  const [settings, prints, customers, printers, components, filaments, spools, series] = await db.$transaction([
+    db.appSettings.findUniqueOrThrow({ where: { id: 1 }, select: { spoolManagementEnabled: true } }),
     db.printJob.findMany({
       where: {
         archivedAt: null,
@@ -123,12 +124,14 @@ export async function searchApplication(query: Record<string, unknown>) {
     },
     {
       type: 'spools',
-      items: spools.map((item) => ({
-        id: item.id,
-        title: item.code,
-        description: item.filament.name,
-        to: `/spools/${item.id}`,
-      })),
+      items: settings.spoolManagementEnabled
+        ? spools.map((item) => ({
+            id: item.id,
+            title: item.code,
+            description: item.filament.name,
+            to: `/spools/${item.id}`,
+          }))
+        : [],
     },
     {
       type: 'prints',

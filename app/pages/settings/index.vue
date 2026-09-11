@@ -65,6 +65,26 @@
       </div>
     </UCard>
 
+    <UCard>
+      <template #header>
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h2 class="font-semibold">{{ t('settings.spoolManagement') }}</h2>
+            <p class="text-sm text-muted">{{ t('settings.spoolManagementDescription') }}</p>
+          </div>
+          <USwitch
+            v-model="form.spoolManagementEnabled"
+            :label="t('settings.spoolManagementEnabled')"
+          />
+        </div>
+      </template>
+      <UAlert
+        v-if="!form.spoolManagementEnabled"
+        color="neutral"
+        :description="t('settings.spoolManagementDisabledHelp')"
+      />
+    </UCard>
+
     <div class="space-y-3">
       <UAlert v-if="message" :color="messageColor" :description="message" />
       <div class="flex justify-end">

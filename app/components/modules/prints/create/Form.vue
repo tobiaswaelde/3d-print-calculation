@@ -156,7 +156,12 @@
               <div
                 v-for="(filament, index) in form.filaments"
                 :key="index"
-                class="grid items-start gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_1fr_10rem_auto]"
+                class="grid items-start gap-3 rounded-lg border border-default p-3"
+                :class="
+                  spoolManagementEnabled
+                    ? 'md:grid-cols-[1fr_1fr_10rem_auto]'
+                    : 'md:grid-cols-[1fr_10rem_auto]'
+                "
               >
                 <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required>
                   <CommonFilamentSelect
@@ -165,7 +170,12 @@
                     :items="filamentOptions"
                   />
                 </UFormField>
-                <UFormField :name="`filaments.${index}.spoolId`" :label="t('nav.spools')" required>
+                <UFormField
+                  v-if="spoolManagementEnabled"
+                  :name="`filaments.${index}.spoolId`"
+                  :label="t('nav.spools')"
+                  required
+                >
                   <CommonSpoolSelect v-model="filament.spoolId" :filament-id="filament.filamentId" />
                 </UFormField>
                 <UFormField :name="`filaments.${index}.usedGrams`" :label="t('prints.usedGrams')" required>
@@ -242,6 +252,7 @@ const {
 }>();
 
 const { t } = useI18n();
+const { enabled: spoolManagementEnabled, load: loadSpoolManagement } = useSpoolManagement();
 const formRef = ref<{
   validate: (options: { name?: string[] }) => Promise<unknown>;
 } | null>(null);
@@ -328,7 +339,7 @@ function payload() {
     otherComponentIds: form.otherComponentIds,
     filaments: form.filaments.map((entry) => ({
       filamentId: entry.filamentId,
-      spoolId: entry.spoolId,
+      ...(spoolManagementEnabled.value ? { spoolId: entry.spoolId } : {}),
       usedGrams: entry.usedGrams,
     })),
     notes: form.notes,
@@ -373,6 +384,7 @@ const lastStep = computed(() => stepperItems.value.length - 1);
 defineExpose({ currentStep, lastStep, loading, saving, nextStep, previousStep });
 
 async function load() {
+  await loadSpoolManagement();
   const [customerResponse, printerResponse, componentResponse, filamentResponse] = await Promise.all([
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/customers', { query: { pageSize: 100 } }),
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/printers', { query: { pageSize: 100 } }),

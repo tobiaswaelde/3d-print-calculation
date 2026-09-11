@@ -188,24 +188,32 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     apiError(422, 'INVALID_COMPONENT', 'errors.invalidComponent');
   if (filaments.length !== filamentIds.length) apiError(422, 'INVALID_FILAMENT', 'errors.invalidFilament');
 
-  const spools = await transaction.spool.findMany({
-    where: { filamentId: { in: filamentIds }, archivedAt: null },
-  });
-  for (const line of input.filaments) {
-    const candidates = spools.filter(
-      (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
-    );
-    const balance = candidates.length === 1 ? await spoolBalance(transaction, candidates[0]!.id) : null;
-    if (
-      candidates.length !== 1 ||
-      ['ARCHIVED', 'MISSING'].includes(candidates[0]!.remoteState ?? '') ||
-      (balance !== null && new Decimal(balance).lte(0))
-    )
-      apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
-    line.spoolId = candidates[0]!.id;
+  const spools = settings.spoolManagementEnabled
+    ? await transaction.spool.findMany({
+        where: { filamentId: { in: filamentIds }, archivedAt: null },
+      })
+    : [];
+  if (settings.spoolManagementEnabled) {
+    for (const line of input.filaments) {
+      const candidates = spools.filter(
+        (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
+      );
+      const balance = candidates.length === 1 ? await spoolBalance(transaction, candidates[0]!.id) : null;
+      if (
+        candidates.length !== 1 ||
+        ['ARCHIVED', 'MISSING'].includes(candidates[0]!.remoteState ?? '') ||
+        (balance !== null && new Decimal(balance).lte(0))
+      )
+        apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
+      line.spoolId = candidates[0]!.id;
+    }
+    if (new Set(input.filaments.map((line) => line.spoolId)).size !== input.filaments.length)
+      apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
+  } else {
+    for (const line of input.filaments) line.spoolId = undefined;
+    if (new Set(input.filaments.map((line) => line.filamentId)).size !== input.filaments.length)
+      apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
   }
-  if (new Set(input.filaments.map((line) => line.spoolId)).size !== input.filaments.length)
-    apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
   const spoolMap = new Map(spools.map((spool) => [spool.id, spool]));
   const componentMap = new Map(components.map((entry) => [entry.id, entry]));
   const filamentMap = new Map(filaments.map((entry) => [entry.id, entry]));
@@ -259,12 +267,12 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
-      const spool = spoolMap.get(entry.spoolId!)!;
+      const spool = entry.spoolId ? spoolMap.get(entry.spoolId) : undefined;
       return {
-        id: spool.id,
-        name: `${source.name} · ${spool.code}`,
-        purchasePrice: spool.purchasePrice,
-        netWeightGrams: spool.initialNetWeightGrams,
+        id: spool?.id ?? source.id,
+        name: spool ? `${source.name} · ${spool.code}` : source.name,
+        purchasePrice: spool?.purchasePrice ?? source.purchasePrice,
+        netWeightGrams: spool?.initialNetWeightGrams ?? source.netWeightGrams,
         usedGrams: entry.usedGrams,
       };
     }),
@@ -314,17 +322,17 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
-      const spool = spoolMap.get(entry.spoolId!)!;
-      const line = lineMap.get(spool.id)!;
+      const spool = entry.spoolId ? spoolMap.get(entry.spoolId) : undefined;
+      const line = lineMap.get(spool?.id ?? source.id)!;
       return {
         filamentId: source.id,
-        spoolId: spool.id,
-        spoolCode: spool.code,
+        spoolId: spool?.id ?? null,
+        spoolCode: spool?.code ?? null,
         filamentName: source.name,
         manufacturer: source.manufacturer.name,
         material: source.material,
-        purchasePrice: spool.purchasePrice,
-        netWeightGrams: spool.initialNetWeightGrams,
+        purchasePrice: spool?.purchasePrice ?? source.purchasePrice,
+        netWeightGrams: spool?.initialNetWeightGrams ?? source.netWeightGrams,
         costPerGram: line.unitRate,
         usedGrams: entry.usedGrams,
         lineCost: line.cost,

@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-4">
     <h2 class="font-semibold">{{ t('history.title') }}</h2>
-    <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <div class="grid gap-3 rounded-lg bg-elevated/50 p-4 sm:grid-cols-2 xl:grid-cols-4">
       <UFormField :label="t('history.from')"
         ><UInput v-model="filters.dateFrom" type="date" class="w-full"
       /></UFormField>
@@ -20,64 +20,73 @@
       <UCheckbox v-model="filters.includeArchived" :label="t('spool.includeArchived')" />
     </div>
     <UAlert v-if="error" color="error" :description="error" />
-    <dl v-if="result" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      <div>
+    <dl v-if="result && showSummary" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('dashboard.completedPrints') }}</dt>
         <dd>
           {{ result.summary.completedPrints }} · {{ t('prints.quantity') }}: {{ result.summary.quantity }}
         </dd>
       </div>
-      <div>
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('series.produced') }}</dt>
         <dd>
           {{ result.summary.producedQuantity }} · {{ t('outcome.PENDING') }}: {{ result.summary.pending }}
         </dd>
       </div>
-      <div>
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('outcome.planned') }}</dt>
         <dd>{{ money(result.summary.plannedCost, result.currency) }}</dd>
       </div>
-      <div>
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('outcome.actualCost') }}</dt>
         <dd>{{ money(result.summary.actualCost, result.currency) }}</dd>
       </div>
-      <div>
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('outcome.failedCost') }}</dt>
         <dd>{{ money(result.summary.failedCost, result.currency) }}</dd>
       </div>
-      <div>
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('sales.realizedRevenue') }}</dt>
         <dd>{{ money(result.summary.revenue, result.currency) }}</dd>
       </div>
-      <div>
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('sales.realizedMargin') }}</dt>
         <dd>{{ money(result.summary.margin, result.currency) }}</dd>
       </div>
-      <div>
+      <div class="rounded-lg border border-default p-3">
         <dt>{{ t('prints.duration') }}</dt>
         <dd>{{ duration(result.summary.totalDurationSeconds) }}</dd>
       </div>
     </dl>
-    <div class="overflow-x-auto">
-      <table class="w-full min-w-200 text-left text-sm">
-        <thead>
+    <div v-if="loading" class="flex min-h-52 items-center justify-center">
+      <UIcon name="i-tabler-loader-2" class="size-8 animate-spin" />
+    </div>
+    <div v-else class="overflow-x-auto">
+      <CommonEmptyState
+        v-if="result && !result.items.length"
+        class="rounded-none border-0"
+        :title="t('history.empty')"
+        icon="i-tabler-history"
+      />
+      <table v-else class="w-full min-w-200 text-left text-sm">
+        <thead class="bg-elevated text-left text-xs text-muted uppercase">
           <tr>
-            <th class="p-3">{{ t('master.name') }}</th>
-            <th class="p-3">{{ t('prints.status') }}</th>
-            <th class="p-3">{{ t('outcome.title') }}</th>
-            <th class="p-3">{{ t('prints.quantity') }}</th>
-            <th class="p-3">{{ t('prints.totalCost') }}</th>
-            <th class="p-3">{{ t('history.actions') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('master.name') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('prints.status') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('outcome.title') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('prints.quantity') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('prints.totalCost') }}</th>
+            <th class="px-4 py-3 font-medium">{{ t('history.actions') }}</th>
           </tr>
         </thead>
         <tbody>
           <tr
             v-for="print in result?.items"
             :key="print.id"
-            class="border-t border-default"
+            class="border-t border-default transition-colors hover:bg-elevated/50"
             :class="print.archivedAt && 'opacity-60'"
           >
-            <td class="space-y-1 p-3">
+            <td class="space-y-1 px-4 py-2.5">
               <NuxtLink :to="`/prints/${print.id}`" class="text-primary underline">{{ print.name }}</NuxtLink>
               <p class="text-xs text-muted">{{ dateTime(print.completedAt ?? print.createdAt) }}</p>
               <NuxtLink
@@ -97,17 +106,17 @@
                 >{{ t('history.repeatOf') }}: {{ print.repeatOf.name }}</NuxtLink
               >
             </td>
-            <td class="p-3">{{ t(`prints.${print.status.toLowerCase()}`) }}</td>
-            <td class="p-3">
+            <td class="px-4 py-2.5">{{ t(`prints.${print.status.toLowerCase()}`) }}</td>
+            <td class="px-4 py-2.5">
               <UBadge
                 v-if="print.status === 'DONE'"
                 :color="print.outcome?.status === 'FAILED' ? 'error' : print.outcome ? 'success' : 'neutral'"
                 >{{ t(`outcome.${print.outcome?.status ?? 'PENDING'}`) }}</UBadge
               >
             </td>
-            <td class="p-3">{{ print.quantity }}</td>
-            <td class="p-3">{{ money(print.totalCost, print.currency) }}</td>
-            <td class="p-3">
+            <td class="px-4 py-2.5">{{ print.quantity }}</td>
+            <td class="px-4 py-2.5">{{ money(print.totalCost, print.currency) }}</td>
+            <td class="px-4 py-2.5">
               <UButton
                 v-if="print.status === 'DONE' && !print.archivedAt"
                 :label="t('history.repeat')"
@@ -125,8 +134,12 @@
         </tbody>
       </table>
     </div>
-    <p v-if="result && !result.items.length">{{ t('common.empty') }}</p>
-    <UPagination v-model:page="page" :total="result?.total ?? 0" :items-per-page="25" />
+    <UPagination
+      v-if="(result?.total ?? 0) > 25"
+      v-model:page="page"
+      :total="result?.total ?? 0"
+      :items-per-page="25"
+    />
     <p v-if="result?.summary.lastActivity" class="text-sm text-muted">
       {{ t('history.lastActivity') }}: {{ dateTime(result.summary.lastActivity) }}
     </p>
@@ -137,7 +150,11 @@ import { printStatuses } from '#shared/schemas/prints';
 import type { PrintJobDto } from '#shared/types/prints';
 import type { PrintSummary } from '#shared/domain/print-summary';
 import type { MasterDataListItem, PaginatedResponse } from '#shared/types/master-data';
-const props = defineProps<{ customerId?: string; seriesId?: string }>();
+const props = withDefaults(defineProps<{ customerId?: string; seriesId?: string; showSummary?: boolean }>(), {
+  customerId: undefined,
+  seriesId: undefined,
+  showSummary: true,
+});
 const { t } = useI18n();
 const { money, duration, dateTime } = useFormatting();
 const filters = reactive({
@@ -150,6 +167,7 @@ const filters = reactive({
 });
 const page = ref(1);
 const error = ref('');
+const loading = ref(true);
 const result = ref<(PaginatedResponse<PrintJobDto> & { summary: PrintSummary; currency: string }) | null>(
   null,
 );
@@ -168,6 +186,7 @@ const outcomeOptions = computed(() =>
 let request = 0;
 async function refresh() {
   const current = ++request;
+  loading.value = true;
   try {
     const response = await $fetch<NonNullable<typeof result.value>>(
       `/api/${props.seriesId ? `series/${props.seriesId}` : `customers/${props.customerId}`}/history`,
@@ -189,6 +208,8 @@ async function refresh() {
     }
   } catch (reason) {
     if (current === request) error.value = String(reason);
+  } finally {
+    if (current === request) loading.value = false;
   }
 }
 async function repeat(id: string) {
