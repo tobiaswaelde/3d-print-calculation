@@ -276,6 +276,7 @@
     "spoolManagementDisabled": "Spool management is disabled."
   },
   "validation": {
+    "printerManufacturerRequired": "A manufacturer is required.",
     "outcomeFailureReasonRequired": "A failure reason is required.",
     "outcomeUniqueUsageRequired": "Enter every filament usage exactly once.",
     "outcomeCorrectionNoteRequired": "Explain the correction.",

@@ -276,6 +276,7 @@
     "spoolManagementDisabled": "Die Spulenverwaltung ist deaktiviert."
   },
   "validation": {
+    "printerManufacturerRequired": "Ein Hersteller ist erforderlich.",
     "outcomeFailureReasonRequired": "Ein Fehlergrund ist erforderlich.",
     "outcomeUniqueUsageRequired": "Jeden Filamentverbrauch genau einmal angeben.",
     "outcomeCorrectionNoteRequired": "Die Korrektur begründen.",

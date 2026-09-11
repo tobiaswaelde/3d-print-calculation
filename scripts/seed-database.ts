@@ -525,7 +525,7 @@ async function seed(credentials: ReturnType<typeof parseCredentials>) {
         data: {
           id: ids.printer,
           name: 'Workshop Prusa MK4',
-          manufacturer: 'Prusa Research',
+          manufacturerId: ids.prusa,
           model: 'MK4',
           purchasePrice: '1199',
           expectedLifetimeHours: '5000',

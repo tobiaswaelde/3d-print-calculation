@@ -39,10 +39,12 @@ function customerDto(value: Awaited<ReturnType<typeof db.customer.findFirstOrThr
   return { ...baseDto(value), email: value.email, note: value.note };
 }
 
-function printerDto(value: Awaited<ReturnType<typeof db.printer.findFirstOrThrow>>) {
+type PrinterWithManufacturer = Prisma.PrinterGetPayload<{ include: { manufacturer: true } }>;
+function printerDto(value: PrinterWithManufacturer) {
   return {
     ...baseDto(value),
-    manufacturer: value.manufacturer,
+    manufacturerId: value.manufacturerId,
+    manufacturer: value.manufacturer.name,
     model: value.model,
     purchasePrice: canonicalDecimal(value.purchasePrice.toString()),
     expectedLifetimeHours: canonicalDecimal(value.expectedLifetimeHours.toString()),
@@ -126,14 +128,19 @@ export async function listResource(resource: Resource, query: Record<string, unk
         ? {
             OR: [
               { name: { contains: input.search } },
-              { manufacturer: { contains: input.search } },
+              { manufacturer: { name: { contains: input.search } } },
               { model: { contains: input.search } },
             ],
           }
         : {}),
     };
     const [items, total] = await db.$transaction([
-      db.printer.findMany({ where, ...pagination, orderBy: { name: 'asc' } }),
+      db.printer.findMany({
+        where,
+        ...pagination,
+        include: { manufacturer: true },
+        orderBy: { name: 'asc' },
+      }),
       db.printer.count({ where }),
     ]);
     return { items: items.map(printerDto), total, page: input.page, pageSize: input.pageSize };
@@ -200,7 +207,8 @@ export async function listResource(resource: Resource, query: Record<string, unk
 
 export async function getResource(resource: Resource, id: string) {
   if (resource === 'customers') return customerDto(await db.customer.findUniqueOrThrow({ where: { id } }));
-  if (resource === 'printers') return printerDto(await db.printer.findUniqueOrThrow({ where: { id } }));
+  if (resource === 'printers')
+    return printerDto(await db.printer.findUniqueOrThrow({ where: { id }, include: { manufacturer: true } }));
   if (resource === 'manufacturers')
     return manufacturerDto(await db.manufacturer.findUniqueOrThrow({ where: { id } }));
   if (resource === 'components')
@@ -227,11 +235,31 @@ async function ensureActiveManufacturer(id: string | null) {
   return manufacturer;
 }
 
+async function resolvePrinterManufacturer(manufacturerId: string | null, legacyName: string | null) {
+  if (manufacturerId) return ensureActiveManufacturer(manufacturerId);
+  const manufacturer = await db.manufacturer.upsert({
+    where: { name: legacyName! },
+    create: { name: legacyName! },
+    update: {},
+  });
+  if (manufacturer.archivedAt) apiError(422, 'INVALID_MANUFACTURER', 'errors.invalidManufacturer');
+  return manufacturer;
+}
+
 export async function createResource(resource: Resource, input: unknown) {
   if (resource === 'customers')
     return customerDto(await db.customer.create({ data: parseBody(customerSchema, input) }));
-  if (resource === 'printers')
-    return printerDto(await db.printer.create({ data: parseBody(printerSchema, input) }));
+  if (resource === 'printers') {
+    const data = parseBody(printerSchema, input);
+    const manufacturer = await resolvePrinterManufacturer(data.manufacturerId, data.manufacturer);
+    const { manufacturerId: _manufacturerId, manufacturer: _manufacturer, ...printer } = data;
+    return printerDto(
+      await db.printer.create({
+        data: { ...printer, manufacturerId: manufacturer!.id },
+        include: { manufacturer: true },
+      }),
+    );
+  }
   if (resource === 'manufacturers')
     return manufacturerDto(await db.manufacturer.create({ data: parseBody(manufacturerSchema, input) }));
   if (resource === 'components') {
@@ -286,8 +314,18 @@ export async function createResource(resource: Resource, input: unknown) {
 export async function updateResource(resource: Resource, id: string, input: unknown) {
   if (resource === 'customers')
     return customerDto(await db.customer.update({ where: { id }, data: parseBody(customerSchema, input) }));
-  if (resource === 'printers')
-    return printerDto(await db.printer.update({ where: { id }, data: parseBody(printerSchema, input) }));
+  if (resource === 'printers') {
+    const data = parseBody(printerSchema, input);
+    const manufacturer = await resolvePrinterManufacturer(data.manufacturerId, data.manufacturer);
+    const { manufacturerId: _manufacturerId, manufacturer: _manufacturer, ...printer } = data;
+    return printerDto(
+      await db.printer.update({
+        where: { id },
+        data: { ...printer, manufacturerId: manufacturer!.id },
+        include: { manufacturer: true },
+      }),
+    );
+  }
   if (resource === 'manufacturers') {
     const data = parseBody(manufacturerSchema, input);
     return db.$transaction(async (transaction) => {
@@ -345,7 +383,8 @@ export async function archiveResource(resource: Resource, id: string, input: unk
   const { archived } = parseBody(archiveSchema, input);
   const data = { archivedAt: archived ? new Date() : null };
   if (resource === 'customers') return customerDto(await db.customer.update({ where: { id }, data }));
-  if (resource === 'printers') return printerDto(await db.printer.update({ where: { id }, data }));
+  if (resource === 'printers')
+    return printerDto(await db.printer.update({ where: { id }, data, include: { manufacturer: true } }));
   if (resource === 'manufacturers')
     return manufacturerDto(await db.manufacturer.update({ where: { id }, data }));
   if (resource === 'components')

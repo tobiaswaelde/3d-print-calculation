@@ -157,13 +157,18 @@ try {
     { method: 'POST', body: JSON.stringify({ name: 'Acme', email: 'hello@example.test', note: '' }) },
     cookie,
   );
+  const printerManufacturer = await json(
+    '/api/manufacturers',
+    { method: 'POST', body: JSON.stringify({ name: 'Prusa', note: '' }) },
+    cookie,
+  );
   const printer = await json(
     '/api/printers',
     {
       method: 'POST',
       body: JSON.stringify({
         name: 'MK4',
-        manufacturer: 'Prusa',
+        manufacturerId: printerManufacturer.body.id,
         model: 'MK4S',
         purchasePrice: '1200',
         expectedLifetimeHours: '6000',
@@ -174,9 +179,91 @@ try {
     cookie,
   );
   check(
-    printer.body.hourlyRate === '0.2',
-    `Printer hourly rate must be deterministic: ${JSON.stringify(printer.body)}`,
+    printer.body.hourlyRate === '0.2' &&
+      printer.body.manufacturerId === printerManufacturer.body.id &&
+      printer.body.manufacturer === 'Prusa',
+    `Printer must resolve its manufacturer relation and hourly rate: ${JSON.stringify(printer.body)}`,
   );
+  const printersByManufacturer = await json('/api/printers?search=Prusa', {}, cookie);
+  check(
+    printersByManufacturer.body.items?.some((item: { id: string }) => item.id === printer.body.id),
+    'Printer inventory search must include the related manufacturer name.',
+  );
+  const printerGlobalSearch = await json('/api/search?q=Prusa', {}, cookie);
+  check(
+    printerGlobalSearch.body.groups?.some(
+      (group: { type: string; items: { id: string }[] }) =>
+        group.type === 'printers' && group.items.some((item) => item.id === printer.body.id),
+    ),
+    'Global search must include printer manufacturer names.',
+  );
+  const invalidPrinter = await json(
+    '/api/printers',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Invalid manufacturer',
+        manufacturerId: 'missing',
+        model: '',
+        purchasePrice: '100',
+        expectedLifetimeHours: '1000',
+        averagePowerWatts: 100,
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  check(invalidPrinter.response.status === 422, 'Printer manufacturer IDs must reference active records.');
+  const archivedPrinterManufacturer = await json(
+    '/api/manufacturers',
+    { method: 'POST', body: JSON.stringify({ name: 'Archived printer maker', note: '' }) },
+    cookie,
+  );
+  await json(
+    `/api/manufacturers/${archivedPrinterManufacturer.body.id}`,
+    { method: 'PATCH', body: JSON.stringify({ archived: true }) },
+    cookie,
+  );
+  const archivedManufacturerPrinter = await json(
+    '/api/printers',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Archived manufacturer',
+        manufacturerId: archivedPrinterManufacturer.body.id,
+        model: '',
+        purchasePrice: '100',
+        expectedLifetimeHours: '1000',
+        averagePowerWatts: 100,
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  check(archivedManufacturerPrinter.response.status === 422, 'Archived manufacturers cannot be assigned.');
+  const legacyPrinter = await json(
+    '/api/printers',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Legacy printer',
+        manufacturer: 'Legacy printer maker',
+        model: '',
+        purchasePrice: '100',
+        expectedLifetimeHours: '1000',
+        averagePowerWatts: 100,
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  check(
+    legacyPrinter.response.ok &&
+      legacyPrinter.body.manufacturer === 'Legacy printer maker' &&
+      typeof legacyPrinter.body.manufacturerId === 'string',
+    'Legacy printer manufacturer text must create and resolve a manufacturer.',
+  );
+  await json(`/api/printers/${legacyPrinter.body.id}`, { method: 'DELETE' }, cookie);
   const componentManufacturer = await json(
     '/api/manufacturers',
     { method: 'POST', body: JSON.stringify({ name: 'Test', note: '' }) },
@@ -887,13 +974,13 @@ try {
   const referencedFilamentDelete = await json(`/api/filaments/${filament.id}`, { method: 'DELETE' }, cookie);
   check(referencedFilamentDelete.response.status === 409, 'Used filaments must not be hard-deleted.');
   const referencedManufacturerDelete = await json(
-    `/api/manufacturers/${componentManufacturer.body.id}`,
+    `/api/manufacturers/${printerManufacturer.body.id}`,
     { method: 'DELETE' },
     cookie,
   );
   check(
     referencedManufacturerDelete.response.status === 409,
-    'Referenced manufacturers must not be hard-deleted.',
+    'Manufacturers referenced by printers must not be hard-deleted.',
   );
 
   const sm = (body: unknown) =>
