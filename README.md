@@ -21,9 +21,18 @@ interface.
 ## 📚 Table of Contents <!-- omit in toc -->
 
 - [✨ Highlights](#-highlights)
+- [📸 Screenshots](#-screenshots)
 - [🐳 Run with Docker Compose](#-run-with-docker-compose)
 - [🛠️ Local development](#-local-development)
 - [🔒 Security](#-security)
+
+## 📸 Screenshots
+
+| Dashboard                                                                                | Cost report                                                                                     |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| ![Dashboard with print metrics and cost charts](./docs/public/screenshots/dashboard.jpg) | ![Detailed cost report for a completed print](./docs/public/screenshots/cost-report.jpg)        |
+| Spool inventory                                                                          | Completed print                                                                                 |
+| ![Spool inventory with remaining material](./docs/public/screenshots/spools.jpg)         | ![Completed print workflow and recorded outcome](./docs/public/screenshots/completed-print.jpg) |
 
 ## 🐳 Run with Docker Compose
 
