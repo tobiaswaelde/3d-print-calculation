@@ -36,3 +36,7 @@ duration, and current total. Select a name to view or continue editing it. **New
 dialog available on the Prints page.
 
 ![Unfinished-print table with a current draft and the New print action](/screenshots/dashboard-unfinished.jpg)
+
+Outcome metrics show success rate, failed-print costs, actual-minus-planned variance, and pending completed prints. Only recorded outcomes enter the success-rate denominator. Costs include failed runs' real consumption; pending outcomes do not imply success or zero actual cost. All metrics use the selected completion period and exclude archived prints.
+
+Realized revenue and margin include only successful, non-archived prints with explicit sales values, using the same completion period as the other metrics. Pending, failed, and unpriced records do not inflate these totals. Failed consumption remains visible separately as waste cost. Negative realized margin means the recorded successful sales value was below actual cost.

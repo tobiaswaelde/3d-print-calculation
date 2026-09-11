@@ -66,3 +66,47 @@ manufacturer, material, and color name. Responses expose the resolved manufactur
 Errors include an HTTP status and stable `data` with `code`, `messageKey`, optional `fieldErrors`, and `requestId`.
 Expect 401 without a session, 403 for a foreign origin, 409 for immutability, references, currency, or setup
 conflicts, and 422 for invalid or incompatible input. API clients should branch on `code`, not parse messages.
+
+Print draft and calculation requests accept `quantity`, a whole number from 1 to 1,000,000, defaulting to 1. Print DTOs, previews, and snapshots expose `quantity` and canonical decimal `costPerUnit`. Material quantities and duration remain run totals.
+
+## Outcomes and retries
+
+`POST /api/prints/:id/outcome` requires authentication and a same-origin request. The body contains `status` (`SUCCESS` or `FAILED`), integer `durationSeconds` (0–2,147,483,647), `filaments: [{ usageId, usedGrams }]` (canonical non-negative decimal strings), optional `note`, and `failureReason` (required for failure). Every planned usage ID must occur exactly once. Only non-archived `DONE` prints accept outcomes. Identical requests are idempotent; changing a recorded outcome returns 409. Read the outcome, recording date, costs, source retry, and retries through `GET /api/prints/:id`.
+
+`POST /api/prints/:id/retry` creates a current-price draft from a non-archived failed print, preserving quantity and customer. It never inherits an outcome. Ordinary duplication does not create a retry relationship. Print lists accept `outcome=PENDING|SUCCESS|FAILED`; pending means a `DONE` print without an outcome. Dashboard outcome metrics use the same completion period and exclude archived prints. Success rate excludes pending outcomes; variance sums actual minus planned only for recorded outcomes.
+
+## Spool inventory
+
+Authenticated `GET /api/spools` supports search, page, pageSize (1–100), includeArchived, filamentId, and availableOnly. The response includes stable IDs/codes, purchase metadata, exact remaining grams and unit cost. `GET /api/spools/:id` also returns a paginated movement history. `POST /api/spools` accepts code, filamentId, purchasePrice, initialNetWeightGrams, and optional purchaseLot, location, acquiredAt (ISO date). Creation adds an opening receipt atomically. `PATCH /api/spools/:id` edits metadata and price while retaining code, filament, and initial weight.
+
+`POST /api/spools/:id/archive` takes `{ archived }`. `POST /api/spools/:id/movements` takes `{ kind: RECEIPT|CORRECTION, grams, note, operationKey }`; operationKey is a UUID reused only for identical retries. Grams use canonical decimals, up to 12 whole and six fractional digits. Corrections are signed nonzero deltas; receipts are positive. `GET /api/filaments/:id/stock` returns the active total and threshold; `PATCH` on the same route accepts `{ minimumStockGrams }`. `GET /api/spools/:id/qr` requires authentication and returns an SVG encoding the local spool route.
+
+Draft filament lines accept `spoolId`. Older clients may omit it only when exactly one active spool can be resolved. Finalized usage DTOs preserve `spoolId` and `spoolCode`; historical usages without a spool remain null.
+
+`POST /api/prints/:id/outcome/correct` accepts the outcome fields plus a required correction note, `expectedRevision`, and a UUID `operationKey`. It appends an immutable revision, updates current result metrics, and books only consumption deltas atomically. Matching retries are idempotent; stale revisions return 409. Print DTOs expose the current revision and history containing the original plus the latest 20 corrections. The full stock ledger remains paginated on the spool detail API.
+
+## Sales values
+
+Drafts and calculation requests accept optional non-negative `salesValue` in the instance currency. It is frozen in the completed snapshot, and old records retain null. Print DTOs expose `financials` with sales value, planned margin, realized revenue/margin, and per-unit values. Missing sales values remain null, pending outcomes have no realized revenue, and only successful outcomes produce realized margin. Failed outcomes produce zero realized revenue when a value was supplied, with failed costs reported separately. Copy/retry flows clear sales value.
+
+## Series, customer history, and exports
+
+- `GET/POST /api/series`: paginated search/create; name, optional customer/target/notes, and `autoComplete`.
+- `GET/PATCH /api/series/:id`: read or update; `POST .../state` accepts `{ status: "OPEN" | "COMPLETED" }`, `POST .../archive` accepts `{ archived }`, and `POST .../next-run` accepts `{ sourcePrintId }`.
+- `GET /api/series/:id/history` and `GET /api/customers/:id/history`: paginated prints plus totals over the same full filtered set.
+- `POST /api/prints/:id/repeat`: current-price draft with separate repeat relationship and cleared sales value.
+- `GET /api/prints/export`: authenticated, no-store CSV; same filters as the print list, restricted to `DONE`, maximum 5,000 records. A larger result returns `EXPORT_TOO_LARGE`; an empty set returns the header.
+- `GET /api/prints/:id/report`: authenticated, no-store persisted report DTO for a done print, including archived records; other statuses return `REPORT_NOT_ALLOWED`. `/reports/prints/:id` renders its localized A4 source view for browser PDF saving.
+
+Print/history/export filters include `dateFrom`, `dateTo` (inclusive ISO dates, completion date or creation when no completion exists), `printerId`, `customerId`, `seriesId`, `status`, `outcome=PENDING|SUCCESS|FAILED`, `search`, and `includeArchived`. A history scope always overrides a conflicting scope query. Draft input accepts nullable `seriesId`; a series customer is inherited and conflicts are rejected. See [exports](../guide/exports) for CSV field and print behavior.
+
+## Optional integrations
+
+All routes require authentication; POST routes require same-origin requests. URL and credentials are server environment configuration only. See [integration setup and limits](../guide/integrations).
+
+- `GET /api/integrations/spoolman`: configuration/capability/version status and the last 50 operations. `?view=preview&page=1` returns the import preview with a SHA-256 fingerprint of the validated remote data.
+- `POST /api/integrations/spoolman`: discriminated `action`: `IMPORT` with `data={remoteId,previewHash,authority?,localSpoolId?}`, `SYNC` with `spoolId`, `UNLINK` with `data={spoolId,ownership:"NATIVE",openingBalance}`, or `OPERATION` with `data={operationId,action:"SEND"|"CONFIRM_APPLIED"|"CONFIRM_NOT_APPLIED"}`. Explicit linking to an existing spool requires the same already-linked filament identity. Reassigning a stable external ID is rejected.
+- `GET /api/integrations/bambubuddy`: safe printer/link status; optional `printId`. `?view=logs&printerId=...&page=1` pages through the selected printer's remote logs.
+- `POST /api/integrations/bambubuddy`: `LINK_PRINTER` (`printerId`, nullable `remoteId`), `SYNC_PRINTER` (`printerId`), `MAP_TRAY` (`printerId`, `slot` as `ams:tray`, nullable `spoolId`), `ATTACH` (`printId`, `remoteLogId`), `SYNC_PRINT` (`printId`), or `IMPORT` (`printId`, `previewHash`, validated `outcome`). Only confirmed terminal records may import an outcome.
+
+Errors use `INTEGRATION_DISABLED`, `INTEGRATION_CONFIG`, `INTEGRATION_UNAVAILABLE`, `INTEGRATION_CONTRACT`, or `INTEGRATION_CONFLICT`; remote HTTP failures are classified without forwarding response bodies or connection details. Native mutations of externally owned stock return `STOCK_OWNED_EXTERNALLY`.

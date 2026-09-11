@@ -2,7 +2,7 @@ import Decimal from 'decimal.js';
 import { z } from 'zod';
 import { currencySchema, supportedLocaleSchema } from './common';
 
-function decimalSchema(options: { positive?: boolean } = {}) {
+export function decimalSchema(options: { positive?: boolean } = {}) {
   return z
     .union([z.string(), z.number().finite()])
     .transform((value) => String(value).trim())

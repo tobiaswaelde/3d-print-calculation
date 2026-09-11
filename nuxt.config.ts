@@ -1,6 +1,7 @@
 import packageJson from './package.json' with { type: 'json' };
 
 export default defineNuxtConfig({
+  ...(process.env.PRINT_COST_BUILD_DIR ? { buildDir: process.env.PRINT_COST_BUILD_DIR } : {}),
   compatibilityDate: '2026-09-01',
   ssr: false,
   modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt', '@nuxt/eslint', '@vite-pwa/nuxt'],

@@ -14,7 +14,14 @@
     </template>
 
     <template #body>
-      <ModulesPrintsCreateForm v-if="open" ref="formRef" :form-id="formId" @created="handleCreated" />
+      <ModulesPrintsCreateForm
+        v-if="open"
+        ref="formRef"
+        :form-id="formId"
+        :initial-series-id="initialSeriesId"
+        :initial-customer-id="initialCustomerId"
+        @created="handleCreated"
+      />
     </template>
 
     <template v-if="formRef && !formRef.loading" #footer>
@@ -65,6 +72,8 @@ import type { PrintJobDto } from '#shared/types/prints';
 const emit = defineEmits<{
   created: [print: PrintJobDto];
 }>();
+
+defineProps<{ initialSeriesId?: string | null; initialCustomerId?: string | null }>();
 
 const open = defineModel<boolean>('open', { default: false });
 const { t } = useI18n();

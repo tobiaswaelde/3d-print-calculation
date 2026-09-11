@@ -8,6 +8,8 @@ const listRoute: Record<Exclude<GlobalSearchKind, 'prints'>, string> = {
   printers: '/printers',
   components: '/components',
   filaments: '/filaments',
+  spools: '/spools',
+  series: '/series',
 };
 
 function masterDataTarget(type: Exclude<GlobalSearchKind, 'prints'>, title: string) {
@@ -16,7 +18,7 @@ function masterDataTarget(type: Exclude<GlobalSearchKind, 'prints'>, title: stri
 
 export async function searchApplication(query: Record<string, unknown>) {
   const { q } = parseBody(globalSearchQuerySchema, query);
-  const [prints, customers, printers, components, filaments] = await db.$transaction([
+  const [prints, customers, printers, components, filaments, spools, series] = await db.$transaction([
     db.printJob.findMany({
       where: {
         archivedAt: null,
@@ -95,9 +97,39 @@ export async function searchApplication(query: Record<string, unknown>) {
       orderBy: [{ manufacturer: { name: 'asc' } }, { name: 'asc' }],
       take: 5,
     }),
+    db.spool.findMany({
+      where: { archivedAt: null, OR: [{ code: { contains: q } }, { filament: { name: { contains: q } } }] },
+      take: 5,
+      orderBy: { code: 'asc' },
+      include: { filament: true },
+    }),
+    db.printSeries.findMany({
+      where: { archivedAt: null, OR: [{ name: { contains: q } }, { customer: { name: { contains: q } } }] },
+      include: { customer: true },
+      take: 5,
+      orderBy: { updatedAt: 'desc' },
+    }),
   ]);
 
   const groups: GlobalSearchGroup[] = [
+    {
+      type: 'series',
+      items: series.map((item) => ({
+        id: item.id,
+        title: item.name,
+        description: item.customer?.name ?? null,
+        to: `/series/${item.id}`,
+      })),
+    },
+    {
+      type: 'spools',
+      items: spools.map((item) => ({
+        id: item.id,
+        title: item.code,
+        description: item.filament.name,
+        to: `/spools/${item.id}`,
+      })),
+    },
     {
       type: 'prints',
       items: prints.map((item) => ({
@@ -113,7 +145,7 @@ export async function searchApplication(query: Record<string, unknown>) {
         id: item.id,
         title: item.name,
         description: item.email,
-        to: masterDataTarget('customers', item.name),
+        to: `/customers/${item.id}`,
       })),
     },
     {

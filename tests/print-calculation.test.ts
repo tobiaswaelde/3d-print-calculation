@@ -38,6 +38,8 @@ describe('calculatePrintCost', () => {
     expect(result.electricityCost).toBe('0.0576');
     expect(result.filamentCost).toBe('1.602575');
     expect(result.totalCost).toBe('2.260175');
+    expect(result.quantity).toBe(1);
+    expect(result.costPerUnit).toBe(result.totalCost);
   });
 
   it('keeps repeating divisions deterministic and permits zero-cost inputs', () => {
@@ -47,6 +49,17 @@ describe('calculatePrintCost', () => {
     });
     expect(result.printerCost).toBe('0');
     expect(result.totalCost).toBe('1.960175');
+  });
+
+  it('divides the unchanged run total using decimal precision', () => {
+    const result = calculatePrintCost({ ...input, quantity: 3 });
+    expect(result.totalCost).toBe('2.260175');
+    expect(result.costPerUnit).toBe('0.75339166666666666667');
+    expect(result.lines).toEqual(calculatePrintCost(input).lines);
+  });
+
+  it.each([0, -1, 1.5, 1000001, NaN, Infinity])('rejects invalid quantity %s', (quantity) => {
+    expect(() => calculatePrintCost({ ...input, quantity })).toThrow();
   });
 
   it('rejects zero denominators, durations, and weights', () => {

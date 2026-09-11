@@ -76,3 +76,17 @@ snapshot. A finalized print cannot return to Draft, but it can move between the 
 **Duplicate** is available in every workflow status. It creates a new draft with a `(copy)` suffix,
 retains the referenced resources and quantities, and recalculates with the current active inventory, formula, and
 settings. Review the new total before advancing it; duplication is the supported way to reuse a finalized record.
+
+Enter the number of identical parts in **Quantity** (1–1,000,000). Enter duration and material for the entire run. The preview and print list distinguish total cost from cost per unit. Duplicates retain the quantity; finalized prints freeze both values.
+
+## Record a result and retry a failed print
+
+After marking a print **Done**, review the **Print outcome** form. Confirm actual duration in seconds and actual grams for every filament; the initial values are planned usage for you to verify. Select **Successful** or **Failed**, supplying a failure reason when needed. Recording freezes the result and displays actual costs beside planned cost and variance. Completed prints without a result remain **Pending outcome** and do not count toward success rate.
+
+Use **Retry print** after a failure to create an editable draft at current inventory prices, with the same quantity and customer. Links connect source and retry in both directions. Ordinary **Duplicate** remains separate. Inactive required inventory must be replaced/reactivated before duplication can succeed. Outcomes and planned calculations are not inherited.
+
+## Sales value and margins
+
+Optionally enter the total **Sales value** for the run in the instance currency. Blank means unknown, and zero is an explicit zero sale. The preview shows planned margin and per-unit values. Leaving Draft freezes the entered value. A successful result shows realized revenue and actual margin; failed runs contribute zero realized revenue and their consumption remains a separate waste cost. Negative margins are supported. Duplication, retry, and repeat orders always clear sales value to prevent double counting.
+
+This is a cost and revenue comparison, not an invoice, tax, receivables, or payment ledger. ezPrint does not split net and gross taxes or infer revenue from its paid flag.

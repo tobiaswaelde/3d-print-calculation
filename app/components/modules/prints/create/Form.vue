@@ -29,6 +29,20 @@
             <UFormField name="name" :label="t('master.name')" required>
               <UInput v-model="form.name" class="w-full" icon="i-tabler-tag" autofocus />
             </UFormField>
+            <UFormField
+              name="quantity"
+              :label="t('prints.quantity')"
+              :description="t('prints.quantityHelp')"
+              required
+            >
+              <UInput v-model="form.quantity" class="w-full" type="number" min="1" max="1000000" step="1" />
+            </UFormField>
+            <UFormField name="salesValue" :label="t('sales.value')" :description="t('sales.help')">
+              <UInput v-model="form.salesValue" inputmode="decimal" class="w-full" />
+            </UFormField>
+            <UFormField name="seriesId" :label="t('nav.series')" :description="t('series.customerRule')"
+              ><CommonSeriesSelect v-model="form.seriesId" @customer="form.customerId = $event"
+            /></UFormField>
             <UFormField name="customerId" :label="t('nav.customers')">
               <USelect
                 v-model="form.customerId"
@@ -142,7 +156,7 @@
               <div
                 v-for="(filament, index) in form.filaments"
                 :key="index"
-                class="grid items-start gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_12rem_auto]"
+                class="grid items-start gap-3 rounded-lg border border-default p-3 md:grid-cols-[1fr_1fr_10rem_auto]"
               >
                 <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required>
                   <CommonFilamentSelect
@@ -150,6 +164,9 @@
                     class="w-full"
                     :items="filamentOptions"
                   />
+                </UFormField>
+                <UFormField :name="`filaments.${index}.spoolId`" :label="t('nav.spools')" required>
+                  <CommonSpoolSelect v-model="filament.spoolId" :filament-id="filament.filamentId" />
                 </UFormField>
                 <UFormField :name="`filaments.${index}.usedGrams`" :label="t('prints.usedGrams')" required>
                   <UInput
@@ -188,7 +205,13 @@
                 <UIcon v-if="previewPending" name="i-tabler-loader-2" class="animate-spin" />
               </div>
               <CommonCostBreakdown v-if="costs" v-bind="costs" />
-              <p v-else class="text-sm text-muted">{{ t('prints.previewHint') }}</p>
+              <CommonFinancialSummary
+                v-if="costs?.financials"
+                :value="costs.financials"
+                :currency="costs.currency"
+                class="mt-3"
+              />
+              <p v-if="!costs" class="text-sm text-muted">{{ t('prints.previewHint') }}</p>
             </div>
           </div>
         </template>
@@ -208,8 +231,14 @@ const emit = defineEmits<{
   created: [print: PrintJobDto];
 }>();
 
-const { formId = 'new-print-form' } = defineProps<{
+const {
+  formId = 'new-print-form',
+  initialSeriesId = null,
+  initialCustomerId = null,
+} = defineProps<{
   formId?: string;
+  initialSeriesId?: string | null;
+  initialCustomerId?: string | null;
 }>();
 
 const { t } = useI18n();
@@ -231,12 +260,15 @@ let hydrating = true;
 
 const form = reactive({
   name: '',
-  customerId: null as string | null,
+  quantity: 1,
+  salesValue: '',
+  customerId: initialCustomerId as string | null,
+  seriesId: initialSeriesId as string | null,
   printerId: '',
   buildPlateId: '',
   hotends: [{ componentId: '', hours: 1, minutes: 0 }],
   otherComponentIds: [] as string[],
-  filaments: [{ filamentId: '', usedGrams: '1' }],
+  filaments: [{ filamentId: '', spoolId: undefined as string | undefined, usedGrams: '1' }],
   notes: '',
 });
 
@@ -248,7 +280,7 @@ const stepperItems = computed<StepperItem[]>(() => [
 ]);
 
 const fieldsByStep: Array<Array<keyof typeof form>> = [
-  ['name', 'customerId', 'printerId', 'buildPlateId'],
+  ['name', 'quantity', 'salesValue', 'seriesId', 'customerId', 'printerId', 'buildPlateId'],
   ['hotends'],
   ['otherComponentIds', 'filaments'],
 ];
@@ -283,7 +315,10 @@ const filamentOptions = computed(() =>
 function payload() {
   return {
     name: form.name,
+    quantity: Number(form.quantity),
+    salesValue: form.salesValue || null,
     customerId: form.customerId,
+    seriesId: form.seriesId,
     printerId: form.printerId,
     buildPlateId: form.buildPlateId,
     hotends: form.hotends.map((entry) => ({
@@ -293,6 +328,7 @@ function payload() {
     otherComponentIds: form.otherComponentIds,
     filaments: form.filaments.map((entry) => ({
       filamentId: entry.filamentId,
+      spoolId: entry.spoolId,
       usedGrams: entry.usedGrams,
     })),
     notes: form.notes,
@@ -304,7 +340,7 @@ function addHotend() {
 }
 
 function addFilament() {
-  form.filaments.push({ filamentId: '', usedGrams: '1' });
+  form.filaments.push({ filamentId: '', spoolId: undefined as string | undefined, usedGrams: '1' });
 }
 
 function applyComponentDefaults() {
