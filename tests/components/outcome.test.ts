@@ -1,5 +1,6 @@
 import { calculatePrintFinancials } from '../../shared/domain/print-financials';
 import { mountSuspended } from '@nuxt/test-utils/runtime';
+import { flushPromises } from '@vue/test-utils';
 import { expect, it } from 'vitest';
 import Outcome from '../../app/components/modules/prints/Outcome.vue';
 import type { PrintJobDto } from '../../shared/types/prints';
@@ -55,4 +56,7 @@ it('requires a failure reason only after choosing a failed outcome', async () =>
   await wrapper.vm.$nextTick();
   expect(wrapper.text()).toContain('Fehlergrund');
   expect(wrapper.text()).toContain('Tatsächliches Gewicht');
+  await wrapper.find('form').trigger('submit');
+  await flushPromises();
+  expect(wrapper.text()).toContain('Ein Fehlergrund ist erforderlich.');
 });

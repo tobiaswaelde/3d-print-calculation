@@ -46,7 +46,7 @@
     </div>
     <UForm
       v-if="!job.outcome || correcting"
-      :schema="correcting ? printOutcomeCorrectionSchema : printOutcomeSchema"
+      :schema="formSchema"
       :state="form"
       class="space-y-4"
       @submit="save"
@@ -93,7 +93,7 @@
 
 <script setup lang="ts">
 import Decimal from 'decimal.js';
-import { printOutcomeSchema, printOutcomeCorrectionSchema } from '#shared/schemas/print-outcomes';
+import { createPrintOutcomeCorrectionSchema, createPrintOutcomeSchema } from '#shared/schemas/print-outcomes';
 import type { PrintJobDto } from '#shared/types/prints';
 const props = defineProps<{ job: PrintJobDto }>();
 const emit = defineEmits<{ recorded: [job: PrintJobDto] }>();
@@ -114,6 +114,16 @@ const form = reactive({
 });
 const statusOptions = computed(() =>
   ['SUCCESS', 'FAILED'].map((value) => ({ value, label: t(`outcome.${value}`) })),
+);
+const validationMessages = computed(() => ({
+  failureReasonRequired: t('validation.outcomeFailureReasonRequired'),
+  uniqueUsageRequired: t('validation.outcomeUniqueUsageRequired'),
+  correctionNoteRequired: t('validation.outcomeCorrectionNoteRequired'),
+}));
+const formSchema = computed(() =>
+  correcting.value
+    ? createPrintOutcomeCorrectionSchema(validationMessages.value)
+    : createPrintOutcomeSchema(validationMessages.value),
 );
 const variance = computed(() =>
   new Decimal(props.job.outcome?.costs.totalCost ?? '0').minus(props.job.totalCost).toFixed(),
