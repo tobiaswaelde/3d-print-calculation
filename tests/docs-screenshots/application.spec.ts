@@ -457,7 +457,7 @@ test('regenerates every application screenshot used by the documentation', async
   await expect(page.getByLabel('Quantity', { exact: true })).toBeEnabled();
   await expect(page.getByLabel('Sales value', { exact: true })).toHaveValue('');
   await page.setViewportSize({ width: 1280, height: 720 });
-  await page.goto('/settings#integration-spoolman-tools');
+  await page.goto('/settings/integrations#integration-spoolman-tools');
   await page.getByRole('heading', { name: 'Spoolman inventory', exact: true }).scrollIntoViewIfNeeded();
   await page.getByRole('button', { name: 'Load import preview', exact: true }).click();
   await expect(page.getByText('Synthetic remote PLA', { exact: false })).toBeVisible();
@@ -478,7 +478,9 @@ test('regenerates every application screenshot used by the documentation', async
   });
   fake.state.logs[0]!.status = 'completed';
   fake.state.logs[0]!.completed_at = '2026-09-11T01:00:00Z';
-  await page.goto(`/settings?printId=${integrated.id}&printerId=${printer.id}#integration-bambubuddy-tools`);
+  await page.goto(
+    `/settings/integrations?printId=${integrated.id}&printerId=${printer.id}#integration-bambubuddy-tools`,
+  );
   await page
     .getByRole('heading', { name: 'BambuBuddy printers and results', exact: true })
     .scrollIntoViewIfNeeded();

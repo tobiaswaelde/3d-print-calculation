@@ -1,13 +1,13 @@
 ---
 title: Settings
-description: Configure language, appearance, date, time, duration formatting, currency, and electricity price.
+description: Configure display, calculation, and integration settings in dedicated tabs.
 ---
 
 # Settings
 
-The Settings page at `/settings` combines display preferences with instance-wide calculation inputs.
+The Settings page uses linked **General**, **Calculation**, and **Integrations** tabs. Each tab has its own URL, so browser navigation and direct links preserve the selected settings area.
 
-![Settings page with General and Calculation sections](/screenshots/settings.jpg)
+![Settings page with linked General, Calculation, and Integrations tabs](/screenshots/settings.jpg)
 
 ## General
 
@@ -28,5 +28,8 @@ the application.
 - **Electricity price per kWh:** a nonnegative decimal used for new previews, saved drafts, duplicates, and
   completion recalculation. Existing completed snapshots keep their original electricity rate.
 
-Select **Save** to validate and persist all settings. A success message confirms the update; validation or
-currency-lock errors are shown on the page without discarding the entered values.
+## Integrations
+
+Use the **Integrations** tab to enable and configure Spoolman and BambuBuddy. Connection tools and print-result workflows stay within that tab; they do not add separate pages or sidebar entries. See [Spoolman and BambuBuddy](./integrations) for setup, ownership, and reconciliation details.
+
+Select **Save** in General or Calculation to validate and persist that tab's settings. A success message confirms the update; validation or currency-lock errors are shown without discarding the entered values.

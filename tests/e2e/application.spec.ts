@@ -146,8 +146,10 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
 
   await page.getByRole('link', { name: 'Einstellungen' }).click();
   await expect(page.getByRole('heading', { name: 'Allgemein' })).toBeVisible();
+  await page.getByRole('link', { name: 'Berechnung', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Berechnung' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Integrationen' })).toBeVisible();
+  await expect(page.getByLabel('Währung')).toBeVisible();
+  await page.getByRole('link', { name: 'Integrationen', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Spoolman-Anbindung' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'BambuBuddy-Anbindung' })).toBeVisible();
   const spoolmanSettings = page.locator('#integration-spoolman');
@@ -159,6 +161,13 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await bambubuddySettings.getByLabel('API-Schlüssel').fill('synthetic-browser-key');
   await page.getByRole('button', { name: 'Integrationseinstellungen speichern', exact: true }).click();
   await expect(page.getByText('Integrationseinstellungen gespeichert.')).toBeVisible();
+  await page.getByRole('link', { name: 'Allgemein', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Allgemein' })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole('link', { name: 'Berechnung', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Integrationen', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page.getByRole('combobox', { name: 'Sprache' }).click();
   await page.getByRole('option', { name: 'English' }).click();
   const dateFormat = page.getByRole('combobox', { name: 'Datumsformat' });

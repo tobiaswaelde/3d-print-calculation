@@ -5,7 +5,7 @@
         <UInput v-model="search" :placeholder="t('common.search')" :aria-label="t('common.search')" />
         <UCheckbox v-model="includeArchived" :label="t('spool.includeArchived')" />
         <UButton
-          :to="{ path: '/settings', hash: '#integration-spoolman' }"
+          :to="{ path: '/settings/integrations', hash: '#integration-spoolman' }"
           :label="t('integration.spoolman')"
           color="neutral"
         /><UButton :label="t('common.add')" @click="creating = !creating" />

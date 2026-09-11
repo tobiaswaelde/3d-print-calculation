@@ -19,7 +19,7 @@
           {{ spool.syncedAt ?? '—' }}
         </p>
         <UButton :label="t('integration.sync')" @click="syncRemote" /><UButton
-          :to="{ path: '/settings', hash: '#integration-spoolman' }"
+          :to="{ path: '/settings/integrations', hash: '#integration-spoolman' }"
           :label="t('integration.spoolman')"
           color="neutral"
         />
