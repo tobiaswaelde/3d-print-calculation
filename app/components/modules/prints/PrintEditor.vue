@@ -231,9 +231,7 @@
               :key="index"
               class="grid items-start gap-3"
               :class="
-                spoolManagementEnabled
-                  ? 'md:grid-cols-[1fr_1fr_10rem_auto]'
-                  : 'md:grid-cols-[1fr_10rem_auto]'
+                spoolManagementEnabled ? 'md:grid-cols-[1fr_1fr_10rem_auto]' : 'md:grid-cols-[1fr_10rem_auto]'
               "
             >
               <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required

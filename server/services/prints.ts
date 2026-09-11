@@ -271,8 +271,8 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
       return {
         id: spool?.id ?? source.id,
         name: spool ? `${source.name} · ${spool.code}` : source.name,
-        purchasePrice: spool?.purchasePrice ?? source.purchasePrice,
-        netWeightGrams: spool?.initialNetWeightGrams ?? source.netWeightGrams,
+        purchasePrice: (spool?.purchasePrice ?? source.purchasePrice).toString(),
+        netWeightGrams: (spool?.initialNetWeightGrams ?? source.netWeightGrams).toString(),
         usedGrams: entry.usedGrams,
       };
     }),

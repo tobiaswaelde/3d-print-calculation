@@ -443,12 +443,12 @@ export async function updateSettings(input: unknown) {
             id: spoolId,
             code: `S-${spoolId}`,
             filamentId: filament.id,
-            purchasePrice: filament.purchasePrice,
-            initialNetWeightGrams: filament.netWeightGrams,
+            purchasePrice: filament.purchasePrice.toString(),
+            initialNetWeightGrams: filament.netWeightGrams.toString(),
             movements: {
               create: {
                 kind: 'RECEIPT',
-                grams: filament.netWeightGrams,
+                grams: filament.netWeightGrams.toString(),
                 operationKey: `opening:${spoolId}`,
               },
             },

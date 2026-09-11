@@ -72,10 +72,7 @@
             <h2 class="font-semibold">{{ t('settings.spoolManagement') }}</h2>
             <p class="text-sm text-muted">{{ t('settings.spoolManagementDescription') }}</p>
           </div>
-          <USwitch
-            v-model="form.spoolManagementEnabled"
-            :label="t('settings.spoolManagementEnabled')"
-          />
+          <USwitch v-model="form.spoolManagementEnabled" :label="t('settings.spoolManagementEnabled')" />
         </div>
       </template>
       <UAlert

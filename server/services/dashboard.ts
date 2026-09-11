@@ -91,10 +91,7 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
     period,
     periodStart: start?.toISOString() ?? null,
     periodEnd: now.toISOString(),
-    currency:
-      completed[0]?.currency ??
-      unfinished[0]?.currency ??
-      settings.currency,
+    currency: completed[0]?.currency ?? unfinished[0]?.currency ?? settings.currency,
     kpis: {
       revenue: canonicalDecimal(revenue),
       margin: canonicalDecimal(margin),
