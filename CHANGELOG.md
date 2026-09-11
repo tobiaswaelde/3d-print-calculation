@@ -1,5 +1,31 @@
 # ezPrint
 
+## 0.6.0
+
+### Minor Changes
+
+- 0a43e49: Replace free-text printer manufacturers with required, localized selections from the complete shared manufacturer inventory while retaining legacy API compatibility.
+- e1b5f8e: Add an interactive Scalar API reference, OpenAPI 3.1 metadata for all endpoints, and a credential-free Bruno collection.
+- d169cc9: Add a Features settings tab for print series and move the optional spool-management control there.
+- 5846e80: Allow instances to disable physical spool selection and stock management while retaining historical inventory.
+- 66db51e: Add filtered, bounded CSV exports and localized printable A4 cost reports with browser PDF saving.
+- 66db51e: Record immutable actual print outcomes and costs, filter results, and create linked retry drafts.
+- 66db51e: Add print quantities and immutable per-unit costs while preserving historical run totals.
+- 66db51e: Add optional frozen sales values and planned/realized margins, including per-unit values and dashboard totals.
+- 66db51e: Add print series with successful-quantity progress, filtered customer histories, and linked repeat orders at current prices.
+- 66db51e: Add physical spool inventory, append-only stock movements, low-stock alerts, QR labels, spool pricing, and versioned actual-usage corrections. Preserve exact calculation snapshots as decimal strings.
+- 66db51e: Add optional Spoolman stock ownership and Bambuddy print-log integrations with cached metadata, reviewed imports, and durable consumption reconciliation.
+
+### Patch Changes
+
+- f6ebcae: Show an icon for every item in list and detail breadcrumbs.
+- 638c354: Move Spoolman and Bambuddy activation, configuration, and operational tools into Settings.
+- f6ebcae: Combine optional features in one list and reveal dedicated Spoolman and Bambuddy settings tabs when enabled.
+- e9a9ea8: Align spool and print-series lists and detail views with the application table, toolbar, modal, status, and summary patterns.
+- 91a79f8: Hide Scalar's Ask AI and Generate MCP actions from the API reference.
+- 4354664: Organize General, Calculation, and Integrations settings in linked dashboard tabs.
+- f6ebcae: Stack full-width, labeled GitHub and documentation links above a centered version control in the sidebar footer.
+
 ## 0.5.0
 
 ### Minor Changes
