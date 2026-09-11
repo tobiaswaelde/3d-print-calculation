@@ -14,11 +14,16 @@ The first request to an empty installation redirects to `/setup`. Enter the foll
 - **Password:** at least 12 characters. The server stores an Argon2 hash, never the plain text value.
 - **Currency:** `EUR`, `USD`, `CHF`, or `GBP`; all cost records in the instance use this currency.
 - **Electricity price per kWh:** a nonnegative decimal used by every new calculation.
+- **Print series:** controls whether related print runs, repeat orders, and production targets are available.
+- **Spool management:** controls whether physical spools, stock movements, QR labels, and spool-specific prices are
+  available.
 
 ![First-run setup form in US English](/screenshots/first-run-setup.jpg)
 
 Selecting **First-run setup** creates the account and application settings atomically, then signs the account in.
 Only one setup request can succeed. After initialization, `/setup` redirects to `/login`.
+Both optional features are preselected and can be changed later under **Settings → Features**. External integrations
+are not configured during first-run setup; add their server details and credentials later in Settings.
 
 ::: warning Choose the currency carefully
 The currency can no longer be changed after the first printer, component, filament, or print is created. This

@@ -2,7 +2,7 @@
   <LayoutPagePanel panel-id="series-detail" :title="t('nav.series')">
     <template #toolbar>
       <CommonDetailToolbar
-        icon="i-tabler-file-description"
+        icon="i-tabler-list-check"
         parent-icon="i-tabler-list-check"
         :parent-title="t('nav.series')"
         parent-to="/series"

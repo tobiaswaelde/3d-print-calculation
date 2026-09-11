@@ -21,7 +21,8 @@
   },
   "auth": {
     "setup": "First-run setup",
-    "setupDescription": "Create the local account and calculation defaults.",
+    "setupDescription": "Create the local account, calculation defaults, and optional features.",
+    "featuresDescription": "Choose which optional modules are available. Integrations can be configured later in Settings.",
     "login": "Sign in",
     "logout": "Sign out",
     "email": "Email",

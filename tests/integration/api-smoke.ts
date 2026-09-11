@@ -90,6 +90,8 @@ try {
     locale: 'de-DE',
     currency: 'EUR',
     electricityPrice: '0.32',
+    printSeriesEnabled: false,
+    spoolManagementEnabled: false,
   });
   const setupResponses = await Promise.all([
     json('/api/auth/setup', { method: 'POST', body: setup }),
@@ -111,6 +113,22 @@ try {
     setupSession.response.ok && setupSession.body.user?.email === 'integration@example.test',
     `Setup session must be immediately usable (cookie name: ${cookie.split('=')[0]}, response: ${JSON.stringify(setupSession.body)}).`,
   );
+  const initialFeatureSettings = await json('/api/settings/features', {}, cookie);
+  check(
+    initialFeatureSettings.response.ok &&
+      !initialFeatureSettings.body.printSeriesEnabled &&
+      !initialFeatureSettings.body.spoolManagementEnabled,
+    'Setup must persist the selected feature flags.',
+  );
+  const enabledInitialFeatures = await json(
+    '/api/settings/features',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ printSeriesEnabled: true, spoolManagementEnabled: true }),
+    },
+    cookie,
+  );
+  check(enabledInitialFeatures.response.ok, 'Feature flags selected during setup can be changed later.');
   const initialIntegrationSettings = await json('/api/settings/integrations', {}, cookie);
   check(
     initialIntegrationSettings.body.spoolman.enabled &&

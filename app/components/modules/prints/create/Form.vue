@@ -32,19 +32,19 @@
             <UFormField
               name="quantity"
               :label="t('prints.quantity')"
-              :description="t('prints.quantityHelp')"
+              :help="t('prints.quantityHelp')"
               required
             >
               <UInput v-model="form.quantity" class="w-full" type="number" min="1" max="1000000" step="1" />
             </UFormField>
-            <UFormField name="salesValue" :label="t('sales.value')" :description="t('sales.help')">
+            <UFormField name="salesValue" :label="t('sales.value')" :help="t('sales.help')">
               <UInput v-model="form.salesValue" inputmode="decimal" class="w-full" />
             </UFormField>
             <UFormField
               v-if="printSeriesEnabled"
               name="seriesId"
               :label="t('nav.series')"
-              :description="t('series.customerRule')"
+              :help="t('series.customerRule')"
               ><CommonSeriesSelect v-model="form.seriesId" @customer="form.customerId = $event"
             /></UFormField>
             <UFormField name="customerId" :label="t('nav.customers')">

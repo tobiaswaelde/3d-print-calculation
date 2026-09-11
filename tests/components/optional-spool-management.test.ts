@@ -27,3 +27,18 @@ it('hides spool selection in the print form when spool management is disabled', 
   expect(wrapper.text()).toContain('Filamente');
   expect(wrapper.text()).not.toContain('Spulen');
 });
+
+it('shows explanatory text below its corresponding print input', async () => {
+  const wrapper = await mountSuspended(PrintForm, { props: { formId: 'form-help-test' } });
+  await vi.waitFor(() => expect((wrapper.vm as unknown as { loading: boolean }).loading).toBe(false));
+
+  const salesInput = wrapper.get('input[name="salesValue"]');
+  const salesHelp = wrapper
+    .findAll('[data-slot="help"]')
+    .find((element) => element.text().includes('Optionaler Gesamtwert des Drucklaufs'));
+
+  expect(salesHelp).toBeDefined();
+  expect(
+    salesInput.element.compareDocumentPosition(salesHelp!.element) & Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});

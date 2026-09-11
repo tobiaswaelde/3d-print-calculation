@@ -8,6 +8,8 @@ export const setupSchema = z.object({
   locale: supportedLocaleSchema.default('de-DE'),
   currency: currencySchema.default('EUR'),
   electricityPrice: canonicalDecimalSchema,
+  printSeriesEnabled: z.boolean().default(true),
+  spoolManagementEnabled: z.boolean().default(true),
 });
 
 export const loginSchema = z.object({

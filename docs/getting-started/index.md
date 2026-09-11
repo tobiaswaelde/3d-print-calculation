@@ -11,7 +11,8 @@ inventory, calculate a draft, and complete it only when the inputs are final.
 
 ## Recommended first workflow
 
-1. Complete [first-run setup](/guide/setup) to create the local operator account, currency, and electricity rate.
+1. Complete [first-run setup](/guide/setup) to create the local operator account, calculation defaults, and select
+   optional features.
 2. Add a [printer](/guide/printers), its compatible [build plate and hotend](/guide/components), and at least one
    [filament](/guide/filaments). A [customer](/guide/customers) is optional.
 3. Open **Prints**, choose **New**, and follow the four-step [print workflow](/guide/print-workflow).

@@ -83,6 +83,8 @@ defineRouteMeta({
               locale: { type: 'string', enum: ['de-DE', 'en-US'], default: 'de-DE' },
               currency: { type: 'string', pattern: '^[A-Z]{3}$', default: 'EUR' },
               electricityPrice: { $ref: '#/components/schemas/Decimal' },
+              printSeriesEnabled: { type: 'boolean', default: true },
+              spoolManagementEnabled: { type: 'boolean', default: true },
             },
           },
           Decimal: {

@@ -9,6 +9,14 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByLabel('Anzeigename').fill('Browser Test');
   await page.getByLabel('E-Mail').fill('browser@example.test');
   await page.getByLabel('Passwort').fill('browser-test-password-123');
+  const setupPrintSeries = page.getByRole('switch', { name: 'Druckserien' });
+  const setupSpoolManagement = page.getByRole('switch', { name: 'Spulenverwaltung' });
+  await expect(setupPrintSeries).toBeChecked();
+  await expect(setupSpoolManagement).toBeChecked();
+  await expect(page.getByLabel('Server-URL')).toHaveCount(0);
+  await setupPrintSeries.click();
+  await expect(setupPrintSeries).not.toBeChecked();
+  await setupPrintSeries.click();
   const electricityPrice = page.getByLabel('Strompreis pro kWh');
   await expect(electricityPrice).toHaveAttribute('type', 'number');
   await expect(electricityPrice.locator('..')).toContainText('EUR/kWh');
@@ -18,8 +26,20 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page).toHaveTitle('ezPrint');
   const brandLink = page.getByRole('link', { name: 'ezPrint' });
   await expect(brandLink).toHaveText('ezPrint');
+  await expect(
+    page.getByRole('link', { name: 'Druckserien', exact: true }).locator('[data-slot="linkLeadingIcon"]'),
+  ).toHaveClass(/i-tabler:list-check/);
   await expect(page.getByRole('link', { name: 'Bambuddy-Anbindung', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toHaveCount(0);
+  const inventoryLinkBoxes = await Promise.all(
+    ['Hersteller', 'Drucker', 'Komponenten', 'Filamente', 'Spulen'].map(async (name) =>
+      page.getByRole('link', { name, exact: true }).boundingBox(),
+    ),
+  );
+  expect(inventoryLinkBoxes.every(Boolean)).toBe(true);
+  expect(inventoryLinkBoxes.map((box) => box!.y)).toEqual(
+    inventoryLinkBoxes.map((box) => box!.y).toSorted((left, right) => left - right),
+  );
   await page.keyboard.press('Shift+/');
   const shortcutsDialog = page.getByRole('dialog', { name: 'Tastenkürzel' });
   await expect(shortcutsDialog).toContainText('Neuen Eintrag erstellen');

@@ -21,7 +21,8 @@
   },
   "auth": {
     "setup": "Ersteinrichtung",
-    "setupDescription": "Lege das lokale Konto und die Berechnungsgrundlagen an.",
+    "setupDescription": "Lege das lokale Konto, die Berechnungsgrundlagen und optionale Features an.",
+    "featuresDescription": "Wähle aus, welche optionalen Module verfügbar sind. Integrationen können später in den Einstellungen konfiguriert werden.",
     "login": "Anmelden",
     "logout": "Abmelden",
     "email": "E-Mail",

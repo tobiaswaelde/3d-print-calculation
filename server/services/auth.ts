@@ -24,6 +24,8 @@ async function setupApplicationLocked(input: unknown) {
           currency: data.currency,
           defaultLocale: data.locale,
           electricityPricePerKwh: data.electricityPrice,
+          printSeriesEnabled: data.printSeriesEnabled,
+          spoolManagementEnabled: data.spoolManagementEnabled,
         },
       });
       return user;

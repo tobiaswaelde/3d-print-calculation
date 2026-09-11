@@ -7,10 +7,11 @@ description: Use the sidebar, page toolbars, global search, keyboard shortcuts, 
 
 ## Sidebar and page header
 
-The sidebar groups links into **Workspace**, **Inventory**, and **System**. Select the logo or **Dashboard** to
-return to the overview. The sidebar can be collapsed or resized; its state is stored in the browser. The vertically
-stacked, full-width footer links are labeled **GitHub** and **Documentation**. The centered installed version opens
-the changelog, and an **Update available** badge appears when a newer semantic version is available.
+The sidebar groups links into **Workspace**, **Inventory**, and **System**. Inventory is ordered as **Manufacturers**,
+**Printers**, **Components**, **Filaments**, and, when enabled, **Spools**. Select the logo or **Dashboard** to return
+to the overview. The sidebar can be collapsed or resized; its state is stored in the browser. The vertically stacked,
+full-width footer links are labeled **GitHub** and **Documentation**. The centered installed version opens the
+changelog, and an **Update available** badge appears when a newer semantic version is available.
 
 Every list page has a fixed toolbar with icon-backed breadcrumbs, local search, table options, and **New**. Local
 search filters only the current resource. **Table options → Show archived** adds archived records to the table.

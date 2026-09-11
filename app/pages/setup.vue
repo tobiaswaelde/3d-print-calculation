@@ -2,14 +2,14 @@
   <div>
     <h1 class="text-2xl font-semibold">{{ t('auth.setup') }}</h1>
     <p class="mt-1 text-sm text-muted">{{ t('auth.setupDescription') }}</p>
-    <UForm :schema="setupSchema" :state="form" class="mt-6 space-y-4" @submit="submit">
+    <UForm :schema="setupSchema" :state="form" class="mt-6 grid gap-4 md:grid-cols-2" @submit="submit">
       <UFormField :label="t('auth.displayName')" name="displayName" required>
         <UInput v-model="form.displayName" class="w-full" autocomplete="name" icon="i-tabler-user" />
       </UFormField>
       <UFormField :label="t('auth.email')" name="email" required>
         <UInput v-model="form.email" class="w-full" type="email" autocomplete="email" icon="i-tabler-mail" />
       </UFormField>
-      <UFormField :label="t('auth.password')" name="password" required>
+      <UFormField :label="t('auth.password')" name="password" class="md:col-span-2" required>
         <UInput
           v-model="form.password"
           class="w-full"
@@ -40,8 +40,28 @@
           </template>
         </UInput>
       </UFormField>
-      <UAlert v-if="error" color="error" :description="error" />
-      <UButton type="submit" block :loading="pending" :label="t('auth.setup')" />
+      <fieldset class="space-y-3 md:col-span-2">
+        <legend class="font-medium">{{ t('settings.features') }}</legend>
+        <p class="text-sm text-muted">{{ t('auth.featuresDescription') }}</p>
+        <div class="grid gap-3 md:grid-cols-2">
+          <div class="flex items-start justify-between gap-4 rounded-lg border border-default p-4">
+            <div>
+              <p class="font-medium">{{ t('settings.printSeries') }}</p>
+              <p class="mt-1 text-sm text-muted">{{ t('settings.printSeriesDescription') }}</p>
+            </div>
+            <USwitch v-model="form.printSeriesEnabled" :aria-label="t('settings.printSeries')" />
+          </div>
+          <div class="flex items-start justify-between gap-4 rounded-lg border border-default p-4">
+            <div>
+              <p class="font-medium">{{ t('settings.spoolManagement') }}</p>
+              <p class="mt-1 text-sm text-muted">{{ t('settings.spoolManagementDescription') }}</p>
+            </div>
+            <USwitch v-model="form.spoolManagementEnabled" :aria-label="t('settings.spoolManagement')" />
+          </div>
+        </div>
+      </fieldset>
+      <UAlert v-if="error" class="md:col-span-2" color="error" :description="error" />
+      <UButton class="md:col-span-2" type="submit" block :loading="pending" :label="t('auth.setup')" />
     </UForm>
   </div>
 </template>
@@ -60,6 +80,8 @@ const form = reactive({
   locale: locale.value,
   currency: 'EUR',
   electricityPrice: '0.30',
+  printSeriesEnabled: true,
+  spoolManagementEnabled: true,
 });
 
 async function submit() {

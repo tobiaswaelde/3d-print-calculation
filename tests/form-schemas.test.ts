@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { setupSchema } from '../shared/schemas/auth';
 import { componentSchema, customerSchema, settingsSchema } from '../shared/schemas/master-data';
 import { featureSettingsSchema } from '../shared/schemas/features';
 import {
@@ -8,6 +9,19 @@ import {
 } from '../shared/schemas/prints';
 
 describe('application form validation', () => {
+  it('accepts feature choices during first-run setup', () => {
+    expect(
+      setupSchema.parse({
+        displayName: 'Test User',
+        email: 'test@example.test',
+        password: 'test-password-123',
+        electricityPrice: '0.32',
+        printSeriesEnabled: false,
+        spoolManagementEnabled: false,
+      }),
+    ).toMatchObject({ printSeriesEnabled: false, spoolManagementEnabled: false });
+  });
+
   it('accepts valid settings and rejects malformed decimal input', () => {
     expect(
       settingsSchema.parse({
