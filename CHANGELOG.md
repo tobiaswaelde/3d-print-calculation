@@ -1,5 +1,11 @@
 # ezPrint
 
+## 0.5.0
+
+### Minor Changes
+
+- 50917a8: Improve the mobile layout and add installable PWA support.
+
 ## 0.4.0
 
 ### Minor Changes
