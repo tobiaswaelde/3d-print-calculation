@@ -36,6 +36,12 @@ model AppSettings {
   defaultLocale          String   @default("de-DE")
   electricityPricePerKwh Decimal  @default(0)
   calculationVersion     String   @default("1")
+  spoolmanEnabled        Boolean?
+  spoolmanUrl            String?
+  spoolmanAuthorization  String?
+  bambubuddyEnabled      Boolean?
+  bambubuddyUrl          String?
+  bambubuddyApiKey       String?
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 }

@@ -3,6 +3,7 @@ import { terminalOutcome, bambuStateSchema } from '../server/utils/integrations/
 import { spoolmanSpoolSchema } from '../server/utils/integrations/spoolman-contract';
 import { integrationUrl } from '../server/utils/integrations/http';
 import { spoolmanImportSchema } from '../shared/schemas/integrations';
+import { integrationSettingsSchema } from '../shared/schemas/integration-settings';
 vi.stubGlobal('createError', (value: unknown) => Object.assign(new Error('API error'), value));
 describe('integration trust boundaries', () => {
   it('accepts only authoritative terminal log states with a valid completion timestamp', () => {
@@ -39,6 +40,12 @@ describe('integration trust boundaries', () => {
     ])
       expect(() => integrationUrl(url)).toThrow();
     expect(integrationUrl('http://spoolman:7912').href).toBe('http://spoolman:7912/');
+    expect(
+      integrationSettingsSchema.safeParse({
+        spoolman: { enabled: true, url: 'https://host/?token=secret' },
+        bambubuddy: { enabled: false, url: '' },
+      }).success,
+    ).toBe(false);
     expect(spoolmanImportSchema.parse({ remoteId: 1, previewHash: 'a'.repeat(64) }).authority).toBe(
       'SPOOLMAN_READ_ONLY',
     );

@@ -102,7 +102,10 @@ Print/history/export filters include `dateFrom`, `dateTo` (inclusive ISO dates, 
 
 ## Optional integrations
 
-All routes require authentication; POST routes require same-origin requests. URL and credentials are server environment configuration only. See [integration setup and limits](../guide/integrations).
+All routes require authentication; mutating routes require same-origin requests. See [integration setup and limits](../guide/integrations).
+
+- `GET /api/settings/integrations`: effective enablement, server URLs, and credential-presence flags. Secret values are never returned.
+- `PATCH /api/settings/integrations`: explicit enablement and server URLs, plus optional replacement or removal of the Spoolman authorization header and BambuBuddy API key. Omitted credential fields preserve the current stored value or environment default.
 
 - `GET /api/integrations/spoolman`: configuration/capability/version status and the last 50 operations. `?view=preview&page=1` returns the import preview with a SHA-256 fingerprint of the validated remote data.
 - `POST /api/integrations/spoolman`: discriminated `action`: `IMPORT` with `data={remoteId,previewHash,authority?,localSpoolId?}`, `SYNC` with `spoolId`, `UNLINK` with `data={spoolId,ownership:"NATIVE",openingBalance}`, or `OPERATION` with `data={operationId,action:"SEND"|"CONFIRM_APPLIED"|"CONFIRM_NOT_APPLIED"}`. Explicit linking to an existing spool requires the same already-linked filament identity. Reassigning a stable external ID is rejected.

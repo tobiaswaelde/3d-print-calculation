@@ -116,7 +116,9 @@
     "durationFormatClock": "Clock (01:30:00)",
     "durationFormatDecimal": "Decimal hours (1.5 h)",
     "currencyHelp": "The currency cannot be changed after the first cost-bearing record is created.",
-    "saved": "Settings saved."
+    "saved": "Settings saved.",
+    "integrations": "Integrations",
+    "integrationsDescription": "Enable and configure optional connections. Credentials remain server-only."
   },
   "master": {
     "name": "Name",
@@ -271,7 +273,8 @@
   "validation": {
     "outcomeFailureReasonRequired": "A failure reason is required.",
     "outcomeUniqueUsageRequired": "Enter every filament usage exactly once.",
-    "outcomeCorrectionNoteRequired": "Explain the correction."
+    "outcomeCorrectionNoteRequired": "Explain the correction.",
+    "integrationUrl": "Enter an HTTP or HTTPS URL without credentials, query parameters, or fragments."
   },
   "spool": {
     "code": "Spool code",
@@ -354,7 +357,19 @@
   },
   "integration": {
     "spoolman": "Spoolman integration",
-    "configHelp": "Configure the connection through server environment variables. Credentials are never shown here.",
+    "spoolmanConfigDescription": "Import and synchronize filament inventory.",
+    "bambuConfigDescription": "Link printers and import completed print results.",
+    "enabled": "Enabled",
+    "url": "Server URL",
+    "authorization": "Authorization header (optional)",
+    "apiKey": "API key",
+    "credentialConfigured": "Stored credential; leave empty to keep it",
+    "removeCredential": "Remove stored credential",
+    "saveConfiguration": "Save integration settings",
+    "configurationSaved": "Integration settings saved.",
+    "spoolmanTools": "Spoolman inventory",
+    "bambuTools": "BambuBuddy printers and results",
+    "configHelp": "Connection and credentials are managed above. Stored credentials are never returned to the browser.",
     "disabled": "Integration is not configured.",
     "version": "Remote version",
     "offline": "Offline or incompatible API",

@@ -29,7 +29,7 @@ export async function syncBambuPrinter(id: string) {
     if (state.id !== printer.bambuId) apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
     let assignments: z.infer<typeof bambuAssignmentsSchema> = [];
     let mappingWarning = false;
-    if (integrationConfigured('SPOOLMAN'))
+    if (await integrationConfigured('SPOOLMAN'))
       try {
         assignments = await request('spoolman/inventory/slot-assignments/all', bambuAssignmentsSchema);
       } catch {
@@ -130,7 +130,8 @@ export async function bambuStatus(query: Record<string, unknown>) {
   let remotePrinters: z.infer<typeof bambuPrinterSchema>[] = [];
   let version: string | null = null;
   let error: string | null = null;
-  if (integrationConfigured('BAMBUBUDDY'))
+  const configured = await integrationConfigured('BAMBUBUDDY');
+  if (configured)
     try {
       remotePrinters = await request('printers/', z.array(bambuPrinterSchema).max(500));
       version = (await request('updates/version', z.object({ version: z.string().max(64) }))).version;
@@ -148,7 +149,7 @@ export async function bambuStatus(query: Record<string, unknown>) {
     : null;
   const log = link ? bambuLogSchema.parse(JSON.parse(link.cachedJson)) : null;
   return {
-    configured: integrationConfigured('BAMBUBUDDY'),
+    configured,
     remotePrinters,
     version,
     error,

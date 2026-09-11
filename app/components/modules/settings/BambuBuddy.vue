@@ -1,5 +1,8 @@
 <template>
-  <LayoutPagePanel panel-id="bambubuddy" :title="t('integration.bambu')">
+  <UCard id="integration-bambubuddy-tools">
+    <template #header>
+      <h3 class="font-semibold">{{ t('integration.bambuTools') }}</h3>
+    </template>
     <div class="space-y-5">
       <p>{{ t('integration.configHelp') }}</p>
       <UAlert v-if="error" color="error" :description="error" />
@@ -155,7 +158,7 @@
         </template>
       </template>
     </div>
-  </LayoutPagePanel>
+  </UCard>
 </template>
 <script setup lang="ts">
 import type { BambuLog, BambuStatus } from '#shared/types/integrations';
