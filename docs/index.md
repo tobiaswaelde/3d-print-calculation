@@ -1,6 +1,6 @@
 ---
 title: ezPrint
-description: Complete US English documentation for the self-hosted 3D print cost calculator.
+description: A self-hosted workflow for repeatable estimates, live cost previews, and immutable completed-print records.
 layout: home
 hero:
   name: ezPrint

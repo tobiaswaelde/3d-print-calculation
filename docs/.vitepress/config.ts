@@ -59,7 +59,8 @@ const sidebar: DefaultTheme.SidebarItem[] = [
 
 export default defineConfig({
   title: 'ezPrint',
-  description: 'User, operator, and developer documentation for ezPrint.',
+  description:
+    'A self-hosted workflow for repeatable estimates, live cost previews, and immutable completed-print records.',
   lang: 'en-US',
   base: '/ezprint/',
   cleanUrls: true,
@@ -72,7 +73,11 @@ export default defineConfig({
     ['meta', { property: 'og:title', content: 'ezPrint' }],
     [
       'meta',
-      { property: 'og:description', content: 'US English user, operator, and developer documentation.' },
+      {
+        property: 'og:description',
+        content:
+          'A self-hosted workflow for repeatable estimates, live cost previews, and immutable completed-print records.',
+      },
     ],
     ['meta', { property: 'og:image', content: `${site}logo.svg` }],
   ],
