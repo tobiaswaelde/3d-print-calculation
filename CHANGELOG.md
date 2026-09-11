@@ -1,5 +1,20 @@
 # ezPrint
 
+## 0.7.0
+
+### Minor Changes
+
+- 4496e81: Allow print series and spool management to be enabled or disabled during first-run setup.
+
+### Patch Changes
+
+- 10fe693: Fix loading configured printers from Bambuddy for printer linking.
+- 10fe693: Improve the dashboard cost-category labels in dark mode.
+- 4496e81: Order inventory navigation by manufacturers, printers, components, filaments, and spools.
+- 4496e81: Show explanatory print form text below its corresponding input.
+- 591d819: Show feature information alerts with a subtle style and an information icon.
+- 4496e81: Use the list-check icon consistently for print series.
+
 ## 0.6.0
 
 ### Minor Changes
