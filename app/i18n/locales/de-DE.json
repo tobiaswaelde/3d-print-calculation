@@ -116,7 +116,9 @@
     "durationFormatClock": "Digital (01:30:00)",
     "durationFormatDecimal": "Dezimalstunden (1,5 h)",
     "currencyHelp": "Nach dem ersten kostenrelevanten Datensatz kann die Währung nicht mehr geändert werden.",
-    "saved": "Einstellungen gespeichert."
+    "saved": "Einstellungen gespeichert.",
+    "integrations": "Integrationen",
+    "integrationsDescription": "Optionale Verbindungen aktivieren und konfigurieren. Zugangsdaten bleiben ausschließlich serverseitig."
   },
   "master": {
     "name": "Name",
@@ -271,7 +273,8 @@
   "validation": {
     "outcomeFailureReasonRequired": "Ein Fehlergrund ist erforderlich.",
     "outcomeUniqueUsageRequired": "Jeden Filamentverbrauch genau einmal angeben.",
-    "outcomeCorrectionNoteRequired": "Die Korrektur begründen."
+    "outcomeCorrectionNoteRequired": "Die Korrektur begründen.",
+    "integrationUrl": "Eine HTTP- oder HTTPS-URL ohne Zugangsdaten, Abfrageparameter oder Fragment eingeben."
   },
   "spool": {
     "code": "Spulencode",
@@ -354,7 +357,19 @@
   },
   "integration": {
     "spoolman": "Spoolman-Anbindung",
-    "configHelp": "Verbindung über Server-Umgebungsvariablen konfigurieren. Zugangsdaten werden hier nie angezeigt.",
+    "spoolmanConfigDescription": "Filamentbestand importieren und synchronisieren.",
+    "bambuConfigDescription": "Drucker verknüpfen und abgeschlossene Druckergebnisse übernehmen.",
+    "enabled": "Aktiviert",
+    "url": "Server-URL",
+    "authorization": "Authorization-Header (optional)",
+    "apiKey": "API-Schlüssel",
+    "credentialConfigured": "Zugangsdaten gespeichert; leer lassen zum Beibehalten",
+    "removeCredential": "Gespeicherte Zugangsdaten entfernen",
+    "saveConfiguration": "Integrationseinstellungen speichern",
+    "configurationSaved": "Integrationseinstellungen gespeichert.",
+    "spoolmanTools": "Spoolman-Bestand",
+    "bambuTools": "BambuBuddy-Drucker und Ergebnisse",
+    "configHelp": "Verbindung und Zugangsdaten werden oben verwaltet. Gespeicherte Zugangsdaten werden nie an den Browser zurückgegeben.",
     "disabled": "Anbindung ist nicht konfiguriert.",
     "version": "Remote-Version",
     "offline": "Offline oder inkompatible API",

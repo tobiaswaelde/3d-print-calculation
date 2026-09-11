@@ -1,5 +1,8 @@
 <template>
-  <LayoutPagePanel panel-id="spoolman" :title="t('integration.spoolman')">
+  <UCard id="integration-spoolman-tools">
+    <template #header>
+      <h3 class="font-semibold">{{ t('integration.spoolmanTools') }}</h3>
+    </template>
     <div class="space-y-5">
       <p>{{ t('integration.configHelp') }}</p>
       <UAlert v-if="error" color="error" :description="error" />
@@ -84,7 +87,7 @@
         </ul>
       </template>
     </div>
-  </LayoutPagePanel>
+  </UCard>
 </template>
 <script setup lang="ts">
 import type { SpoolmanPreview, SpoolmanStatus } from '#shared/types/integrations';

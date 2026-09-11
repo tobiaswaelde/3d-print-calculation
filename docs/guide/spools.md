@@ -31,4 +31,4 @@ Use **QR label** and **Print label** for a plain label that opens the authentica
 
 ![Printable spool label with an authenticated local detail URL](/screenshots/spool-label.jpg)
 
-Spoolman and printer integrations use explicit external IDs and stock ownership; native stock never assumes that another system has already deducted material. Keep integrations disabled until their ownership mode is configured.
+Spoolman and printer integrations use explicit external IDs and stock ownership; native stock never assumes that another system has already deducted material. Keep integrations disabled until their ownership mode is configured under **Settings → Integrations**.

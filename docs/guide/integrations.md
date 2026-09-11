@@ -5,7 +5,11 @@ description: Configure optional server-only integrations, preview imports, assig
 
 # Spoolman and BambuBuddy
 
-Both integrations are optional. Configure them on the ezPrint server and restart it. Credentials never enter browser configuration, exports, or error messages. An administrator must choose a trusted HTTP or HTTPS origin, optionally with a base path. URL user information, query strings, fragments, and redirects are rejected. Private container-network hosts and LAN addresses are supported; these URLs are not accepted from browser input. Permit network access only to the intended services. Do not repoint an existing connection to an unrelated database with reused numeric IDs: unlink and reconcile its records first.
+Both integrations are optional. Open **Settings → Integrations** to enable each service and enter its server URL and credentials. Changes apply without a restart. Credentials are sent once, stored server-side, and never returned to the browser, exports, or error messages. Protect the SQLite database and its backups because they contain stored credentials.
+
+An administrator must choose a trusted HTTP or HTTPS origin, optionally with a base path. URL user information, query strings, fragments, and redirects are rejected. Private container-network hosts and LAN addresses are supported. Permit network access only to the intended services. Do not repoint an existing connection to an unrelated database with reused numeric IDs: unlink and reconcile its records first.
+
+Environment variables remain supported as backward-compatible defaults for existing deployments. When present, their integrations appear enabled until an administrator saves an explicit configuration in Settings:
 
 ```dotenv
 SPOOLMAN_URL=http://spoolman:7912
@@ -18,7 +22,7 @@ The Spoolman authorization header is optional for a reverse proxy. Give BambuBud
 
 ## Spoolman import and ownership
 
-Open **Spools → Spoolman integration → Load import preview**. The preview shows remote IDs, local links, unknown or changed balances, and archived or incomplete records. Confirm import only after reviewing it. Changed remote data requires another preview. Pages contain at most 50 remote spools. Imports create or reuse vendors, filaments, and spools by their immutable external IDs, never by names. Repeating an import keeps local IDs. Remote vendor, price, and positive initial weight are required; fix missing values in Spoolman before importing. Initial weights remain the local spool's pricing basis after import; create a new physical spool if that basis was wrong.
+Open **Settings → Integrations → Spoolman inventory → Load import preview**. The preview shows remote IDs, local links, unknown or changed balances, and archived or incomplete records. Confirm import only after reviewing it. Changed remote data requires another preview. Pages contain at most 50 remote spools. Imports create or reuse vendors, filaments, and spools by their immutable external IDs, never by names. Repeating an import keeps local IDs. Remote vendor, price, and positive initial weight are required; fix missing values in Spoolman before importing. Initial weights remain the local spool's pricing basis after import; create a new physical spool if that basis was wrong.
 
 ![Spoolman preview with explicit stock authority](/screenshots/spoolman-import.jpg)
 
@@ -32,9 +36,9 @@ Unlinking requires a measured opening balance and explicit native ownership. It 
 
 ## BambuBuddy printer and print links
 
-Open **BambuBuddy integration**, choose the local printer and the remote printer ID, and save the link. Printer names may change without breaking identity. The page shows cached live state, AMS slots, and external trays. Shared Spoolman IDs take priority; otherwise select an explicit local spool for the slot. Conflicting mappings and unavailable spools require operator review. Mappings propose context only: select the verified physical spool in the print draft. Slot changes never rewrite completed usage lines. The current picker displays up to 100 local printers/spools; remote printer lists are bounded to 500.
+Open **Settings → Integrations → BambuBuddy printers and results**, choose the local printer and the remote printer ID, and save the link. Printer names may change without breaking identity. The section shows cached live state, AMS slots, and external trays. Shared Spoolman IDs take priority; otherwise select an explicit local spool for the slot. Conflicting mappings and unavailable spools require operator review. Mappings propose context only: select the verified physical spool in the print draft. Slot changes never rewrite completed usage lines. The current picker displays up to 100 local printers/spools; remote printer lists are bounded to 500.
 
-From a print, open **BambuBuddy integration → Choose print log**. Attach the exact run's stable print-log ID. A log can belong to only one local print; repeat orders require a new remote run. The picker pages through 50 records. Refreshing an attached job searches at most the latest 1,000 records for its printer; older missing entries retain their cached data and require manual reconciliation. Archive files can represent repeated runs, so ezPrint deliberately uses individual print-log records.
+From a print, open **BambuBuddy result** to jump directly to the BambuBuddy tools in Settings, then choose the print log. Attach the exact run's stable print-log ID. A log can belong to only one local print; repeat orders require a new remote run. The picker pages through 50 records. Refreshing an attached job searches at most the latest 1,000 records for its printer; older missing entries retain their cached data and require manual reconciliation. Archive files can represent repeated runs, so ezPrint deliberately uses individual print-log records.
 
 ![BambuBuddy terminal-result preview and explicit outcome confirmation](/screenshots/bambubuddy-preview.jpg)
 
@@ -44,6 +48,6 @@ Native spools receive one outcome-linked deduction. For Spoolman-owned spools, a
 
 ## Troubleshooting and supported contracts
 
-A missing version, offline warning, or incompatible-response error means the service is unreachable, credentials lack permissions, or its API differs. Check server configuration and remote permissions without copying secrets into issue reports. Refresh a preview after resolving conflicts. Remote errors are intentionally summarized; inspect the remote service's logs directly if more detail is needed.
+A missing version, offline warning, or incompatible-response error means the service is unreachable, credentials lack permissions, or its API differs. Check the integration configuration in Settings and remote permissions without copying secrets into issue reports. Refresh a preview after resolving conflicts. Remote errors are intentionally summarized; inspect the remote service's logs directly if more detail is needed.
 
 The adapter uses [Spoolman's v1 API](https://github.com/Donkie/Spoolman/wiki), including `info`, paginated `spool`, and `PUT spool/:id/use`. BambuBuddy uses [its HTTP API](https://github.com/maziggy/bambuddy), specifically `printers`, printer `status`, `print-log`, `updates/version`, and optional Spoolman inventory slot assignments. Unsupported payload shapes fail closed; manual ezPrint workflows remain available. Application controls are translated into English and German; repository documentation follows the project's US English convention.

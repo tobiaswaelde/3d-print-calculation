@@ -1,7 +1,9 @@
 import { apiError } from '../http';
-export type Integration = 'SPOOLMAN' | 'BAMBUBUDDY';
-export function integrationConfigured(name: Integration) {
-  return !!process.env[`${name}_URL`];
+import { getIntegrationConfig, type IntegrationName } from '../../services/integration-settings';
+
+export async function integrationConfigured(name: IntegrationName) {
+  const config = await getIntegrationConfig(name);
+  return config.enabled && !!config.url;
 }
 export function integrationUrl(value: string) {
   try {
@@ -15,13 +17,14 @@ export function integrationUrl(value: string) {
   }
 }
 export async function integrationRequest(
-  name: Integration,
+  name: IntegrationName,
   path: string,
   options: { method?: string; body?: unknown } = {},
 ): Promise<unknown> {
-  const base = process.env[`${name}_URL`];
-  if (!base) return apiError(503, 'INTEGRATION_DISABLED', 'errors.integrationDisabled');
-  const url = new URL(path, integrationUrl(base));
+  const config = await getIntegrationConfig(name);
+  if (!config.enabled || !config.url)
+    return apiError(503, 'INTEGRATION_DISABLED', 'errors.integrationDisabled');
+  const url = new URL(path, integrationUrl(config.url));
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 3000);
   try {
@@ -33,12 +36,8 @@ export async function integrationRequest(
       headers: {
         accept: 'application/json',
         ...(options.body ? { 'content-type': 'application/json' } : {}),
-        ...(name === 'BAMBUBUDDY' && process.env.BAMBUBUDDY_API_KEY
-          ? { 'X-API-Key': process.env.BAMBUBUDDY_API_KEY }
-          : {}),
-        ...(name === 'SPOOLMAN' && process.env.SPOOLMAN_AUTHORIZATION
-          ? { authorization: process.env.SPOOLMAN_AUTHORIZATION }
-          : {}),
+        ...(name === 'BAMBUBUDDY' && config.credential ? { 'X-API-Key': config.credential } : {}),
+        ...(name === 'SPOOLMAN' && config.credential ? { authorization: config.credential } : {}),
       },
     });
     if (!response.ok) return apiError(502, `REMOTE_HTTP_${response.status}`, 'errors.integrationRemote');

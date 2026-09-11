@@ -3,13 +3,12 @@ import { db } from '../utils/db';
 import { integrationConfigured } from '../utils/integrations/http';
 import { reconcileSpoolOperation, syncSpoolman } from '../services/spoolman';
 export default defineNitroPlugin((nitro) => {
-  if (!integrationConfigured('SPOOLMAN') && !integrationConfigured('BAMBUBUDDY')) return;
   let running = false;
   const timer = setInterval(async () => {
     if (running) return;
     running = true;
     try {
-      if (integrationConfigured('SPOOLMAN')) {
+      if (await integrationConfigured('SPOOLMAN')) {
         const spools = await db.spool.findMany({
           where: { stockAuthority: { not: 'NATIVE' } },
           orderBy: { updatedAt: 'asc' },
@@ -24,7 +23,7 @@ export default defineNitroPlugin((nitro) => {
         for (const operation of operations)
           await reconcileSpoolOperation({ operationId: operation.id, action: 'SEND' });
       }
-      if (integrationConfigured('BAMBUBUDDY')) {
+      if (await integrationConfigured('BAMBUBUDDY')) {
         const printers = await db.printer.findMany({
           where: { bambuId: { not: null } },
           orderBy: { updatedAt: 'asc' },

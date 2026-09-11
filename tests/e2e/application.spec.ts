@@ -18,6 +18,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page).toHaveTitle('ezPrint');
   const brandLink = page.getByRole('link', { name: 'ezPrint' });
   await expect(brandLink).toHaveText('ezPrint');
+  await expect(page.getByRole('link', { name: 'BambuBuddy-Anbindung', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toHaveCount(0);
   await page.keyboard.press('Shift+/');
   const shortcutsDialog = page.getByRole('dialog', { name: 'Tastenkürzel' });
@@ -146,6 +147,18 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('link', { name: 'Einstellungen' }).click();
   await expect(page.getByRole('heading', { name: 'Allgemein' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Berechnung' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Integrationen' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Spoolman-Anbindung' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'BambuBuddy-Anbindung' })).toBeVisible();
+  const spoolmanSettings = page.locator('#integration-spoolman');
+  const bambubuddySettings = page.locator('#integration-bambubuddy');
+  await spoolmanSettings.getByRole('switch', { name: 'Aktiviert' }).click();
+  await spoolmanSettings.getByLabel('Server-URL').fill('http://spoolman:7912');
+  await bambubuddySettings.getByRole('switch', { name: 'Aktiviert' }).click();
+  await bambubuddySettings.getByLabel('Server-URL').fill('http://bambubuddy:8000');
+  await bambubuddySettings.getByLabel('API-Schlüssel').fill('synthetic-browser-key');
+  await page.getByRole('button', { name: 'Integrationseinstellungen speichern', exact: true }).click();
+  await expect(page.getByText('Integrationseinstellungen gespeichert.')).toBeVisible();
   await page.getByRole('combobox', { name: 'Sprache' }).click();
   await page.getByRole('option', { name: 'English' }).click();
   const dateFormat = page.getByRole('combobox', { name: 'Datumsformat' });
@@ -157,7 +170,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   const durationFormat = page.getByRole('combobox', { name: 'Dauerformat' });
   await durationFormat.click();
   await page.getByRole('option', { name: 'Digital (01:30:00)' }).click();
-  await page.getByRole('button', { name: 'Speichern' }).click();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByText('Settings saved.')).toBeVisible();
   await page.reload();
   await expect(page.getByRole('combobox', { name: 'Date format' })).toContainText('YYYY-MM-DD');

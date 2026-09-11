@@ -276,7 +276,8 @@ export async function reconcileSpoolOperation(input: unknown) {
 export async function spoolmanStatus() {
   let version: string | null = null;
   let error: string | null = null;
-  if (integrationConfigured('SPOOLMAN'))
+  const configured = await integrationConfigured('SPOOLMAN');
+  if (configured)
     try {
       version = z
         .object({ version: z.string().max(64) })
@@ -287,7 +288,7 @@ export async function spoolmanStatus() {
   return {
     version,
     error,
-    configured: integrationConfigured('SPOOLMAN'),
+    configured,
     capabilities: ['spool-v1', 'explicit-consumption'],
     operations: await db.spoolSyncOperation.findMany({
       orderBy: { createdAt: 'desc' },

@@ -13,6 +13,8 @@ manufacturer, material, and color name.
 The `Component.alwaysUsed` flag controls compatible defaults in new print forms without making those selections
 mandatory.
 
+`AppSettings` also stores explicit Spoolman and BambuBuddy enablement, server URLs, and server-only credentials. Nullable values preserve environment-variable defaults for deployments upgraded from earlier versions. Credentials are never serialized in settings or integration responses; database files and backups still require secret-level protection.
+
 A `PrintJob` references one printer, an optional customer, and component and filament usage rows. Its workflow
 status is one of `DRAFT`, `PRINTING`, `PRINTED`, `SHIPPED`, or `DONE`; payment is tracked independently with the
 nullable `paidAt` timestamp. Usage rows copy

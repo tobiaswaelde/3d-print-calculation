@@ -92,6 +92,65 @@ try {
     setupSession.response.ok && setupSession.body.user?.email === 'integration@example.test',
     `Setup session must be immediately usable (cookie name: ${cookie.split('=')[0]}, response: ${JSON.stringify(setupSession.body)}).`,
   );
+  const initialIntegrationSettings = await json('/api/settings/integrations', {}, cookie);
+  check(
+    initialIntegrationSettings.body.spoolman.enabled &&
+      initialIntegrationSettings.body.bambubuddy.enabled &&
+      initialIntegrationSettings.body.spoolman.authorizationConfigured &&
+      initialIntegrationSettings.body.bambubuddy.apiKeyConfigured &&
+      !JSON.stringify(initialIntegrationSettings.body).includes('synthetic-secret') &&
+      !JSON.stringify(initialIntegrationSettings.body).includes('synthetic-key'),
+    'Legacy environment configuration is visible without exposing credentials.',
+  );
+  const savedIntegrationSettings = await json(
+    '/api/settings/integrations',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        spoolman: {
+          enabled: true,
+          url: fake.url,
+          authorization: 'Bearer synthetic-secret',
+        },
+        bambubuddy: { enabled: true, url: fake.url, apiKey: 'synthetic-key' },
+      }),
+    },
+    cookie,
+  );
+  check(
+    savedIntegrationSettings.response.ok &&
+      savedIntegrationSettings.body.spoolman.authorizationConfigured &&
+      savedIntegrationSettings.body.bambubuddy.apiKeyConfigured &&
+      !JSON.stringify(savedIntegrationSettings.body).includes('synthetic-secret') &&
+      !JSON.stringify(savedIntegrationSettings.body).includes('synthetic-key'),
+    'Integration settings persist server-side without returning credentials.',
+  );
+  await json(
+    '/api/settings/integrations',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        spoolman: { enabled: false, url: fake.url },
+        bambubuddy: { enabled: true, url: fake.url },
+      }),
+    },
+    cookie,
+  );
+  check(
+    !(await json('/api/integrations/spoolman', {}, cookie)).body.configured,
+    'Disabling an integration in settings takes effect without a restart.',
+  );
+  await json(
+    '/api/settings/integrations',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        spoolman: { enabled: true, url: fake.url },
+        bambubuddy: { enabled: true, url: fake.url },
+      }),
+    },
+    cookie,
+  );
 
   const customer = await json(
     '/api/customers',
