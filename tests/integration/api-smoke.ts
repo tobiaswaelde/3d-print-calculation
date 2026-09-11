@@ -185,6 +185,33 @@ try {
     renamedFilament.body.name === 'Maker Updated PLA - Black',
     `Manufacturer renames must update derived filament names: ${JSON.stringify(renamedFilament.body)}`,
   );
+  const unusedFilament = await json(
+    '/api/filaments',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'Unused',
+        manufacturerId: filamentManufacturer.body.id,
+        material: 'PETG',
+        colorName: 'Clear',
+        colorHex: '#FFFFFF',
+        purchasePrice: '24',
+        netWeightGrams: '750',
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  const unusedSpools = await json(`/api/spools?filamentId=${unusedFilament.body.id}`, {}, cookie);
+  check(unusedSpools.body.items.length === 1, 'New filaments receive an opening spool.');
+  const unusedDelete = await json(`/api/filaments/${unusedFilament.body.id}`, { method: 'DELETE' }, cookie);
+  check(unusedDelete.response.ok, 'Unused filaments and their pristine opening spool can be deleted.');
+  const deletedSpools = await json(
+    `/api/spools?filamentId=${unusedFilament.body.id}&includeArchived=true`,
+    {},
+    cookie,
+  );
+  check(deletedSpools.body.items.length === 0, 'Deleting an unused filament removes its opening spool.');
 
   const payload = {
     name: 'Bracket',
@@ -793,6 +820,8 @@ try {
   check(locked.response.status === 409, 'Currency must lock after cost-bearing data exists.');
   const referencedDelete = await json(`/api/printers/${printer.body.id}`, { method: 'DELETE' }, cookie);
   check(referencedDelete.response.status === 409, 'Referenced master data must not be hard-deleted.');
+  const referencedFilamentDelete = await json(`/api/filaments/${filament.id}`, { method: 'DELETE' }, cookie);
+  check(referencedFilamentDelete.response.status === 409, 'Used filaments must not be hard-deleted.');
   const referencedManufacturerDelete = await json(
     `/api/manufacturers/${componentManufacturer.body.id}`,
     { method: 'DELETE' },

@@ -355,12 +355,51 @@ export async function archiveResource(resource: Resource, id: string, input: unk
 }
 
 export async function deleteResource(resource: Resource, id: string) {
+  if (resource === 'filaments') {
+    await db.$transaction(async (transaction) => {
+      const [usageCount, spools] = await Promise.all([
+        transaction.printFilamentUsage.count({ where: { filamentId: id } }),
+        transaction.spool.findMany({
+          where: { filamentId: id },
+          include: {
+            movements: true,
+            usages: { select: { id: true } },
+            trayMappings: { select: { id: true } },
+            syncOperations: { select: { id: true } },
+          },
+        }),
+      ]);
+      const hasReferencedSpool = spools.some((spool) => {
+        const opening = spool.movements[0];
+        return (
+          spool.stockAuthority !== 'NATIVE' ||
+          spool.spoolmanId !== null ||
+          spool.remoteRemainingGrams !== null ||
+          spool.remoteState !== null ||
+          spool.syncedAt !== null ||
+          spool.syncError !== null ||
+          spool.usages.length > 0 ||
+          spool.trayMappings.length > 0 ||
+          spool.syncOperations.length > 0 ||
+          spool.movements.length !== 1 ||
+          opening?.kind !== 'RECEIPT' ||
+          opening.printUsageId !== null ||
+          !opening.operationKey.startsWith('opening:') ||
+          !new Decimal(opening.grams).equals(spool.initialNetWeightGrams)
+        );
+      });
+      if (usageCount || hasReferencedSpool) apiError(409, 'RESOURCE_REFERENCED', 'errors.resourceReferenced');
+      await transaction.stockMovement.deleteMany({ where: { spool: { filamentId: id } } });
+      await transaction.spool.deleteMany({ where: { filamentId: id } });
+      await transaction.filament.delete({ where: { id } });
+    });
+    return { success: true };
+  }
   await assertUnreferenced(resource, id);
   if (resource === 'customers') await db.customer.delete({ where: { id } });
   else if (resource === 'printers') await db.printer.delete({ where: { id } });
   else if (resource === 'manufacturers') await db.manufacturer.delete({ where: { id } });
   else if (resource === 'components') await db.component.delete({ where: { id } });
-  else await db.filament.delete({ where: { id } });
   return { success: true };
 }
 
