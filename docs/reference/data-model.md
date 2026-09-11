@@ -13,7 +13,11 @@ manufacturer, material, and color name.
 The `Component.alwaysUsed` flag controls compatible defaults in new print forms without making those selections
 mandatory.
 
-`AppSettings` also stores explicit Spoolman and BambuBuddy enablement, server URLs, and server-only credentials. Nullable values preserve environment-variable defaults for deployments upgraded from earlier versions. Credentials are never serialized in settings or integration responses; database files and backups still require secret-level protection.
+`AppSettings.spoolManagementEnabled` defaults to true and controls new spool selection, stock writes, and
+filament pricing behavior. `AppSettings` also stores explicit Spoolman and BambuBuddy enablement, server URLs, and
+server-only credentials. Nullable values preserve environment-variable defaults for deployments upgraded from
+earlier versions. Credentials are never serialized in settings or integration responses; database files and
+backups still require secret-level protection.
 
 A `PrintJob` references one printer, an optional customer, and component and filament usage rows. Its workflow
 status is one of `DRAFT`, `PRINTING`, `PRINTED`, `SHIPPED`, or `DONE`; payment is tracked independently with the
@@ -21,6 +25,12 @@ nullable `paidAt` timestamp. Usage rows copy
 names, prices, lifetimes, quantities, and line costs at calculation time. `PrintCostSnapshot` also retains totals,
 electricity price, printer inputs, currency, and formula version. A `DRAFT` may be recalculated; leaving Draft
 finalizes the snapshot and makes print inputs immutable through the service contract.
+
+`PrintFilamentUsage.spoolId` and `spoolCode` remain nullable. With spool management disabled, new usages copy the
+filament catalog price and net weight without a spool relation or stock movement. Re-enabling inventory does not
+retroactively attach those usages or reinterpret their snapshots. `PrintOutcome.stockTracked` prevents later
+corrections from partially booking an outcome whose stock history was intentionally skipped while management was
+disabled.
 
 Archiving sets `archivedAt`, hiding records from new selections while preserving historical prints. Restrictive
 relations and service checks prevent deletion of referenced data, including manufacturers used by components or
