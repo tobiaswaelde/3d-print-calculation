@@ -1,5 +1,10 @@
+import { startFakeIntegrations } from '../utils/fake-integrations';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import Database from 'better-sqlite3';
+import { join, resolve } from 'node:path';
+import { assertSafeTestDatabaseUrl } from '../utils/test-database';
+import AxeBuilder from '@axe-core/playwright';
 import { mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { expect, test, type Browser, type Page } from '@playwright/test';
 
 const appUrl = 'http://127.0.0.1:3001';
@@ -60,6 +65,12 @@ async function selectOption(page: Page, label: string, option: string) {
   await page.getByLabel(label, { exact: true }).click();
   await page.getByRole('option', { name: option, exact: true }).click();
 }
+
+let fake: Awaited<ReturnType<typeof startFakeIntegrations>>;
+test.beforeAll(async () => {
+  fake = await startFakeIntegrations(3003);
+});
+test.afterAll(() => fake?.close());
 
 test('regenerates every application screenshot used by the documentation', async ({ page, browser }) => {
   mkdirSync(screenshotDirectory, { recursive: true });
@@ -152,13 +163,46 @@ test('regenerates every application screenshot used by the documentation', async
     note: null,
   });
 
+  const openingSpools = (await (await page.request.get(`/api/spools?filamentId=${filament.id}`)).json()) as {
+    items: Resource[];
+  };
+  for (const opening of openingSpools.items)
+    await api(page, `/api/spools/${opening.id}/archive`, 'POST', { archived: true });
+  const spool = await api<Resource>(page, '/api/spools', 'POST', {
+    code: 'DOC-PLA-001',
+    filamentId: filament.id,
+    purchasePrice: '24.99',
+    initialNetWeightGrams: '1000',
+    location: 'Shelf A',
+    purchaseLot: 'DEMO-2026',
+    acquiredAt: '2026-09-10',
+  });
+  const screenshotRoot = process.env.PRINT_COST_SCREENSHOT_ROOT!;
+  const fixtureDatabasePath = join(screenshotRoot, 'app.db');
+  assertSafeTestDatabaseUrl(`file:${fixtureDatabasePath}`, screenshotRoot);
+  const fixtureDatabase = new Database(fixtureDatabasePath, { fileMustExist: true });
+  fixtureDatabase.pragma('foreign_keys = ON');
+  fixtureDatabase.prepare('UPDATE Spool SET id = ? WHERE id = ?').run('documentation-spool', spool.id);
+  fixtureDatabase
+    .prepare('UPDATE StockMovement SET createdAt = ? WHERE spoolId = ?')
+    .run('2026-09-10T18:54:00.000Z', 'documentation-spool');
+  fixtureDatabase.close();
+  spool.id = 'documentation-spool';
+
+  const series = await api<Resource>(page, '/api/series', 'POST', {
+    name: 'Studio collection',
+    customerId: customer.id,
+    targetQuantity: 20,
+  });
   const printInput = {
+    seriesId: series.id,
+    salesValue: '12',
     customerId: customer.id,
     printerId: printer.id,
     buildPlateId: buildPlate.id,
     hotends: [{ componentId: hotend.id, durationSeconds: 23_400 }],
     otherComponentIds: [enclosure.id],
-    filaments: [{ filamentId: filament.id, usedGrams: '185' }],
+    filaments: [{ filamentId: filament.id, spoolId: spool.id, usedGrams: '185' }],
     notes: 'Synthetic data used to keep the documentation screenshots reproducible.',
   };
   const completed = await api<Resource>(page, '/api/prints', 'POST', {
@@ -258,6 +302,21 @@ test('regenerates every application screenshot used by the documentation', async
   await expect(page.getByText('Polymaker PLA - Teal', { exact: true })).toBeVisible();
   await capture(page, 'filaments.jpg');
 
+  await page.goto('/spools');
+  await expect(page.getByRole('link', { name: 'DOC-PLA-001', exact: true })).toBeVisible();
+  await capture(page, 'spools.jpg');
+  await page.getByRole('link', { name: 'DOC-PLA-001', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'DOC-PLA-001', exact: true })).toBeVisible();
+  await capture(page, 'spool-detail.jpg');
+  await page.getByRole('link', { name: 'QR label', exact: true }).click();
+  await expect(page.getByAltText('QR code for spool DOC-PLA-001')).toBeVisible();
+  expect(
+    await page
+      .getByAltText('QR code for spool DOC-PLA-001')
+      .evaluate((image) => (image as HTMLImageElement).naturalWidth),
+  ).toBeGreaterThan(0);
+  await capture(page, 'spool-label.jpg');
+
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'General' })).toBeVisible();
   await capture(page, 'settings.jpg');
@@ -277,6 +336,8 @@ test('regenerates every application screenshot used by the documentation', async
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByText('New print', { exact: true })).toBeVisible();
   await dialog.getByLabel('Name', { exact: true }).fill('Architectural Lamp Preview');
+  await dialog.getByLabel('Quantity', { exact: true }).fill('3');
+  await dialog.getByLabel('Sales value', { exact: true }).fill('12');
   await selectOption(page, 'Customers', 'Studio North');
   await selectOption(page, 'Printers', 'Workshop Prusa MK4');
   await selectOption(page, 'Build plate', 'Textured PEI plate');
@@ -292,14 +353,34 @@ test('regenerates every application screenshot used by the documentation', async
   await dialog.getByLabel('Used weight (g)', { exact: true }).fill('185');
   await dialog.getByRole('button', { name: 'Next' }).click();
   await expect(dialog.getByText('Total cost', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Cost per unit', { exact: true })).toBeVisible();
+  await expect(dialog.getByText('Planned margin', { exact: true })).toBeVisible();
   await capture(page, 'new-print-review.jpg');
   await page.keyboard.press('Escape');
 
   await page.goto(`/prints/${draft.id}`);
   await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Prototype Housing');
+  await page.getByLabel('Quantity', { exact: true }).fill('4');
+  const savedQuantity = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/prints/${draft.id}`) && response.request().method() === 'PATCH',
+  );
+  await page.getByRole('button', { name: 'Save draft', exact: true }).click();
+  expect((await savedQuantity).ok()).toBe(true);
+  await page.reload();
+  await expect(page.getByLabel('Quantity', { exact: true })).toHaveValue('4');
   await page.getByRole('heading', { name: 'Hotends and durations' }).scrollIntoViewIfNeeded();
   await capture(page, 'print-draft.jpg');
 
+  await page.goto('/series');
+  await expect(page.getByRole('link', { name: 'Studio collection', exact: true })).toBeVisible();
+  await capture(page, 'series.jpg');
+  await page.goto(`/series/${series.id}`);
+  await expect(page.getByRole('heading', { name: 'Studio collection', exact: true })).toBeVisible();
+  await capture(page, 'series-detail.jpg');
+  await page.goto(`/customers/${customer.id}`);
+  await expect(page.getByRole('heading', { name: 'Studio North', exact: true })).toBeVisible();
+  await capture(page, 'customer-history.jpg');
   await page.goto(`/prints/${completed.id}`);
   const immutableMessage = page.getByText(
     'The print details are immutable after leaving draft. You can duplicate the print using current inventory.',
@@ -309,4 +390,104 @@ test('regenerates every application screenshot used by the documentation', async
   await capture(page, 'completed-print.jpg');
   await page.getByRole('heading', { name: 'Stored calculation sources' }).scrollIntoViewIfNeeded();
   await capture(page, 'completed-print-sources.jpg');
+  await page.goto(`/reports/prints/${completed.id}`);
+  await expect(page.getByRole('heading', { name: 'Architectural Lamp', exact: true })).toBeVisible();
+  await capture(page, 'cost-report.jpg');
+  const pdf = await page.pdf({
+    format: 'A4',
+    printBackground: true,
+    path: 'test-results/screenshots/cost-report.pdf',
+  });
+  const document = await getDocument({ data: new Uint8Array(pdf), useSystemFonts: true }).promise;
+  let reportText = '';
+  for (let index = 1; index <= document.numPages; index++) {
+    const content = await (await document.getPage(index)).getTextContent();
+    reportText += content.items.map((item) => ('str' in item ? item.str : '')).join(' ');
+  }
+  reportText = reportText.replace(/\s+/g, ' ');
+  expect(document.numPages).toBeLessThanOrEqual(3);
+  expect(reportText).toContain('Architectural Lamp');
+  expect(reportText).toContain('Not an invoice');
+  expect(reportText).toContain('DOC-PLA-001');
+  expect(reportText).toContain('Sales and margin');
+  expect(reportText).toContain('€7.10');
+  expect(reportText).toContain('€12.00');
+  expect(reportText).not.toContain('outcome.PENDING');
+  await api(page, '/api/auth/preferences', 'PATCH', { locale: 'de-DE' });
+  await page.reload();
+  await expect(page.getByText('Kostenbericht', { exact: false }).first()).toBeVisible();
+  const germanPdf = await page.pdf({ format: 'A4', printBackground: true });
+  const germanDocument = await getDocument({ data: new Uint8Array(germanPdf), useSystemFonts: true }).promise;
+  let germanText = '';
+  for (let index = 1; index <= germanDocument.numPages; index++) {
+    const content = await (await germanDocument.getPage(index)).getTextContent();
+    germanText += content.items.map((item) => ('str' in item ? item.str : '')).join(' ');
+  }
+  germanText = germanText.replace(/\s+/g, ' ');
+  expect(germanText).toContain('Keine Rechnung');
+  expect(germanText).toContain('7,10');
+  await germanDocument.destroy();
+  await api(page, '/api/auth/preferences', 'PATCH', { locale: 'en-US' });
+  await document.destroy();
+  await page.goto(`/prints/${completed.id}`);
+  await selectOption(page, 'Print outcome', 'Failed');
+  await page.getByLabel('Failure reason', { exact: true }).fill('Synthetic adhesion failure');
+  await page.getByLabel('Actual duration (seconds)', { exact: true }).fill('1200');
+  const outcomeSaved = page.waitForResponse(
+    (response) =>
+      response.url().endsWith(`/api/prints/${completed.id}/outcome`) &&
+      response.request().method() === 'POST',
+  );
+  await page.getByRole('button', { name: 'Record outcome', exact: true }).click();
+  expect((await outcomeSaved).ok()).toBe(true);
+  await expect(page.getByRole('button', { name: 'Retry print', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByText('Synthetic adhesion failure')).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const accessibility = await new AxeBuilder({ page }).analyze();
+  expect(
+    accessibility.violations.filter((violation) => ['critical', 'serious'].includes(violation.impact ?? '')),
+  ).toEqual([]);
+  await page.getByRole('button', { name: 'Retry print', exact: true }).click();
+  await expect(page.getByLabel('Name', { exact: true })).toHaveValue('Architectural Lamp (copy)');
+  await expect(page.getByRole('link', { name: 'Retry of: Architectural Lamp', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Quantity', { exact: true })).toBeEnabled();
+  await expect(page.getByLabel('Sales value', { exact: true })).toHaveValue('');
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/integrations/spoolman');
+  await page.getByRole('button', { name: 'Load import preview', exact: true }).click();
+  await expect(page.getByText('Synthetic remote PLA', { exact: false })).toBeVisible();
+  await capture(page, 'spoolman-import.jpg');
+  await page.getByRole('button', { name: 'Confirm import / link', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'SM-101', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Book movement', exact: true })).toHaveCount(0);
+  await capture(page, 'spoolman-detail.jpg');
+  const integrated = await api<Resource>(page, '/api/prints', 'POST', {
+    ...printInput,
+    name: 'Integrated test run',
+  });
+  await api(page, `/api/prints/${integrated.id}/complete`, 'POST');
+  await api(page, '/api/integrations/bambubuddy', 'POST', {
+    action: 'LINK_PRINTER',
+    printerId: printer.id,
+    remoteId: 7,
+  });
+  fake.state.logs[0]!.status = 'completed';
+  fake.state.logs[0]!.completed_at = '2026-09-11T01:00:00Z';
+  await page.goto(`/integrations/bambubuddy?printId=${integrated.id}&printerId=${printer.id}`);
+  await page.getByRole('button', { name: 'Choose print log', exact: true }).click();
+  await page.getByRole('button', { name: 'Attach this record', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Confirm actual values and import outcome', exact: true }),
+  ).toBeVisible();
+  await capture(page, 'bambubuddy-preview.jpg');
+  await page.getByRole('button', { name: 'Confirm actual values and import outcome', exact: true }).click();
+  await expect(page.getByText('Applied', { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const integrationA11y = await new AxeBuilder({ page }).analyze();
+  expect(
+    integrationA11y.violations.filter((item) => ['critical', 'serious'].includes(item.impact ?? '')),
+  ).toEqual([]);
 });
