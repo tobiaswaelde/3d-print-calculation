@@ -271,6 +271,7 @@
     "stockOwnedExternally": "Spoolman führt diesen Bestand. Dort ändern oder zuerst ausdrücklich trennen."
   },
   "validation": {
+    "printerManufacturerRequired": "Ein Hersteller ist erforderlich.",
     "outcomeFailureReasonRequired": "Ein Fehlergrund ist erforderlich.",
     "outcomeUniqueUsageRequired": "Jeden Filamentverbrauch genau einmal angeben.",
     "outcomeCorrectionNoteRequired": "Die Korrektur begründen.",

@@ -271,6 +271,7 @@
     "stockOwnedExternally": "Spoolman owns this stock. Change it there or explicitly unlink first."
   },
   "validation": {
+    "printerManufacturerRequired": "A manufacturer is required.",
     "outcomeFailureReasonRequired": "A failure reason is required.",
     "outcomeUniqueUsageRequired": "Enter every filament usage exactly once.",
     "outcomeCorrectionNoteRequired": "Explain the correction.",

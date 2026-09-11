@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filamentSchema, printerSchema } from '../shared/schemas/master-data';
+import { createPrinterSchema, filamentSchema, printerSchema } from '../shared/schemas/master-data';
 
 describe('master data validation', () => {
   it('accepts zero purchase prices but rejects invalid divisors', () => {
@@ -43,6 +43,10 @@ describe('master data validation', () => {
     };
 
     expect(printerSchema.safeParse(printer).success).toBe(false);
+    expect(
+      createPrinterSchema({ manufacturerRequired: 'Ein Hersteller ist erforderlich.' }).safeParse(printer)
+        .error?.issues[0]?.message,
+    ).toBe('Ein Hersteller ist erforderlich.');
     expect(printerSchema.parse({ ...printer, manufacturerId: ' manufacturer-1 ' }).manufacturerId).toBe(
       'manufacturer-1',
     );

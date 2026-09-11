@@ -45,25 +45,37 @@ export const customerSchema = z.object({
   note: optionalText,
 });
 
-export const printerSchema = z
-  .object({
-    name: z.string().trim().min(1).max(200),
-    manufacturerId: optionalId,
-    manufacturer: optionalText,
-    model: optionalText,
-    purchasePrice: decimalSchema(),
-    expectedLifetimeHours: decimalSchema({ positive: true }),
-    averagePowerWatts: z.coerce.number().int().nonnegative(),
-    note: optionalText,
-  })
-  .superRefine((value, context) => {
-    if (value.manufacturerId || value.manufacturer) return;
-    context.addIssue({
-      code: 'custom',
-      path: ['manufacturerId'],
-      message: 'Manufacturer is required',
+type PrinterValidationMessages = {
+  manufacturerRequired: string;
+};
+
+const defaultPrinterValidationMessages: PrinterValidationMessages = {
+  manufacturerRequired: 'validation.printerManufacturerRequired',
+};
+
+export function createPrinterSchema(messages: PrinterValidationMessages = defaultPrinterValidationMessages) {
+  return z
+    .object({
+      name: z.string().trim().min(1).max(200),
+      manufacturerId: optionalId,
+      manufacturer: optionalText,
+      model: optionalText,
+      purchasePrice: decimalSchema(),
+      expectedLifetimeHours: decimalSchema({ positive: true }),
+      averagePowerWatts: z.coerce.number().int().nonnegative(),
+      note: optionalText,
+    })
+    .superRefine((value, context) => {
+      if (value.manufacturerId || value.manufacturer) return;
+      context.addIssue({
+        code: 'custom',
+        path: ['manufacturerId'],
+        message: messages.manufacturerRequired,
+      });
     });
-  });
+}
+
+export const printerSchema = createPrinterSchema();
 
 export const manufacturerSchema = z.object({
   name: z.string().trim().min(1).max(200),

@@ -320,10 +320,10 @@
 import Decimal from 'decimal.js';
 import {
   componentSchema,
+  createPrinterSchema,
   customerSchema,
   filamentSchema,
   manufacturerSchema,
-  printerSchema,
 } from '#shared/schemas/master-data';
 import type { MasterDataListItem, MasterDataResource, PaginatedResponse } from '#shared/types/master-data';
 
@@ -353,13 +353,16 @@ const componentTypes = computed(() => [
 const dialogTitle = computed(
   () => `${editingId.value ? t('common.edit') : t('common.create')} · ${props.title}`,
 );
+const printerValidationMessages = computed(() => ({
+  manufacturerRequired: t('validation.printerManufacturerRequired'),
+}));
 
 const formSchema = computed(() => {
   switch (props.resource) {
     case 'customers':
       return customerSchema;
     case 'printers':
-      return printerSchema;
+      return createPrinterSchema(printerValidationMessages.value);
     case 'manufacturers':
       return manufacturerSchema;
     case 'components':
@@ -403,6 +406,23 @@ const derivedRate = computed(() => {
   }
 });
 
+async function loadManufacturerOptions() {
+  const firstPage = await $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
+    query: { page: 1, pageSize: 100 },
+  });
+  const pageCount = Math.ceil(firstPage.total / firstPage.pageSize);
+  const remainingPages = await Promise.all(
+    Array.from({ length: Math.max(0, pageCount - 1) }, (_, index) =>
+      $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
+        query: { page: index + 2, pageSize: 100 },
+      }),
+    ),
+  );
+  manufacturerOptions.value = [firstPage, ...remainingPages].flatMap((page) =>
+    page.items.map((item) => ({ label: item.name, value: item.id })),
+  );
+}
+
 async function refresh() {
   loading.value = true;
   error.value = '';
@@ -422,10 +442,7 @@ async function refresh() {
       printerOptions.value = printers.items.map((item) => ({ label: item.name, value: item.id }));
     }
     if (props.resource === 'printers' || props.resource === 'components' || props.resource === 'filaments') {
-      const manufacturers = await $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
-        query: { pageSize: 100 },
-      });
-      manufacturerOptions.value = manufacturers.items.map((item) => ({ label: item.name, value: item.id }));
+      await loadManufacturerOptions();
     }
   } catch (reason) {
     error.value = reason instanceof Error ? reason.message : String(reason);
