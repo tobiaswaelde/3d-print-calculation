@@ -1,5 +1,6 @@
 import type { DateFormat, DurationFormat, TimeFormat } from '~/utils/display-formatting';
 import { DATE_FORMATS, TIME_FORMATS } from '~/utils/display-formatting';
+import type { ApplicationSettingsDto } from '#shared/types/settings';
 
 export function useApplicationSettings() {
   const { t, setLocale } = useI18n();
@@ -7,6 +8,7 @@ export function useApplicationSettings() {
   const { user, updateLocale } = useAuth();
   const { dateFormat, timeFormat, durationFormat, setDateFormat, setTimeFormat, setDurationFormat } =
     useFormatting();
+  const { setEnabled: setSpoolManagementEnabled } = useSpoolManagement();
   const pending = ref(false);
   const message = ref('');
   const messageColor = ref<'success' | 'error'>('success');
@@ -14,6 +16,7 @@ export function useApplicationSettings() {
     currency: 'EUR',
     defaultLocale: 'de-DE' as 'de-DE' | 'en-US',
     electricityPricePerKwh: '0',
+    spoolManagementEnabled: true,
     theme: 'system' as 'light' | 'dark' | 'system',
     dateFormat: 'DD.MM.YYYY' as DateFormat,
     timeFormat: 'HH:mm' as TimeFormat,
@@ -36,7 +39,8 @@ export function useApplicationSettings() {
   ]);
 
   async function load() {
-    Object.assign(form, await $fetch('/api/settings'));
+    Object.assign(form, await $fetch<ApplicationSettingsDto>('/api/settings'));
+    setSpoolManagementEnabled(form.spoolManagementEnabled);
     form.defaultLocale = user.value?.locale ?? form.defaultLocale;
     if (colorMode.preference === 'light' || colorMode.preference === 'dark')
       form.theme = colorMode.preference;
@@ -58,9 +62,11 @@ export function useApplicationSettings() {
             currency: form.currency,
             defaultLocale: form.defaultLocale,
             electricityPricePerKwh: form.electricityPricePerKwh,
+            spoolManagementEnabled: form.spoolManagementEnabled,
           },
         }),
       );
+      setSpoolManagementEnabled(form.spoolManagementEnabled);
       await setLocale(form.defaultLocale);
       localStorage.setItem('print-cost-locale', form.defaultLocale);
       await updateLocale(form.defaultLocale);

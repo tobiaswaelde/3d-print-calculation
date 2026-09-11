@@ -56,6 +56,7 @@ const { t } = useI18n();
 const appVersion = useRuntimeConfig().public.appVersion;
 const changelogOpen = useState('changelog-open', () => false);
 const { load: loadVersion, updateAvailable } = useVersionCheck();
+const { enabled: spoolManagementEnabled } = useSpoolManagement();
 const navigation = computed(() => [
   { label: t('nav.sections.workspace'), type: 'label' as const },
   { label: t('nav.dashboard'), icon: 'i-tabler-layout-dashboard', to: '/' },
@@ -66,7 +67,9 @@ const navigation = computed(() => [
   { label: t('nav.printers'), icon: 'i-tabler-printer', to: '/printers' },
   { label: t('nav.manufacturers'), icon: 'i-tabler-building-factory-2', to: '/manufacturers' },
   { label: t('nav.components'), icon: 'i-tabler-components', to: '/components' },
-  { label: t('nav.spools'), icon: 'i-tabler-qrcode', to: '/spools' },
+  ...(spoolManagementEnabled.value
+    ? [{ label: t('nav.spools'), icon: 'i-tabler-qrcode', to: '/spools' }]
+    : []),
   { label: t('nav.filaments'), icon: 'i-tabler-disc', to: '/filaments' },
   { label: t('nav.sections.system'), type: 'label' as const },
   { label: t('nav.settings'), icon: 'i-tabler-settings', to: '/settings' },

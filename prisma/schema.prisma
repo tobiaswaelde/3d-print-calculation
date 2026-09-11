@@ -36,6 +36,7 @@ model AppSettings {
   defaultLocale          String   @default("de-DE")
   electricityPricePerKwh Decimal  @default(0)
   calculationVersion     String   @default("1")
+  spoolManagementEnabled Boolean  @default(true)
   spoolmanEnabled        Boolean?
   spoolmanUrl            String?
   spoolmanAuthorization  String?

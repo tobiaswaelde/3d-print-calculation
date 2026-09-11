@@ -872,7 +872,12 @@ try {
     '/api/settings',
     {
       method: 'PATCH',
-      body: JSON.stringify({ currency: 'USD', defaultLocale: 'de-DE', electricityPricePerKwh: '0.32' }),
+      body: JSON.stringify({
+        currency: 'USD',
+        defaultLocale: 'de-DE',
+        electricityPricePerKwh: '0.32',
+        spoolManagementEnabled: true,
+      }),
     },
     cookie,
   );
