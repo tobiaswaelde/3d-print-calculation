@@ -1158,6 +1158,12 @@ try {
   );
   const bambuStatus = await json('/api/integrations/bambubuddy', {}, cookie);
   check(
+    bambuStatus.body.remotePrinters.length === 1 &&
+      bambuStatus.body.remotePrinters[0].id === 7 &&
+      bambuStatus.body.remotePrinters[0].name === 'Synthetic remote printer',
+    'Configured Bambuddy printers are listed for linking.',
+  );
+  check(
     !JSON.stringify(bambuStatus.body).includes('synthetic-secret') &&
       !JSON.stringify(bambuStatus.body).includes(fake.url),
     'Upstream printer credentials and server configuration are stripped.',

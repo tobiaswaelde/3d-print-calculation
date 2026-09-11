@@ -455,6 +455,7 @@
     "unlink": "Trennen und bestätigten lokalen Bestand übernehmen",
     "bambu": "Bambuddy-Anbindung",
     "remotePrinter": "Bambuddy-Drucker",
+    "remotePrinters": "Erkannte Bambuddy-Drucker",
     "unlinked": "Nicht verknüpft",
     "linkPrinter": "Druckerverknüpfung speichern",
     "mappingWarning": "Slot-Zuordnung ist mehrdeutig, veraltet oder nicht verfügbar. Physische Spule vor Auswahl im Entwurf prüfen.",

@@ -284,6 +284,9 @@ const pieOption = computed(() => ({
     {
       type: 'pie',
       radius: ['38%', '68%'],
+      ...(colorMode.value === 'dark'
+        ? { label: { color: chartTextColor.value, textBorderColor: 'transparent', textBorderWidth: 0 } }
+        : {}),
       data:
         data.value?.categoryTotals.map((item) => ({
           name: categoryLabel(item.category),

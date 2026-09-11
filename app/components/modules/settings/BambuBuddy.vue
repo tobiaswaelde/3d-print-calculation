@@ -10,6 +10,19 @@
       <template v-if="status?.configured">
         <p>{{ t('integration.version') }}: {{ status.version ?? '—' }}</p>
         <UAlert v-if="status.error" color="warning" :description="t('integration.offline')" />
+        <div v-if="status.remotePrinters.length" class="space-y-2">
+          <p class="text-sm font-medium">{{ t('integration.remotePrinters') }}</p>
+          <ul class="divide-y divide-default rounded-lg border border-default">
+            <li
+              v-for="remote in status.remotePrinters"
+              :key="remote.id"
+              class="flex items-center justify-between gap-3 px-3 py-2"
+            >
+              <span>{{ remote.name }}</span>
+              <span class="text-sm text-muted">#{{ remote.id }}</span>
+            </li>
+          </ul>
+        </div>
         <UFormField :label="t('nav.printers')"
           ><USelect
             v-model="printerId"
@@ -167,7 +180,7 @@ import type { BambuLog, BambuStatus } from '#shared/types/integrations';
 import type { PrintJobDto } from '#shared/types/prints';
 import type { SpoolDto } from '#shared/types/spools';
 const { t } = useI18n();
-const { enabled: spoolManagementEnabled } = useSpoolManagement();
+const { enabled: spoolManagementEnabled, load: loadSpoolManagement } = useSpoolManagement();
 const route = useRoute();
 const printId = typeof route.query.printId === 'string' ? route.query.printId : undefined;
 const printerId = ref(typeof route.query.printerId === 'string' ? route.query.printerId : '');
@@ -246,7 +259,7 @@ async function importResult() {
 onMounted(() =>
   run(async () => {
     if (printId) print.value = await $fetch<PrintJobDto>(`/api/prints/${printId}`);
-    if (spoolManagementEnabled.value)
+    if (await loadSpoolManagement())
       spools.value = (await $fetch<{ items: SpoolDto[] }>('/api/spools', { query: { pageSize: 100 } })).items;
     await refresh();
   }),

@@ -455,6 +455,7 @@
     "unlink": "Unlink and use confirmed native balance",
     "bambu": "Bambuddy integration",
     "remotePrinter": "Bambuddy printer",
+    "remotePrinters": "Detected Bambuddy printers",
     "unlinked": "Unlinked",
     "linkPrinter": "Save printer link",
     "mappingWarning": "Slot mapping is ambiguous, stale or unavailable. Verify the physical spool before selecting it in a draft.",
