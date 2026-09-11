@@ -1,5 +1,22 @@
 <template>
   <div class="space-y-5">
+    <div v-if="job" class="flex flex-wrap gap-3 text-sm">
+      <NuxtLink v-if="job.series" :to="`/series/${job.series.id}`" class="text-primary underline">{{
+        job.series.name
+      }}</NuxtLink
+      ><NuxtLink v-if="job.customer" :to="`/customers/${job.customer.id}`" class="text-primary underline">{{
+        job.customer.name
+      }}</NuxtLink
+      ><NuxtLink v-if="job.repeatOf" :to="`/prints/${job.repeatOf.id}`" class="text-primary underline"
+        >{{ t('history.repeatOf') }}: {{ job.repeatOf.name }}</NuxtLink
+      ><NuxtLink
+        v-for="item in job.repeats"
+        :key="item.id"
+        :to="`/prints/${item.id}`"
+        class="text-primary underline"
+        >{{ t('history.repeat') }}: {{ item.name }}</NuxtLink
+      >
+    </div>
     <UAlert v-if="error" color="error" :description="error" />
     <UAlert
       v-if="job && job.status !== 'DRAFT'"
@@ -59,6 +76,12 @@
       </div>
     </UCard>
 
+    <CommonFinancialSummary v-if="job?.outcome" :value="job.financials" :currency="job.currency" />
+    <ModulesPrintsOutcome v-if="job?.status === 'DONE'" :key="job.id" :job="job" @recorded="job = $event" />
+    <NuxtLink v-else-if="job?.retryOf" :to="`/prints/${job.retryOf.id}`" class="text-primary underline"
+      >{{ t('outcome.retryOf') }}: {{ job.retryOf.name }}</NuxtLink
+    >
+
     <UForm
       ref="editorForm"
       :schema="printDraftFormSchema"
@@ -72,6 +95,20 @@
           <div class="grid gap-4 md:grid-cols-2">
             <UFormField name="name" :label="t('master.name')" required
               ><UInput v-model="form.name" class="w-full" icon="i-tabler-tag"
+            /></UFormField>
+            <UFormField
+              name="quantity"
+              :label="t('prints.quantity')"
+              :description="t('prints.quantityHelp')"
+              required
+            >
+              <UInput v-model="form.quantity" class="w-full" type="number" min="1" max="1000000" step="1" />
+            </UFormField>
+            <UFormField name="salesValue" :label="t('sales.value')" :description="t('sales.help')">
+              <UInput v-model="form.salesValue" inputmode="decimal" class="w-full" />
+            </UFormField>
+            <UFormField name="seriesId" :label="t('nav.series')" :description="t('series.customerRule')"
+              ><CommonSeriesSelect v-model="form.seriesId" @customer="form.customerId = $event"
             /></UFormField>
             <UFormField name="customerId" :label="t('nav.customers')"
               ><USelect
@@ -192,11 +229,14 @@
             <div
               v-for="(filament, index) in form.filaments"
               :key="index"
-              class="grid items-start gap-3 md:grid-cols-[1fr_12rem_auto]"
+              class="grid items-start gap-3 md:grid-cols-[1fr_1fr_10rem_auto]"
             >
               <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required
                 ><CommonFilamentSelect v-model="filament.filamentId" class="w-full" :items="filamentOptions"
               /></UFormField>
+              <UFormField :name="`filaments.${index}.spoolId`" :label="t('nav.spools')" required>
+                <CommonSpoolSelect v-model="filament.spoolId" :filament-id="filament.filamentId" />
+              </UFormField>
               <UFormField :name="`filaments.${index}.usedGrams`" :label="t('prints.usedGrams')" required
                 ><UInput
                   v-model="filament.usedGrams"
@@ -232,7 +272,13 @@
             <UIcon v-if="previewPending" name="i-tabler-loader-2" class="animate-spin" /></div
         ></template>
         <CommonCostBreakdown v-if="costs" v-bind="costs" />
-        <p v-else class="text-sm text-muted">{{ t('prints.previewHint') }}</p>
+        <CommonFinancialSummary
+          v-if="costs?.financials"
+          :value="costs.financials"
+          :currency="costs.currency"
+          class="mt-3"
+        />
+        <p v-if="!costs" class="text-sm text-muted">{{ t('prints.previewHint') }}</p>
       </UCard>
 
       <UCard v-if="job && job.status !== 'DRAFT' && job.snapshot">
@@ -267,6 +313,31 @@
       <div
         class="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-default bg-default/95 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur"
       >
+        <UButton
+          v-if="job"
+          color="neutral"
+          variant="outline"
+          :label="t(job.archivedAt ? 'common.restore' : 'common.archive')"
+          @click="toggleArchive"
+        />
+        <UButton
+          v-if="job"
+          :to="{ path: '/integrations/bambubuddy', query: { printId: job.id, printerId: job.printerId } }"
+          :label="t('integration.bambu')"
+          color="neutral"
+        />
+        <UButton
+          v-if="job?.status === 'DONE'"
+          :to="`/reports/prints/${job.id}`"
+          :label="t('report.title')"
+          color="neutral"
+        />
+        <UButton
+          v-if="job?.status === 'DONE' && !job.archivedAt"
+          :label="t('history.repeat')"
+          color="neutral"
+          @click="repeatOrder"
+        />
         <UButton
           v-if="job"
           color="neutral"
@@ -327,12 +398,15 @@ const statusOptions = computed(() =>
 
 const form = reactive({
   name: '',
+  quantity: 1,
+  salesValue: '',
   customerId: null as string | null,
+  seriesId: null as string | null,
   printerId: '',
   buildPlateId: '',
   hotends: [{ componentId: '', hours: 1, minutes: 0 }],
   otherComponentIds: [] as string[],
-  filaments: [{ filamentId: '', usedGrams: '1' }],
+  filaments: [{ filamentId: '', spoolId: undefined as string | undefined, usedGrams: '1' }],
   notes: '',
 });
 
@@ -366,7 +440,10 @@ const filamentOptions = computed(() =>
 function payload() {
   return {
     name: form.name,
+    quantity: Number(form.quantity),
+    salesValue: form.salesValue || null,
     customerId: form.customerId,
+    seriesId: form.seriesId,
     printerId: form.printerId,
     buildPlateId: form.buildPlateId,
     hotends: form.hotends.map((entry) => ({
@@ -374,7 +451,11 @@ function payload() {
       durationSeconds: Number(entry.hours) * 3600 + Number(entry.minutes) * 60,
     })),
     otherComponentIds: form.otherComponentIds,
-    filaments: form.filaments.map((entry) => ({ filamentId: entry.filamentId, usedGrams: entry.usedGrams })),
+    filaments: form.filaments.map((entry) => ({
+      filamentId: entry.filamentId,
+      spoolId: entry.spoolId,
+      usedGrams: entry.usedGrams,
+    })),
     notes: form.notes,
   };
 }
@@ -383,7 +464,10 @@ function hydrate(value: PrintJobDto) {
   job.value = value;
   selectedStatus.value = value.status;
   form.name = value.name;
+  form.quantity = value.quantity;
+  form.salesValue = value.salesValue ?? '';
   form.customerId = value.customerId;
+  form.seriesId = value.seriesId;
   form.printerId = value.printerId;
   form.buildPlateId = value.componentUsages.find((entry) => entry.type === 'BUILD_PLATE')?.componentId ?? '';
   form.hotends = value.componentUsages
@@ -398,12 +482,14 @@ function hydrate(value: PrintJobDto) {
     .map((entry) => entry.componentId);
   form.filaments = value.filamentUsages.map((entry) => ({
     filamentId: entry.filamentId,
+    spoolId: entry.spoolId ?? undefined,
     usedGrams: entry.usedGrams,
   }));
   form.notes = value.notes ?? '';
   if (value.snapshot)
     costs.value = {
       ...value.snapshot,
+      financials: value.financials,
       calculationVersion: value.snapshot.formulaVersion,
       totalDurationSeconds: value.totalDurationSeconds,
       lines: [],
@@ -430,7 +516,7 @@ function addHotend() {
   form.hotends.push({ componentId: '', hours: 1, minutes: 0 });
 }
 function addFilament() {
-  form.filaments.push({ filamentId: '', usedGrams: '1' });
+  form.filaments.push({ filamentId: '', spoolId: undefined as string | undefined, usedGrams: '1' });
 }
 
 function applyComponentDefaults() {
@@ -532,6 +618,29 @@ async function togglePaid() {
   }
 }
 
+async function toggleArchive() {
+  if (!job.value) return;
+  try {
+    hydrate(
+      await $fetch<PrintJobDto>(`/api/prints/${job.value.id}`, {
+        method: 'PATCH',
+        body: { archived: !job.value.archivedAt },
+      }),
+    );
+  } catch (reason) {
+    error.value = String(reason);
+  }
+}
+async function repeatOrder() {
+  if (!job.value) return;
+  try {
+    const draft = await $fetch<PrintJobDto>(`/api/prints/${job.value.id}/repeat`, { method: 'POST' });
+    await navigateTo(`/prints/${draft.id}`);
+  } catch (reason) {
+    error.value = String(reason);
+  }
+}
+
 async function duplicate() {
   if (!job.value) return;
   try {
@@ -550,6 +659,7 @@ watch(
     if (hydrating) return;
     applyComponentDefaults();
   },
+  { flush: 'sync' },
 );
 watch(
   form,

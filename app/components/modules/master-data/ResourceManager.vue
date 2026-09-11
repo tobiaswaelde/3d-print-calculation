@@ -272,7 +272,14 @@
             class="border-t border-default transition-colors hover:bg-elevated/50"
             :class="item.archivedAt && 'opacity-60'"
           >
-            <td class="px-4 py-2.5 font-medium sm:first:pl-6">{{ item.name }}</td>
+            <td class="px-4 py-2.5 font-medium sm:first:pl-6">
+              <NuxtLink
+                v-if="resource === 'customers'"
+                :to="`/customers/${item.id}`"
+                class="text-primary underline"
+                >{{ item.name }}</NuxtLink
+              ><template v-else>{{ item.name }}</template>
+            </td>
             <td class="px-4 py-2.5 text-muted">{{ details(item) }}</td>
             <td class="px-4 py-2.5">{{ rate(item) }}</td>
             <td class="px-4 py-2.5 sm:pr-6">

@@ -12,6 +12,7 @@ describe('CostBreakdown', () => {
         filamentCost: '3',
         electricityCost: '4',
         totalCost: '10',
+        costPerUnit: '2.5',
       },
     });
     expect(wrapper.text()).toContain('Drucker');
@@ -19,5 +20,7 @@ describe('CostBreakdown', () => {
     expect(wrapper.text()).toContain('Filament');
     expect(wrapper.text()).toContain('Strom');
     expect(wrapper.text()).toContain('Gesamtkosten');
+    expect(wrapper.text()).toContain('Kosten pro Stück');
+    expect(wrapper.text()).toContain('2,50');
   });
 });

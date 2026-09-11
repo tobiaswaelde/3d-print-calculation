@@ -1,5 +1,16 @@
 <template>
   <div class="space-y-5">
+    <UAlert v-if="data?.lowStock.length" color="warning" :title="t('spool.lowStock')">
+      <template #description
+        ><ul>
+          <li v-for="item in data.lowStock" :key="item.filamentId">
+            <NuxtLink :to="`/spools?search=${encodeURIComponent(item.name)}`" class="underline"
+              >{{ item.name }}: {{ item.remainingGrams }} g / {{ item.minimumStockGrams }} g</NuxtLink
+            >
+          </li>
+        </ul></template
+      >
+    </UAlert>
     <div class="flex justify-end">
       <USelect
         v-model="period"
@@ -33,6 +44,34 @@
       </NuxtLink>
     </div>
 
+    <dl v-if="data" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="rounded-lg border border-default p-4">
+        <dt>{{ t('sales.realizedRevenue') }}</dt>
+        <dd>{{ money(data.kpis.revenue, data.currency) }}</dd>
+      </div>
+      <div class="rounded-lg border border-default p-4">
+        <dt>{{ t('sales.realizedMargin') }}</dt>
+        <dd :class="Number(data.kpis.margin) < 0 && 'text-error'">
+          {{ money(data.kpis.margin, data.currency) }}
+        </dd>
+      </div>
+      <div class="rounded-lg border border-default p-4">
+        <dt>{{ t('outcome.successRate') }}</dt>
+        <dd>{{ data.kpis.successRate === null ? '—' : `${Number(data.kpis.successRate).toFixed(1)} %` }}</dd>
+      </div>
+      <div class="rounded-lg border border-default p-4">
+        <dt>{{ t('outcome.failedCost') }}</dt>
+        <dd>{{ money(data.kpis.failedCost, data.currency) }}</dd>
+      </div>
+      <div class="rounded-lg border border-default p-4">
+        <dt>{{ t('outcome.variance') }}</dt>
+        <dd>{{ money(data.kpis.variance, data.currency) }}</dd>
+      </div>
+      <div class="rounded-lg border border-default p-4">
+        <dt>{{ t('outcome.PENDING') }}</dt>
+        <dd>{{ data.kpis.pendingOutcomes }}</dd>
+      </div>
+    </dl>
     <div class="grid gap-5 xl:grid-cols-2">
       <UCard class="overflow-hidden" :ui="{ header: 'bg-blue-50/70 dark:bg-blue-950/20' }">
         <template #header>

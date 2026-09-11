@@ -19,7 +19,7 @@
         :aria-label="t('common.search')"
         :placeholder="t('common.search')"
       />
-      <div class="flex max-w-full items-center justify-end gap-2">
+      <div class="flex max-w-full flex-wrap items-center justify-end gap-2">
         <slot name="filters" />
         <slot name="options" />
         <slot name="create" />
