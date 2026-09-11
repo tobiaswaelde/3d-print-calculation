@@ -27,6 +27,11 @@ const navigation = computed(() => [
       to: '/settings/calculation',
     },
     {
+      label: t('settings.features'),
+      icon: 'i-tabler-toggle-right',
+      to: '/settings/features',
+    },
+    {
       label: t('settings.integrations'),
       icon: 'i-tabler-plug-connected',
       to: '/settings/integrations',

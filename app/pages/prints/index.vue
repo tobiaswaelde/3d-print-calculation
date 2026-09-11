@@ -30,7 +30,7 @@
                 <UFormField :label="t('nav.customers')"
                   ><USelect v-model="customerId" :items="customerOptions" class="w-full"
                 /></UFormField>
-                <UFormField :label="t('nav.series')"
+                <UFormField v-if="printSeriesEnabled" :label="t('nav.series')"
                   ><CommonSeriesSelect v-model="seriesId"
                 /></UFormField></div></template
           ></UPopover>
@@ -88,11 +88,11 @@
                   item.name
                 }}</NuxtLink
                 ><NuxtLink
-                  v-if="item.series"
+                  v-if="item.series && printSeriesEnabled"
                   :to="`/series/${item.series.id}`"
                   class="block text-xs text-primary"
                   >{{ item.series.name }}</NuxtLink
-                >
+                ><span v-else-if="item.series" class="block text-xs text-muted">{{ item.series.name }}</span>
               </td>
               <td class="px-4 py-2.5">
                 <NuxtLink
@@ -137,7 +137,7 @@
     <UPagination v-model:page="page" :total="total" :items-per-page="25" class="p-4" />
     <ModulesPrintsCreateDialog
       v-model:open="createOpen"
-      :initial-series-id="seriesId"
+      :initial-series-id="printSeriesEnabled ? seriesId : null"
       :initial-customer-id="customerId === 'ALL' ? null : customerId"
       @created="refresh"
     />
@@ -150,6 +150,7 @@ import { printStatuses } from '#shared/schemas/prints';
 import type { PrintJobDto } from '#shared/types/prints';
 
 const { t } = useI18n();
+const { load: loadFeatures, printSeriesEnabled } = useFeatures();
 const route = useRoute();
 const { money, duration } = useFormatting();
 const items = ref<PrintJobDto[]>([]);
@@ -203,7 +204,7 @@ const filters = computed(() => ({
   dateTo: dateTo.value || undefined,
   printerId: printerId.value === 'ALL' ? undefined : printerId.value,
   customerId: customerId.value === 'ALL' ? undefined : customerId.value,
-  seriesId: seriesId.value ?? undefined,
+  seriesId: printSeriesEnabled.value ? (seriesId.value ?? undefined) : undefined,
   search: search.value,
   outcome: outcome.value === 'ALL' ? undefined : outcome.value,
   status: status.value === 'ALL' ? undefined : status.value,
@@ -244,6 +245,8 @@ watch(createOpen, (open) => {
 });
 watch(page, refresh);
 onMounted(async () => {
+  await loadFeatures();
+  if (!printSeriesEnabled.value) seriesId.value = null;
   await refresh();
   try {
     const [p, c] = await Promise.all([

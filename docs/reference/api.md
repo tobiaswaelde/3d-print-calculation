@@ -21,6 +21,7 @@ whole seconds.
 | `POST /api/auth/logout`                   | Yes      | Delete the current session                                            |
 | `PATCH /api/auth/preferences`             | Yes      | Update `{ locale }` for the account                                   |
 | `GET/PATCH /api/settings`                 | Yes      | Read or update currency, default language, and electricity price      |
+| `GET/PATCH /api/settings/features`        | Yes      | Read or update print-series and spool-management feature flags        |
 | `GET/POST /api/customers`                 | Yes      | Paginated list or create                                              |
 | `GET/PATCH/DELETE /api/customers/:id`     | Yes      | Read, replace/archive, or safely delete                               |
 | `GET/POST /api/printers`                  | Yes      | Paginated list or create                                              |
@@ -64,7 +65,7 @@ manufacturer, material, and color name. Responses expose the resolved manufactur
 ## Errors
 
 Errors include an HTTP status and stable `data` with `code`, `messageKey`, optional `fieldErrors`, and `requestId`.
-Expect 401 without a session, 403 for a foreign origin, 409 for immutability, references, currency, or setup
+Expect 401 without a session, 403 for a foreign origin, 409 for disabled features, immutability, references, currency, or setup
 conflicts, and 422 for invalid or incompatible input. API clients should branch on `code`, not parse messages.
 
 Print draft and calculation requests accept `quantity`, a whole number from 1 to 1,000,000, defaulting to 1. Print DTOs, previews, and snapshots expose `quantity` and canonical decimal `costPerUnit`. Material quantities and duration remain run totals.

@@ -253,25 +253,33 @@ export async function createResource(resource: Resource, input: unknown) {
   }
   const data = parseBody(filamentSchema, input);
   const manufacturer = await ensureActiveManufacturer(data.manufacturerId);
+  const features = await db.appSettings.findUniqueOrThrow({
+    where: { id: 1 },
+    select: { spoolManagementEnabled: true },
+  });
   return filamentDto(
     await db.filament.create({
       data: {
         ...data,
         name: `${manufacturer!.name} ${data.material} - ${data.colorName}`,
-        spools: {
-          create: {
-            code: `S-${randomUUID()}`,
-            purchasePrice: data.purchasePrice,
-            initialNetWeightGrams: data.netWeightGrams,
-            movements: {
-              create: {
-                kind: 'RECEIPT',
-                grams: data.netWeightGrams,
-                operationKey: `opening:${randomUUID()}`,
+        ...(features.spoolManagementEnabled
+          ? {
+              spools: {
+                create: {
+                  code: `S-${randomUUID()}`,
+                  purchasePrice: data.purchasePrice,
+                  initialNetWeightGrams: data.netWeightGrams,
+                  movements: {
+                    create: {
+                      kind: 'RECEIPT',
+                      grams: data.netWeightGrams,
+                      operationKey: `opening:${randomUUID()}`,
+                    },
+                  },
+                },
               },
-            },
-          },
-        },
+            }
+          : {}),
       },
       include: { manufacturer: true },
     }),

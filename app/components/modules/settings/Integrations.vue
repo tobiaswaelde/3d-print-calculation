@@ -6,7 +6,7 @@
     </div>
 
     <UForm :schema="integrationSettingsSchema" :state="form" class="space-y-5" @submit="save">
-      <UCard id="integration-spoolman">
+      <UCard v-if="spoolManagementEnabled" id="integration-spoolman">
         <template #header>
           <div class="flex items-center justify-between gap-4">
             <div>
@@ -36,6 +36,13 @@
           />
         </div>
       </UCard>
+
+      <UAlert
+        v-else
+        color="neutral"
+        :title="t('integration.spoolman')"
+        :description="t('integration.spoolManagementRequired')"
+      />
 
       <UCard id="integration-bambubuddy">
         <template #header>
@@ -79,7 +86,10 @@
       </div>
     </UForm>
 
-    <ModulesSettingsSpoolman v-if="settings?.spoolman.enabled" :key="`spoolman-${revision}`" />
+    <ModulesSettingsSpoolman
+      v-if="spoolManagementEnabled && settings?.spoolman.enabled"
+      :key="`spoolman-${revision}`"
+    />
     <ModulesSettingsBambuBuddy v-if="settings?.bambubuddy.enabled" :key="`bambu-${revision}`" />
   </section>
 </template>
@@ -88,6 +98,7 @@
 import { integrationSettingsSchema, type IntegrationSettingsDto } from '#shared/schemas/integration-settings';
 
 const { t } = useI18n();
+const { spoolManagementEnabled } = useFeatures();
 const settings = ref<IntegrationSettingsDto | null>(null);
 const pending = ref(false);
 const message = ref('');

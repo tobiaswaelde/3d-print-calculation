@@ -42,6 +42,8 @@
 </template>
 <script setup lang="ts">
 import type { PrintSeriesDto } from '#shared/types/series';
+
+definePageMeta({ middleware: 'print-series' });
 const { t } = useI18n();
 const id = String(useRoute().params.id);
 const series = ref<PrintSeriesDto | null>(null);

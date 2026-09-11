@@ -7,6 +7,8 @@ description: Group production runs, track successful quantities, and repeat cust
 
 A series groups print runs under a name, optional customer, target quantity, and notes. Create it from **Series**, then select it in a new draft or create a print directly from the series. A series customer is inherited; conflicting customer assignments are rejected. Prints can also remain independent.
 
+Print series can be disabled under **Settings → Features**. Series pages and APIs then become unavailable, but existing assignments remain stored and visible as plain text in print history.
+
 ![Series list with target progress](/screenshots/series.jpg)
 
 Only non-archived **Done** runs with a successful outcome contribute to produced quantity. Failed runs contribute waste costs, pending results remain separate, and drafts and in-progress runs do not count as finished production. A target can automatically complete the series. Manual completion or reopening disables automatic completion until you enable it again in the editor. Archiving preserves the series and its historical runs.

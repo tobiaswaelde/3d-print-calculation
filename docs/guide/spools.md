@@ -7,6 +7,8 @@ description: Physical filament spools, exact stock movements, low-stock warnings
 
 Filaments describe products; spools identify physical stock. Open **Spools** to search by code, filament, or location and page through active inventory. Each spool has a stable code, purchase lot, location, acquisition date, purchase price, and initial net weight. Referenced spools can be archived, never deleted. Code, filament identity, and initial net weight remain fixed; use a correction for a measured balance change.
 
+Spool management can be disabled under **Settings → Features**. Its pages and APIs then become unavailable while existing inventory remains stored. New prints use the filament's price and net weight without stock movements until the feature is re-enabled.
+
 ![Spool inventory with remaining material and location](/screenshots/spools.jpg)
 
 Creating a filament also creates its initial spool using the entered price and net weight. Add further spools for later purchases or different prices. Upgrades create a clearly marked legacy spool for each existing active filament. Verify its physical weight: the imported opening balance uses the catalog's nominal weight and does not infer historical consumption. Existing completed prints retain their original snapshots and do not acquire guessed spool references.

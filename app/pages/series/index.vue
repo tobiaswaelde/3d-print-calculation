@@ -43,6 +43,8 @@
 <script setup lang="ts">
 import type { PrintSeriesDto } from '#shared/types/series';
 import type { PaginatedResponse } from '#shared/types/master-data';
+
+definePageMeta({ middleware: 'print-series' });
 const { t } = useI18n();
 const { money } = useFormatting();
 const search = ref('');

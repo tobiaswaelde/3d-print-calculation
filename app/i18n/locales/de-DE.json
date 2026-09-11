@@ -108,6 +108,13 @@
     "generalDescription": "Sprache, Darstellung sowie Datums-, Uhrzeit- und Daueranzeige für diese Anwendung.",
     "calculation": "Berechnung",
     "calculationDescription": "Währung und Energiekosten für die Druckkostenberechnung.",
+    "features": "Features",
+    "printSeries": "Druckserien",
+    "printSeriesDescription": "Zusammengehörige Druckläufe, Wiederholungsaufträge und Produktionsziele verwalten.",
+    "printSeriesDisabledHelp": "Seriennavigation und -bearbeitung sind nicht verfügbar. Bestehende Zuordnungen bleiben gespeichert und als Text sichtbar.",
+    "spoolManagement": "Spulenverwaltung",
+    "spoolManagementDescription": "Physische Spulen, Bestandsbewegungen, QR-Etiketten und spulenspezifische Preise verwalten.",
+    "spoolManagementDisabledHelp": "Drucke verwenden Filamentpreis und Nettogewicht. Bestehende Bestände bleiben gespeichert und Spoolman wird deaktiviert.",
     "dateFormat": "Datumsformat",
     "timeFormat": "Uhrzeitformat",
     "durationFormat": "Dauerformat",
@@ -268,7 +275,9 @@
     "integrationContract": "Remote-Antwort ist mit der unterstützten API inkompatibel.",
     "integrationConflict": "Verknüpfung oder Daten geändert. Aktualisieren und Konflikt lösen.",
     "integrationMetadata": "Remote-Hersteller, Preis und Anfangsgewicht erforderlich; archivierte Spulen können nicht importiert werden.",
-    "stockOwnedExternally": "Spoolman führt diesen Bestand. Dort ändern oder zuerst ausdrücklich trennen."
+    "stockOwnedExternally": "Spoolman führt diesen Bestand. Dort ändern oder zuerst ausdrücklich trennen.",
+    "printSeriesDisabled": "Druckserien sind unter Einstellungen → Features deaktiviert.",
+    "spoolManagementDisabled": "Die Spulenverwaltung ist unter Einstellungen → Features deaktiviert."
   },
   "validation": {
     "outcomeFailureReasonRequired": "Ein Fehlergrund ist erforderlich.",
@@ -358,6 +367,7 @@
   "integration": {
     "spoolman": "Spoolman-Anbindung",
     "spoolmanConfigDescription": "Filamentbestand importieren und synchronisieren.",
+    "spoolManagementRequired": "Aktiviere die Spulenverwaltung unter Einstellungen → Features, um Spoolman zu konfigurieren.",
     "bambuConfigDescription": "Drucker verknüpfen und abgeschlossene Druckergebnisse übernehmen.",
     "enabled": "Aktiviert",
     "url": "Server-URL",

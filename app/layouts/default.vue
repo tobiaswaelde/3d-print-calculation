@@ -9,4 +9,7 @@
 
 <script setup lang="ts">
 const changelogOpen = useState('changelog-open', () => false);
+const { load: loadFeatures } = useFeatures();
+
+onMounted(loadFeatures);
 </script>

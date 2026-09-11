@@ -108,6 +108,13 @@
     "generalDescription": "Language, appearance, date, time, and duration display for this application.",
     "calculation": "Calculation",
     "calculationDescription": "Currency and energy costs used for print cost calculations.",
+    "features": "Features",
+    "printSeries": "Print series",
+    "printSeriesDescription": "Group related print runs, repeat orders, and production targets.",
+    "printSeriesDisabledHelp": "Series navigation and editing are unavailable. Existing assignments remain stored and visible as text.",
+    "spoolManagement": "Spool management",
+    "spoolManagementDescription": "Track physical spools, stock movements, QR labels, and spool-specific prices.",
+    "spoolManagementDisabledHelp": "Prints use filament price and net weight. Existing stock stays stored, and Spoolman is disabled.",
     "dateFormat": "Date format",
     "timeFormat": "Time format",
     "durationFormat": "Duration format",
@@ -268,7 +275,9 @@
     "integrationContract": "Remote response is incompatible with the supported API.",
     "integrationConflict": "Link or data changed. Refresh and resolve the conflict.",
     "integrationMetadata": "Remote vendor, price and initial weight are required; archived spools cannot be imported.",
-    "stockOwnedExternally": "Spoolman owns this stock. Change it there or explicitly unlink first."
+    "stockOwnedExternally": "Spoolman owns this stock. Change it there or explicitly unlink first.",
+    "printSeriesDisabled": "Print series are disabled in Settings → Features.",
+    "spoolManagementDisabled": "Spool management is disabled in Settings → Features."
   },
   "validation": {
     "outcomeFailureReasonRequired": "A failure reason is required.",
@@ -358,6 +367,7 @@
   "integration": {
     "spoolman": "Spoolman integration",
     "spoolmanConfigDescription": "Import and synchronize filament inventory.",
+    "spoolManagementRequired": "Enable spool management under Settings → Features to configure Spoolman.",
     "bambuConfigDescription": "Link printers and import completed print results.",
     "enabled": "Enabled",
     "url": "Server URL",

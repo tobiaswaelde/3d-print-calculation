@@ -1,13 +1,13 @@
 ---
 title: Settings
-description: Configure display, calculation, and integration settings in dedicated tabs.
+description: Configure display, calculation, optional features, and integrations in dedicated tabs.
 ---
 
 # Settings
 
-The Settings page uses linked **General**, **Calculation**, and **Integrations** tabs. Each tab has its own URL, so browser navigation and direct links preserve the selected settings area.
+The Settings page uses linked **General**, **Calculation**, **Features**, and **Integrations** tabs. Each tab has its own URL, so browser navigation and direct links preserve the selected settings area.
 
-![Settings page with linked General, Calculation, and Integrations tabs](/screenshots/settings.jpg)
+![Settings page with linked configuration tabs](/screenshots/settings.jpg)
 
 ## General
 
@@ -28,8 +28,23 @@ the application.
 - **Electricity price per kWh:** a nonnegative decimal used for new previews, saved drafts, duplicates, and
   completion recalculation. Existing completed snapshots keep their original electricity rate.
 
+## Features
+
+The **Features** tab controls optional instance-wide modules. Both modules are enabled by default, and disabling
+them never deletes existing records.
+
+![Feature settings for print series and spool management](/screenshots/settings-features.jpg)
+
+- **Print series:** hides series navigation, search, filters, and assignment controls. Direct series pages and API
+  operations are unavailable. Existing print assignments remain stored and appear as plain text.
+- **Spool management:** hides spool navigation, stock controls, QR labels, and spool selection. New calculations
+  use the filament purchase price and net weight without booking stock. Existing spool data remains stored.
+  Disabling it also disables Spoolman; BambuBuddy result imports remain available without tray mapping.
+
+Re-enabling spool management creates one opening spool for every active filament that has no active spool.
+
 ## Integrations
 
 Use the **Integrations** tab to enable and configure Spoolman and BambuBuddy. Connection tools and print-result workflows stay within that tab; they do not add separate pages or sidebar entries. See [Spoolman and BambuBuddy](./integrations) for setup, ownership, and reconciliation details.
 
-Select **Save** in General or Calculation to validate and persist that tab's settings. A success message confirms the update; validation or currency-lock errors are shown without discarding the entered values.
+Select **Save** to validate and persist the current tab's settings. A success message confirms the update; validation or currency-lock errors are shown without discarding the entered values.

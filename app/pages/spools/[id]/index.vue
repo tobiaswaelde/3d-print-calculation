@@ -104,6 +104,8 @@
 <script setup lang="ts">
 import { spoolSchema, stockMovementSchema, stockThresholdSchema } from '#shared/schemas/spools';
 import type { SpoolDetailDto } from '#shared/types/spools';
+
+definePageMeta({ middleware: 'spool-management' });
 const { t } = useI18n();
 const { dateTime } = useFormatting();
 const id = String(useRoute().params.id);

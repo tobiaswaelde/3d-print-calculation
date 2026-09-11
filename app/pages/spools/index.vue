@@ -86,6 +86,8 @@
 import { spoolSchema } from '#shared/schemas/spools';
 import type { SpoolDto } from '#shared/types/spools';
 import type { MasterDataListItem, PaginatedResponse } from '#shared/types/master-data';
+
+definePageMeta({ middleware: 'spool-management' });
 const { t } = useI18n();
 const search = ref(String(useRoute().query.search ?? ''));
 const page = ref(1);

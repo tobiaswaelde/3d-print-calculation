@@ -30,7 +30,7 @@ inventory, calculate a draft, and complete it only when the inputs are final.
 | **Printers**   | Machine cost and power           | Maintain purchase price, lifetime, average power, and notes                     |
 | **Components** | Wear parts and compatibility     | Define type, cost, lifetime, and compatible printers                            |
 | **Filaments**  | Material cost                    | Maintain spool price, net weight, material, color, and notes                    |
-| **Settings**   | Instance and display preferences | Language, appearance, date format, currency, and electricity rate               |
+| **Settings**   | Instance and display preferences | Language, appearance, feature modules, currency, and electricity rate           |
 
 The global header, keyboard shortcuts, user menu, version indicator, and search are described under
 [Navigation and search](/guide/navigation-search).

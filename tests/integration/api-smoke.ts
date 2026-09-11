@@ -1236,6 +1236,92 @@ try {
   );
   check(fake.state.authenticated > 0, 'Remote calls authenticate through server-only credentials.');
 
+  const disabledFeatures = await json(
+    '/api/settings/features',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ printSeriesEnabled: false, spoolManagementEnabled: false }),
+    },
+    cookie,
+  );
+  check(
+    disabledFeatures.body.printSeriesEnabled === false &&
+      disabledFeatures.body.spoolManagementEnabled === false,
+    'Feature settings persist independently.',
+  );
+  check(
+    (await json(`/api/series/${series.body.id}`, {}, cookie)).response.status === 409,
+    'Disabled print series reject direct API access.',
+  );
+  check(
+    (
+      await json(
+        '/api/prints',
+        { method: 'POST', body: JSON.stringify({ ...payload, seriesId: series.body.id }) },
+        cookie,
+      )
+    ).response.status === 409,
+    'Disabled print series reject new assignments.',
+  );
+  check(
+    (await json(`/api/prints/${seriesDone.body.id}`, {}, cookie)).body.series?.name === 'Bracket batch',
+    'Historical print DTOs retain their series text while the feature is disabled.',
+  );
+  check(
+    (await json(`/api/spools/${otherSpool.body.id}`, {}, cookie)).response.status === 409,
+    'Disabled spool management rejects direct API access.',
+  );
+  check(
+    (await json('/api/integrations/spoolman', {}, cookie)).response.status === 409,
+    'Disabling spool management also blocks Spoolman operations.',
+  );
+  const disabledSearch = await json('/api/search?q=Bracket', {}, cookie);
+  check(
+    !disabledSearch.body.groups.some((group: { type: string }) => ['series', 'spools'].includes(group.type)),
+    'Disabled features disappear from global search.',
+  );
+  const featureFilament = await json(
+    '/api/filaments',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        manufacturerId: filamentManufacturer.body.id,
+        material: 'ASA',
+        colorName: 'Feature test',
+        colorHex: '#223344',
+        purchasePrice: '30',
+        netWeightGrams: '1000',
+        note: '',
+      }),
+    },
+    cookie,
+  );
+  const featurePreview = await json(
+    '/api/prints/calculate',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        ...payload,
+        name: 'Feature-disabled print',
+        customerId: null,
+        seriesId: null,
+        filaments: [{ filamentId: featureFilament.body.id, usedGrams: '10' }],
+      }),
+    },
+    cookie,
+  );
+  check(featurePreview.response.ok, 'Print calculations use filament pricing while spools are disabled.');
+  await json(
+    '/api/settings/features',
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ printSeriesEnabled: true, spoolManagementEnabled: true }),
+    },
+    cookie,
+  );
+  const backfilledSpools = await json(`/api/spools?filamentId=${featureFilament.body.id}`, {}, cookie);
+  check(backfilledSpools.body.items.length === 1, 'Re-enabling spool management backfills an opening spool.');
+
   execFileSync('pnpm', ['db:reset-password', 'integration@example.test', 'new-integration-password-456'], {
     env: environment,
     stdio: 'ignore',

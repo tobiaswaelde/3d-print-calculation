@@ -1,9 +1,12 @@
 <template>
   <div class="space-y-5">
     <div v-if="job" class="flex flex-wrap gap-3 text-sm">
-      <NuxtLink v-if="job.series" :to="`/series/${job.series.id}`" class="text-primary underline">{{
-        job.series.name
-      }}</NuxtLink
+      <NuxtLink
+        v-if="job.series && printSeriesEnabled"
+        :to="`/series/${job.series.id}`"
+        class="text-primary underline"
+        >{{ job.series.name }}</NuxtLink
+      ><span v-else-if="job.series">{{ job.series.name }}</span
       ><NuxtLink v-if="job.customer" :to="`/customers/${job.customer.id}`" class="text-primary underline">{{
         job.customer.name
       }}</NuxtLink
@@ -107,7 +110,11 @@
             <UFormField name="salesValue" :label="t('sales.value')" :description="t('sales.help')">
               <UInput v-model="form.salesValue" inputmode="decimal" class="w-full" />
             </UFormField>
-            <UFormField name="seriesId" :label="t('nav.series')" :description="t('series.customerRule')"
+            <UFormField
+              v-if="printSeriesEnabled"
+              name="seriesId"
+              :label="t('nav.series')"
+              :description="t('series.customerRule')"
               ><CommonSeriesSelect v-model="form.seriesId" @customer="form.customerId = $event"
             /></UFormField>
             <UFormField name="customerId" :label="t('nav.customers')"
@@ -229,12 +236,28 @@
             <div
               v-for="(filament, index) in form.filaments"
               :key="index"
-              class="grid items-start gap-3 md:grid-cols-[1fr_1fr_10rem_auto]"
+              class="grid items-start gap-3"
+              :class="
+                spoolManagementEnabled ? 'md:grid-cols-[1fr_1fr_10rem_auto]' : 'md:grid-cols-[1fr_10rem_auto]'
+              "
             >
               <UFormField :name="`filaments.${index}.filamentId`" :label="t('nav.filaments')" required
-                ><CommonFilamentSelect v-model="filament.filamentId" class="w-full" :items="filamentOptions"
-              /></UFormField>
-              <UFormField :name="`filaments.${index}.spoolId`" :label="t('nav.spools')" required>
+                ><CommonFilamentSelect
+                  v-model="filament.filamentId"
+                  class="w-full"
+                  :items="filamentOptions"
+                /><span
+                  v-if="!spoolManagementEnabled && job?.filamentUsages[index]?.spoolCode"
+                  class="mt-1 block text-xs text-muted"
+                  >{{ job.filamentUsages[index]?.spoolCode }}</span
+                ></UFormField
+              >
+              <UFormField
+                v-if="spoolManagementEnabled"
+                :name="`filaments.${index}.spoolId`"
+                :label="t('nav.spools')"
+                required
+              >
                 <CommonSpoolSelect v-model="filament.spoolId" :filament-id="filament.filamentId" />
               </UFormField>
               <UFormField :name="`filaments.${index}.usedGrams`" :label="t('prints.usedGrams')" required
@@ -374,6 +397,7 @@ import type { PrintJobDto } from '#shared/types/prints';
 
 const props = defineProps<{ printId?: string }>();
 const { t } = useI18n();
+const { load: loadFeatures, printSeriesEnabled, spoolManagementEnabled } = useFeatures();
 const { money, dateTime } = useFormatting();
 const job = ref<PrintJobDto | null>(null);
 const loading = ref(true);
@@ -447,7 +471,7 @@ function payload() {
     quantity: Number(form.quantity),
     salesValue: form.salesValue || null,
     customerId: form.customerId,
-    seriesId: form.seriesId,
+    seriesId: printSeriesEnabled.value ? form.seriesId : (job.value?.seriesId ?? null),
     printerId: form.printerId,
     buildPlateId: form.buildPlateId,
     hotends: form.hotends.map((entry) => ({
@@ -457,7 +481,7 @@ function payload() {
     otherComponentIds: form.otherComponentIds,
     filaments: form.filaments.map((entry) => ({
       filamentId: entry.filamentId,
-      spoolId: entry.spoolId,
+      ...(spoolManagementEnabled.value ? { spoolId: entry.spoolId } : {}),
       usedGrams: entry.usedGrams,
     })),
     notes: form.notes,
@@ -501,6 +525,7 @@ function hydrate(value: PrintJobDto) {
 }
 
 async function load() {
+  await loadFeatures();
   const [customerResponse, printerResponse, componentResponse, filamentResponse] = await Promise.all([
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/customers', { query: { pageSize: 100 } }),
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/printers', { query: { pageSize: 100 } }),

@@ -81,10 +81,11 @@
               <NuxtLink :to="`/prints/${print.id}`" class="text-primary underline">{{ print.name }}</NuxtLink>
               <p class="text-xs text-muted">{{ dateTime(print.completedAt ?? print.createdAt) }}</p>
               <NuxtLink
-                v-if="print.series"
+                v-if="print.series && printSeriesEnabled"
                 :to="`/series/${print.series.id}`"
                 class="block text-xs text-primary"
                 >{{ print.series.name }}</NuxtLink
+              ><span v-else-if="print.series" class="text-muted">{{ print.series.name }}</span
               ><NuxtLink
                 v-if="print.retryOf"
                 :to="`/prints/${print.retryOf.id}`"
@@ -138,6 +139,7 @@ import type { PrintJobDto } from '#shared/types/prints';
 import type { PrintSummary } from '#shared/domain/print-summary';
 import type { MasterDataListItem, PaginatedResponse } from '#shared/types/master-data';
 const props = defineProps<{ customerId?: string; seriesId?: string }>();
+const { printSeriesEnabled } = useFeatures();
 const { t } = useI18n();
 const { money, duration, dateTime } = useFormatting();
 const filters = reactive({

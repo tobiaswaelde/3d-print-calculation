@@ -21,6 +21,7 @@ import { canonicalDecimal } from '#shared/utils/decimal';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
 import { parseBody } from '../utils/validation';
+import { requireFeature } from '../utils/features';
 
 type Transaction = Prisma.TransactionClient;
 const printInclude = {
@@ -146,7 +147,14 @@ function printDto(value: PrintWithSnapshot): PrintJobDto {
   };
 }
 
-async function resolveCalculation(transaction: Transaction, input: PrintDraftInput) {
+async function resolveCalculation(
+  transaction: Transaction,
+  input: PrintDraftInput,
+  allowedDisabledSeriesId?: string | null,
+) {
+  const features = await transaction.appSettings.findUniqueOrThrow({ where: { id: 1 } });
+  if (input.seriesId && !features.printSeriesEnabled && input.seriesId !== allowedDisabledSeriesId)
+    apiError(409, 'PRINT_SERIES_DISABLED', 'errors.printSeriesDisabled');
   if (input.seriesId) {
     const series = await transaction.printSeries.findFirst({
       where: { id: input.seriesId, archivedAt: null },
@@ -167,8 +175,7 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
   if (new Set(componentIds).size !== componentIds.length)
     apiError(422, 'DUPLICATE_COMPONENT', 'errors.duplicateComponent');
 
-  const [settings, printer, components, filaments, customer] = await Promise.all([
-    transaction.appSettings.findUniqueOrThrow({ where: { id: 1 } }),
+  const [printer, components, filaments, customer] = await Promise.all([
     transaction.printer.findFirst({ where: { id: input.printerId, archivedAt: null } }),
     transaction.component.findMany({
       where: { id: { in: componentIds }, archivedAt: null },
@@ -188,24 +195,32 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     apiError(422, 'INVALID_COMPONENT', 'errors.invalidComponent');
   if (filaments.length !== filamentIds.length) apiError(422, 'INVALID_FILAMENT', 'errors.invalidFilament');
 
-  const spools = await transaction.spool.findMany({
-    where: { filamentId: { in: filamentIds }, archivedAt: null },
-  });
-  for (const line of input.filaments) {
-    const candidates = spools.filter(
-      (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
-    );
-    const balance = candidates.length === 1 ? await spoolBalance(transaction, candidates[0]!.id) : null;
-    if (
-      candidates.length !== 1 ||
-      ['ARCHIVED', 'MISSING'].includes(candidates[0]!.remoteState ?? '') ||
-      (balance !== null && new Decimal(balance).lte(0))
-    )
-      apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
-    line.spoolId = candidates[0]!.id;
+  const spools = features.spoolManagementEnabled
+    ? await transaction.spool.findMany({
+        where: { filamentId: { in: filamentIds }, archivedAt: null },
+      })
+    : [];
+  if (features.spoolManagementEnabled) {
+    for (const line of input.filaments) {
+      const candidates = spools.filter(
+        (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
+      );
+      const balance = candidates.length === 1 ? await spoolBalance(transaction, candidates[0]!.id) : null;
+      if (
+        candidates.length !== 1 ||
+        ['ARCHIVED', 'MISSING'].includes(candidates[0]!.remoteState ?? '') ||
+        (balance !== null && new Decimal(balance).lte(0))
+      )
+        apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
+      line.spoolId = candidates[0]!.id;
+    }
+    if (new Set(input.filaments.map((line) => line.spoolId)).size !== input.filaments.length)
+      apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
+  } else {
+    for (const line of input.filaments) line.spoolId = undefined;
+    if (new Set(input.filaments.map((line) => line.filamentId)).size !== input.filaments.length)
+      apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
   }
-  if (new Set(input.filaments.map((line) => line.spoolId)).size !== input.filaments.length)
-    apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
   const spoolMap = new Map(spools.map((spool) => [spool.id, spool]));
   const componentMap = new Map(components.map((entry) => [entry.id, entry]));
   const filamentMap = new Map(filaments.map((entry) => [entry.id, entry]));
@@ -259,19 +274,19 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
-      const spool = spoolMap.get(entry.spoolId!)!;
+      const spool = entry.spoolId ? spoolMap.get(entry.spoolId) : undefined;
       return {
-        id: spool.id,
-        name: `${source.name} · ${spool.code}`,
-        purchasePrice: spool.purchasePrice,
-        netWeightGrams: spool.initialNetWeightGrams,
+        id: spool?.id ?? source.id,
+        name: spool ? `${source.name} · ${spool.code}` : source.name,
+        purchasePrice: (spool?.purchasePrice ?? source.purchasePrice).toString(),
+        netWeightGrams: (spool?.initialNetWeightGrams ?? source.netWeightGrams).toString(),
         usedGrams: entry.usedGrams,
       };
     }),
-    electricityPricePerKwh: settings.electricityPricePerKwh.toString(),
-    currency: settings.currency,
+    electricityPricePerKwh: features.electricityPricePerKwh.toString(),
+    currency: features.currency,
   });
-  return { settings, printer, componentMap, filamentMap, spoolMap, result };
+  return { settings: features, printer, componentMap, filamentMap, spoolMap, result };
 }
 
 function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<typeof resolveCalculation>>) {
@@ -314,17 +329,17 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
-      const spool = spoolMap.get(entry.spoolId!)!;
-      const line = lineMap.get(spool.id)!;
+      const spool = entry.spoolId ? spoolMap.get(entry.spoolId) : undefined;
+      const line = lineMap.get(spool?.id ?? source.id)!;
       return {
         filamentId: source.id,
-        spoolId: spool.id,
-        spoolCode: spool.code,
+        spoolId: spool?.id ?? null,
+        spoolCode: spool?.code ?? null,
         filamentName: source.name,
         manufacturer: source.manufacturer.name,
         material: source.material,
-        purchasePrice: spool.purchasePrice,
-        netWeightGrams: spool.initialNetWeightGrams,
+        purchasePrice: spool?.purchasePrice ?? source.purchasePrice,
+        netWeightGrams: spool?.initialNetWeightGrams ?? source.netWeightGrams,
         costPerGram: line.unitRate,
         usedGrams: entry.usedGrams,
         lineCost: line.cost,
@@ -357,7 +372,7 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
 export async function previewPrint(input: unknown) {
   const parsed = parseBody(printDraftSchema, input);
   return db.$transaction(async (transaction) => {
-    const { result } = await resolveCalculation(transaction, parsed);
+    const { result } = await resolveCalculation(transaction, parsed, parsed.seriesId);
     return {
       ...result,
       financials: calculatePrintFinancials(parsed.salesValue, result.totalCost, result.quantity),
@@ -402,7 +417,7 @@ export async function updatePrint(id: string, input: unknown) {
   return db.$transaction(async (transaction) => {
     const existing = await transaction.printJob.findUniqueOrThrow({ where: { id } });
     if (existing.status !== 'DRAFT') apiError(409, 'PRINT_IMMUTABLE', 'errors.printImmutable');
-    const data = persistenceData(parsed, await resolveCalculation(transaction, parsed));
+    const data = persistenceData(parsed, await resolveCalculation(transaction, parsed, existing.seriesId));
     return printDto(
       await transaction.printJob.update({
         where: { id },
@@ -474,7 +489,7 @@ export async function updatePrintWorkflow(id: string, input: unknown) {
     }
 
     const draft = intentFromPrint(existing);
-    const data = persistenceData(draft, await resolveCalculation(transaction, draft));
+    const data = persistenceData(draft, await resolveCalculation(transaction, draft, existing.seriesId));
     return printDto(
       await transaction.printJob.update({
         where: { id },
@@ -496,7 +511,11 @@ export async function updatePrintWorkflow(id: string, input: unknown) {
 export async function duplicatePrint(id: string, relationship: 'copy' | 'retry' | 'repeat' = 'copy') {
   const existing = await db.printJob.findUniqueOrThrow({ where: { id }, include: printInclude });
   const input = intentFromPrint(existing);
-  if (existing.series?.archivedAt) input.seriesId = null;
+  const features = await db.appSettings.findUniqueOrThrow({
+    where: { id: 1 },
+    select: { printSeriesEnabled: true },
+  });
+  if (!features.printSeriesEnabled || existing.series?.archivedAt) input.seriesId = null;
   return createPrint(
     { ...input, salesValue: null, name: `${input.name} (copy)` },
     {
@@ -558,6 +577,7 @@ function printFilter(input: ReturnType<typeof printListQuerySchema.parse>) {
 
 export async function listPrints(query: Record<string, unknown>, transaction?: Transaction) {
   const input = parseBody(printListQuerySchema, query);
+  if (input.seriesId) await requireFeature('printSeriesEnabled', transaction ?? db);
   const where = printFilter(input);
   const run = async (client: Transaction) => {
     const [items, total] = await Promise.all([

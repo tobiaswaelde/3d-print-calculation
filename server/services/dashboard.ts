@@ -85,15 +85,13 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
     series.set(key, (series.get(key) ?? new Decimal(0)).plus(costs.totalCost.toString()));
   }
 
+  const settings = await db.appSettings.findUniqueOrThrow({ where: { id: 1 } });
   return {
-    lowStock: await lowStockFilaments(),
+    lowStock: settings.spoolManagementEnabled ? await lowStockFilaments() : [],
     period,
     periodStart: start?.toISOString() ?? null,
     periodEnd: now.toISOString(),
-    currency:
-      completed[0]?.currency ??
-      unfinished[0]?.currency ??
-      (await db.appSettings.findUniqueOrThrow({ where: { id: 1 } })).currency,
+    currency: completed[0]?.currency ?? unfinished[0]?.currency ?? settings.currency,
     kpis: {
       revenue: canonicalDecimal(revenue),
       margin: canonicalDecimal(margin),

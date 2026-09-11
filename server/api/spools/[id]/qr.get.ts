@@ -1,9 +1,11 @@
 import { renderSVG } from 'uqr';
 import { requireUser } from '../../../utils/auth';
 import { db } from '../../../utils/db';
+import { requireFeature } from '../../../utils/features';
 
 export default defineEventHandler(async (event) => {
   await requireUser(event);
+  await requireFeature('spoolManagementEnabled');
   const id = getRouterParam(event, 'id')!;
   await db.spool.findUniqueOrThrow({ where: { id }, select: { id: true } });
   const target = new URL(`/spools/${encodeURIComponent(id)}`, getRequestURL(event).origin);

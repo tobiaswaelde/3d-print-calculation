@@ -18,117 +18,126 @@ function masterDataTarget(type: Exclude<GlobalSearchKind, 'prints'>, title: stri
 
 export async function searchApplication(query: Record<string, unknown>) {
   const { q } = parseBody(globalSearchQuerySchema, query);
-  const [prints, customers, printers, components, filaments, spools, series] = await db.$transaction([
-    db.printJob.findMany({
-      where: {
-        archivedAt: null,
-        OR: [
-          { name: { contains: q } },
-          { customer: { name: { contains: q } } },
-          { printer: { name: { contains: q } } },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        customer: { select: { name: true } },
-        printer: { select: { name: true } },
-      },
-      orderBy: { updatedAt: 'desc' },
-      take: 5,
-    }),
-    db.customer.findMany({
-      where: {
-        archivedAt: null,
-        OR: [{ name: { contains: q } }, { email: { contains: q } }],
-      },
-      select: { id: true, name: true, email: true },
-      orderBy: { name: 'asc' },
-      take: 5,
-    }),
-    db.printer.findMany({
-      where: {
-        archivedAt: null,
-        OR: [{ name: { contains: q } }, { manufacturer: { contains: q } }, { model: { contains: q } }],
-      },
-      select: { id: true, name: true, manufacturer: true, model: true },
-      orderBy: { name: 'asc' },
-      take: 5,
-    }),
-    db.component.findMany({
-      where: {
-        archivedAt: null,
-        OR: [
-          { name: { contains: q } },
-          { manufacturer: { is: { name: { contains: q } } } },
-          { model: { contains: q } },
-          { type: { contains: q } },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        manufacturer: { select: { name: true } },
-        model: true,
-      },
-      orderBy: [{ type: 'asc' }, { name: 'asc' }],
-      take: 5,
-    }),
-    db.filament.findMany({
-      where: {
-        archivedAt: null,
-        OR: [
-          { name: { contains: q } },
-          { manufacturer: { name: { contains: q } } },
-          { material: { contains: q } },
-          { colorName: { contains: q } },
-          { colorHex: { contains: q } },
-        ],
-      },
-      select: {
-        id: true,
-        name: true,
-        manufacturer: { select: { name: true } },
-        material: true,
-        colorName: true,
-        colorHex: true,
-      },
-      orderBy: [{ manufacturer: { name: 'asc' } }, { name: 'asc' }],
-      take: 5,
-    }),
-    db.spool.findMany({
-      where: { archivedAt: null, OR: [{ code: { contains: q } }, { filament: { name: { contains: q } } }] },
-      take: 5,
-      orderBy: { code: 'asc' },
-      include: { filament: true },
-    }),
-    db.printSeries.findMany({
-      where: { archivedAt: null, OR: [{ name: { contains: q } }, { customer: { name: { contains: q } } }] },
-      include: { customer: true },
-      take: 5,
-      orderBy: { updatedAt: 'desc' },
-    }),
-  ]);
+  const [settings, prints, customers, printers, components, filaments, spools, series] =
+    await db.$transaction([
+      db.appSettings.findUniqueOrThrow({
+        where: { id: 1 },
+        select: { printSeriesEnabled: true, spoolManagementEnabled: true },
+      }),
+      db.printJob.findMany({
+        where: {
+          archivedAt: null,
+          OR: [
+            { name: { contains: q } },
+            { customer: { name: { contains: q } } },
+            { printer: { name: { contains: q } } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          customer: { select: { name: true } },
+          printer: { select: { name: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 5,
+      }),
+      db.customer.findMany({
+        where: {
+          archivedAt: null,
+          OR: [{ name: { contains: q } }, { email: { contains: q } }],
+        },
+        select: { id: true, name: true, email: true },
+        orderBy: { name: 'asc' },
+        take: 5,
+      }),
+      db.printer.findMany({
+        where: {
+          archivedAt: null,
+          OR: [{ name: { contains: q } }, { manufacturer: { contains: q } }, { model: { contains: q } }],
+        },
+        select: { id: true, name: true, manufacturer: true, model: true },
+        orderBy: { name: 'asc' },
+        take: 5,
+      }),
+      db.component.findMany({
+        where: {
+          archivedAt: null,
+          OR: [
+            { name: { contains: q } },
+            { manufacturer: { is: { name: { contains: q } } } },
+            { model: { contains: q } },
+            { type: { contains: q } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          manufacturer: { select: { name: true } },
+          model: true,
+        },
+        orderBy: [{ type: 'asc' }, { name: 'asc' }],
+        take: 5,
+      }),
+      db.filament.findMany({
+        where: {
+          archivedAt: null,
+          OR: [
+            { name: { contains: q } },
+            { manufacturer: { name: { contains: q } } },
+            { material: { contains: q } },
+            { colorName: { contains: q } },
+            { colorHex: { contains: q } },
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          manufacturer: { select: { name: true } },
+          material: true,
+          colorName: true,
+          colorHex: true,
+        },
+        orderBy: [{ manufacturer: { name: 'asc' } }, { name: 'asc' }],
+        take: 5,
+      }),
+      db.spool.findMany({
+        where: { archivedAt: null, OR: [{ code: { contains: q } }, { filament: { name: { contains: q } } }] },
+        take: 5,
+        orderBy: { code: 'asc' },
+        include: { filament: true },
+      }),
+      db.printSeries.findMany({
+        where: { archivedAt: null, OR: [{ name: { contains: q } }, { customer: { name: { contains: q } } }] },
+        include: { customer: true },
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+      }),
+    ]);
 
   const groups: GlobalSearchGroup[] = [
     {
       type: 'series',
-      items: series.map((item) => ({
-        id: item.id,
-        title: item.name,
-        description: item.customer?.name ?? null,
-        to: `/series/${item.id}`,
-      })),
+      items: settings.printSeriesEnabled
+        ? series.map((item) => ({
+            id: item.id,
+            title: item.name,
+            description: item.customer?.name ?? null,
+            to: `/series/${item.id}`,
+          }))
+        : [],
     },
     {
       type: 'spools',
-      items: spools.map((item) => ({
-        id: item.id,
-        title: item.code,
-        description: item.filament.name,
-        to: `/spools/${item.id}`,
-      })),
+      items: settings.spoolManagementEnabled
+        ? spools.map((item) => ({
+            id: item.id,
+            title: item.code,
+            description: item.filament.name,
+            to: `/spools/${item.id}`,
+          }))
+        : [],
     },
     {
       type: 'prints',

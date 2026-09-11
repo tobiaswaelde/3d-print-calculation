@@ -1,10 +1,9 @@
-import { listSeries } from '../../services/series';
+import { updateFeatureSettings } from '../../services/feature-settings';
 import { requireUser } from '../../utils/auth';
 import { requireSameOrigin } from '../../utils/http';
-import { requireFeature } from '../../utils/features';
+
 export default defineEventHandler(async (event) => {
   requireSameOrigin(event);
   await requireUser(event);
-  await requireFeature('printSeriesEnabled');
-  return listSeries(getQuery(event));
+  return updateFeatureSettings(await readBody(event));
 });

@@ -5,6 +5,7 @@ import { bambuActionSchema, bambuQuerySchema } from '#shared/schemas/integration
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
 import { parseBody } from '../utils/validation';
+import { requireFeature } from '../utils/features';
 import { integrationConfigured, integrationRequest } from '../utils/integrations/http';
 import {
   bambuPrinterSchema,
@@ -200,6 +201,7 @@ export async function bambuAction(input: unknown) {
   }
   if (data.action === 'SYNC_PRINTER') await syncBambuPrinter(data.printerId);
   if (data.action === 'MAP_TRAY') {
+    await requireFeature('spoolManagementEnabled');
     const printer = await db.printer.findUniqueOrThrow({ where: { id: data.printerId } });
     const state = printer.bambuState
       ? (JSON.parse(printer.bambuState) as { trays: { slot: string }[] })

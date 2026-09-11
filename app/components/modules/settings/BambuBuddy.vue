@@ -55,33 +55,35 @@
             color="warning"
             :description="t('integration.mappingWarning')"
           />
-          <div
-            v-for="tray in selected.state?.trays ?? []"
-            :key="tray.slot"
-            class="grid gap-2 rounded border border-default p-3 sm:grid-cols-3"
-          >
-            <p>
-              {{ t('integration.slot') }} {{ tray.slot }} · {{ tray.material ?? '—'
-              }}<span class="block">{{ tray.spoolCode ?? t('integration.unmapped') }}</span
-              ><span v-if="tray.ambiguous || tray.unavailable" class="text-warning">{{
-                t('integration.mappingWarning')
-              }}</span>
-            </p>
-            <USelect
-              v-model="trayChoices[tray.slot]"
-              :items="
-                spools.map((item: { id: string; code: string }) => ({ label: item.code, value: item.id }))
-              "
-              :aria-label="`${t('integration.slot')} ${tray.slot}`"
-            />
-            <UButton
-              :label="t('integration.map')"
-              :disabled="!trayChoices[tray.slot]"
-              @click="
-                action({ action: 'MAP_TRAY', printerId, slot: tray.slot, spoolId: trayChoices[tray.slot] })
-              "
-            />
-          </div>
+          <template v-if="spoolManagementEnabled">
+            <div
+              v-for="tray in selected.state?.trays ?? []"
+              :key="tray.slot"
+              class="grid gap-2 rounded border border-default p-3 sm:grid-cols-3"
+            >
+              <p>
+                {{ t('integration.slot') }} {{ tray.slot }} · {{ tray.material ?? '—'
+                }}<span class="block">{{ tray.spoolCode ?? t('integration.unmapped') }}</span
+                ><span v-if="tray.ambiguous || tray.unavailable" class="text-warning">{{
+                  t('integration.mappingWarning')
+                }}</span>
+              </p>
+              <USelect
+                v-model="trayChoices[tray.slot]"
+                :items="
+                  spools.map((item: { id: string; code: string }) => ({ label: item.code, value: item.id }))
+                "
+                :aria-label="`${t('integration.slot')} ${tray.slot}`"
+              />
+              <UButton
+                :label="t('integration.map')"
+                :disabled="!trayChoices[tray.slot]"
+                @click="
+                  action({ action: 'MAP_TRAY', printerId, slot: tray.slot, spoolId: trayChoices[tray.slot] })
+                "
+              />
+            </div>
+          </template>
         </div>
         <template v-if="print">
           <h2 class="text-lg font-semibold">{{ print.name }}</h2>
@@ -165,6 +167,7 @@ import type { BambuLog, BambuStatus } from '#shared/types/integrations';
 import type { PrintJobDto } from '#shared/types/prints';
 import type { SpoolDto } from '#shared/types/spools';
 const { t } = useI18n();
+const { spoolManagementEnabled } = useFeatures();
 const route = useRoute();
 const printId = typeof route.query.printId === 'string' ? route.query.printId : undefined;
 const printerId = ref(typeof route.query.printerId === 'string' ? route.query.printerId : '');
@@ -243,7 +246,8 @@ async function importResult() {
 onMounted(() =>
   run(async () => {
     if (printId) print.value = await $fetch<PrintJobDto>(`/api/prints/${printId}`);
-    spools.value = (await $fetch<{ items: SpoolDto[] }>('/api/spools', { query: { pageSize: 100 } })).items;
+    if (spoolManagementEnabled.value)
+      spools.value = (await $fetch<{ items: SpoolDto[] }>('/api/spools', { query: { pageSize: 100 } })).items;
     await refresh();
   }),
 );

@@ -322,6 +322,9 @@ test('regenerates every application screenshot used by the documentation', async
   await page.goto('/settings');
   await expect(page.getByRole('heading', { name: 'General' })).toBeVisible();
   await capture(page, 'settings.jpg');
+  await page.getByRole('link', { name: 'Features', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Print series' })).toBeVisible();
+  await capture(page, 'settings-features.jpg');
 
   await page.getByRole('button', { name: 'Open global search' }).click();
   await page.getByRole('searchbox').fill('Prusa');
