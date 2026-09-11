@@ -56,3 +56,5 @@ UI from that commit.
 
 `pnpm docs:check` validates frontmatter, navigation, alt text, unresolved placeholders, and the absence of legacy
 localized Markdown. `pnpm docs:build` validates page rendering, links, and anchors.
+
+To keep the live development server on port 3000 while running browser checks, use `PRINT_COST_E2E_PORT=3002 pnpm test:e2e`. Browser suites isolate SQLite databases and Nuxt build directories under temporary roots. Playwright artifacts are separated into `test-results/e2e`, `test-results/screenshots`, and `test-results/docs`. `PRINT_COST_BUILD_DIR` selects a separate Nuxt build directory when needed.

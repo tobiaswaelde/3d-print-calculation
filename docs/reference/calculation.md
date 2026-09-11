@@ -1,11 +1,11 @@
 ---
 title: Calculation rules
-description: Formula version 1, units, input boundaries, decimal precision, and a reproducible example.
+description: Formula version 3, units, input boundaries, decimal precision, and a reproducible example.
 ---
 
 # Calculation rules
 
-Formula version `1` uses `decimal.js` without intermediate rounding. API results are canonical decimal strings;
+Formula version `3` uses `decimal.js` without intermediate rounding. API results are canonical decimal strings;
 only the UI formats currency for display. Let `t = seconds / 3600`, and convert watts to kilowatts by dividing by
 1,000.
 
@@ -37,3 +37,13 @@ Total                         = 1.782175
 
 A changed formula receives a new `calculationVersion`. Existing completed snapshots retain their version and
 values; duplicates use the current formula and current prices.
+
+## Quantity and unit costs
+
+Quantity is a whole number from 1 to 1,000,000 (default 1). Duration, material, categories, and total cost describe the entire run. `costPerUnit = totalCost / quantity` uses the same decimal precision (20 significant digits for repeating division), with currency rounding only for display. Version 2 snapshots freeze quantity and unit cost. Version 1 snapshots retain their original totals and use quantity 1 with unit cost equal to their stored total. Duplication preserves quantity and recalculates at current prices.
+
+## Actual costs
+
+An outcome uses `actual-1` and only the rates stored when the print left Draft. Actual duration drives printer, build-plate, other-component, and electricity costs. Multiple hotends share actual duration in proportion to their planned durations. Each planned filament usage requires an actual weight, including zero. Zero-duration failures are allowed. Actual totals and unit costs are stored as canonical decimal strings in a separate immutable snapshot. Planned costs never change.
+
+Version 3 uses selected physical spool prices and preserves the complete calculation as decimal strings in JSON, avoiding SQLite numeric-affinity rounding of repeating rates. Earlier snapshots retain their original stored values. Actual-cost snapshots use the frozen rates of their source version.
