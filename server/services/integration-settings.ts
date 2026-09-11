@@ -70,10 +70,6 @@ export async function updateIntegrationSettings(input: unknown) {
 
   if (data.spoolman.enabled && !current.spoolManagementEnabled)
     apiError(409, 'SPOOL_MANAGEMENT_DISABLED', 'errors.spoolManagementDisabled');
-  if (data.spoolman.enabled && !spoolmanUrl) apiError(422, 'INTEGRATION_CONFIG', 'errors.integrationConfig');
-  if (data.bambubuddy.enabled && (!bambubuddyUrl || !(bambubuddyApiKey ?? process.env.BAMBUBUDDY_API_KEY)))
-    apiError(422, 'INTEGRATION_CONFIG', 'errors.integrationConfig');
-
   return dto(
     await db.appSettings.update({
       where: { id: 1 },

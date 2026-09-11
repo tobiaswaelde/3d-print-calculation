@@ -338,7 +338,7 @@
         <UButton
           v-if="job"
           :to="{
-            path: '/settings/integrations',
+            path: '/settings/bambuddy',
             query: { printId: job.id, printerId: job.printerId },
             hash: '#integration-bambubuddy-tools',
           }"

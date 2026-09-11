@@ -1,7 +1,7 @@
 <template>
   <LayoutPagePanel :panel-id="resource" :title="title" table>
     <template #toolbar>
-      <CommonTableToolbar v-model:search="search" :title="title">
+      <CommonTableToolbar v-model:search="search" :icon="resourceIcon" :title="title">
         <template #options>
           <CommonTableOptionsMenu v-model:include-archived="includeArchived" />
         </template>
@@ -328,6 +328,16 @@ import {
 import type { MasterDataListItem, MasterDataResource, PaginatedResponse } from '#shared/types/master-data';
 
 const props = defineProps<{ resource: MasterDataResource; title: string }>();
+const resourceIcon = computed(
+  () =>
+    ({
+      customers: 'i-tabler-users',
+      printers: 'i-tabler-printer',
+      manufacturers: 'i-tabler-building-factory-2',
+      components: 'i-tabler-components',
+      filaments: 'i-tabler-disc',
+    })[props.resource],
+);
 const { t } = useI18n();
 const route = useRoute();
 const { money, decimal } = useFormatting();

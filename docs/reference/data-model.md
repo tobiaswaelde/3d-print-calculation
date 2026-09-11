@@ -16,7 +16,7 @@ mandatory.
 `AppSettings` stores the instance-wide `printSeriesEnabled` and `spoolManagementEnabled` feature flags. Both
 default to true, and disabling them preserves existing series, spool, usage, and snapshot records. The spool flag
 controls new spool selection, stock writes, and filament pricing behavior. `AppSettings` also stores explicit
-Spoolman and BambuBuddy enablement, server URLs, and server-only credentials. Nullable values preserve
+Spoolman and Bambuddy enablement, server URLs, and server-only credentials. Nullable values preserve
 environment-variable defaults for deployments upgraded from earlier versions. Credentials are never serialized
 in settings or integration responses; database files and backups still require secret-level protection.
 
@@ -53,4 +53,4 @@ Each optional `PrintOutcome` has a unique print reference, status, duration, rea
 
 Spoolman links retain unique nullable external IDs on manufacturers, filaments, and spools. A spool stores one `stockAuthority`, nullable remote balance, remote state, last successful sync, and safe error code. Native balances remain append-only ledger sums; linked balances remain remote mirrors. `SpoolSyncOperation` uniquely identifies each outcome usage/correction and records pending, applied, failed, or uncertain dispatch state. No remote call occurs inside the outcome transaction.
 
-Printers retain a unique nullable BambuBuddy ID and sanitized cached status. `BambuTrayMapping` has one explicit spool per printer/slot. `BambuPrintLink` uniquely binds one remote print-log ID to one local print and stores validated cached data plus confirmed import metadata. Imported outcome metadata is persisted in the same transaction as its outcome and native stock deduction. Completed calculations do not depend on either remote service.
+Printers retain a unique nullable Bambuddy ID and sanitized cached status. `BambuTrayMapping` has one explicit spool per printer/slot. `BambuPrintLink` uniquely binds one remote print-log ID to one local print and stores validated cached data plus confirmed import metadata. Imported outcome metadata is persisted in the same transaction as its outcome and native stock deduction. Completed calculations do not depend on either remote service.

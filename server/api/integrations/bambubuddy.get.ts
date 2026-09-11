@@ -2,7 +2,7 @@ import { bambuStatus } from '../../services/bambubuddy';
 import { requireUser } from '../../utils/auth';
 defineRouteMeta({
   openAPI: {
-    summary: 'Get BambuBuddy status or logs',
+    summary: 'Get Bambuddy status or logs',
     tags: ['Integrations'],
     security: [{ cookieAuth: [] }],
   },

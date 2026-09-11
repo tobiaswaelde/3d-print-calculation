@@ -2,4 +2,4 @@
 'ezprint': patch
 ---
 
-Move Spoolman and BambuBuddy activation, configuration, and operational tools into Settings.
+Move Spoolman and Bambuddy activation, configuration, and operational tools into Settings.

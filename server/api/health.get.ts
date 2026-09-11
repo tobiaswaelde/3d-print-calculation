@@ -319,7 +319,7 @@ defineRouteMeta({
           BambuBuddyActionInput: {
             type: 'object',
             required: ['action'],
-            description: 'BambuBuddy link, sync, tray mapping, attachment, or import action.',
+            description: 'Bambuddy link, sync, tray mapping, attachment, or import action.',
             properties: {
               action: {
                 type: 'string',

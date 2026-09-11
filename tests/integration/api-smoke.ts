@@ -1406,7 +1406,7 @@ try {
     !disabledIntegrations.body.spoolman.enabled &&
       disabledIntegrations.body.bambubuddy.enabled &&
       disabledIntegrations.body.spoolman.authorizationConfigured,
-    'Disabling spool management disables Spoolman without deleting its credential or disabling BambuBuddy.',
+    'Disabling spool management disables Spoolman without deleting its credential or disabling Bambuddy.',
   );
   await json(
     `/api/prints/${deferredManagedDraft.body.id}/outcome`,

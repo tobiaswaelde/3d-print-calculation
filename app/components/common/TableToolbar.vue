@@ -29,11 +29,11 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ title: string }>();
+const props = defineProps<{ icon: string; title: string }>();
 const search = defineModel<string>('search', { required: true });
 const { t } = useI18n();
 const breadcrumbItems = computed(() => [
   { icon: 'i-tabler-home', label: t('nav.dashboard'), to: '/' },
-  { label: props.title },
+  { icon: props.icon, label: props.title },
 ]);
 </script>

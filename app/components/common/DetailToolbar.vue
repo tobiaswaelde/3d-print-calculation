@@ -16,12 +16,18 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ parentTitle: string; parentTo: string; title: string }>();
+const props = defineProps<{
+  icon: string;
+  parentIcon: string;
+  parentTitle: string;
+  parentTo: string;
+  title: string;
+}>();
 const { t } = useI18n();
 
 const breadcrumbItems = computed(() => [
   { icon: 'i-tabler-home', label: t('nav.dashboard'), to: '/' },
-  { label: props.parentTitle, to: props.parentTo },
-  { label: props.title },
+  { icon: props.parentIcon, label: props.parentTitle, to: props.parentTo },
+  { icon: props.icon, label: props.title },
 ]);
 </script>

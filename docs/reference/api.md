@@ -108,7 +108,7 @@ Draft filament lines accept `spoolId`. Older clients may omit it only when exact
 
 When spool management is disabled, draft `spoolId` values are ignored and new usages store null spool fields.
 Calculations use the selected filament's catalog price and net weight. Spool and stock endpoints, Spoolman actions,
-and BambuBuddy tray mapping return `409 SPOOL_MANAGEMENT_DISABLED`; historical print usage remains readable.
+and Bambuddy tray mapping return `409 SPOOL_MANAGEMENT_DISABLED`; historical print usage remains readable.
 
 `POST /api/prints/:id/outcome/correct` accepts the outcome fields plus a required correction note, `expectedRevision`, and a UUID `operationKey`. It appends an immutable revision, updates current result metrics, and books only consumption deltas atomically. Matching retries are idempotent; stale revisions return 409. Print DTOs expose the current revision and history containing the original plus the latest 20 corrections. The full stock ledger remains paginated on the spool detail API.
 
@@ -132,7 +132,7 @@ Print/history/export filters include `dateFrom`, `dateTo` (inclusive ISO dates, 
 All routes require authentication; mutating routes require same-origin requests. See [integration setup and limits](../guide/integrations).
 
 - `GET /api/settings/integrations`: effective enablement, server URLs, and credential-presence flags. Secret values are never returned.
-- `PATCH /api/settings/integrations`: explicit enablement and server URLs, plus optional replacement or removal of the Spoolman authorization header and BambuBuddy API key. Omitted credential fields preserve the current stored value or environment default.
+- `PATCH /api/settings/integrations`: explicit enablement and server URLs, plus optional replacement or removal of the Spoolman authorization header and Bambuddy API key. Omitted credential fields preserve the current stored value or environment default. Either integration may be enabled before its connection is complete so its dedicated settings tab can be configured; operational routes remain unconfigured until the required URL and, for Bambuddy, API key are available.
 
 - `GET /api/integrations/spoolman`: configuration/capability/version status and the last 50 operations. `?view=preview&page=1` returns the import preview with a SHA-256 fingerprint of the validated remote data.
 - `POST /api/integrations/spoolman`: discriminated `action`: `IMPORT` with `data={remoteId,previewHash,authority?,localSpoolId?}`, `SYNC` with `spoolId`, `UNLINK` with `data={spoolId,ownership:"NATIVE",openingBalance}`, or `OPERATION` with `data={operationId,action:"SEND"|"CONFIRM_APPLIED"|"CONFIRM_NOT_APPLIED"}`. Explicit linking to an existing spool requires the same already-linked filament identity. Reassigning a stable external ID is rejected.

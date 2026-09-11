@@ -12,31 +12,42 @@
     </template>
 
     <template #footer="{ collapsed }">
-      <div class="flex w-full items-center gap-1" :class="collapsed && 'flex-col'">
+      <div
+        data-sidebar-footer
+        class="flex w-full flex-col gap-1"
+        :class="collapsed ? 'items-center' : 'items-start'"
+      >
         <UButton
+          data-sidebar-footer-item
           to="https://github.com/tobiaswaelde/ezprint"
           target="_blank"
           color="neutral"
           variant="ghost"
           icon="i-simple-icons-github"
-          square
+          :square="collapsed"
+          :label="collapsed ? undefined : t('sidebar.githubLabel')"
+          :class="collapsed ? undefined : 'w-full justify-start'"
           :aria-label="t('sidebar.github')"
           :title="t('sidebar.github')"
         />
         <UButton
+          data-sidebar-footer-item
           to="https://tobiaswaelde.github.io/ezprint/"
           target="_blank"
           color="neutral"
           variant="ghost"
           icon="i-tabler-book-2"
-          square
+          :square="collapsed"
+          :label="collapsed ? undefined : t('sidebar.docsLabel')"
+          :class="collapsed ? undefined : 'w-full justify-start'"
           :aria-label="t('sidebar.docs')"
           :title="t('sidebar.docs')"
         />
         <button
           v-if="!collapsed"
+          data-sidebar-footer-item
           type="button"
-          class="ml-auto flex items-center gap-1.5 rounded-md px-1.5 py-1 font-mono text-xs text-muted transition-colors hover:bg-elevated hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
+          class="flex w-full items-center justify-center gap-1.5 rounded-md px-1.5 py-1 font-mono text-xs text-muted transition-colors hover:bg-elevated hover:text-primary focus-visible:outline-2 focus-visible:outline-primary"
           :aria-label="t('changelog.open')"
           @click="changelogOpen = true"
         >
@@ -63,7 +74,7 @@ const navigation = computed(() => [
   { label: t('nav.dashboard'), icon: 'i-tabler-layout-dashboard', to: '/' },
   { label: t('nav.prints'), icon: 'i-tabler-printer', to: '/prints' },
   ...(featuresLoaded.value && printSeriesEnabled.value
-    ? [{ label: t('nav.series'), icon: 'i-tabler-stack-2', to: '/series' }]
+    ? [{ label: t('nav.series'), icon: 'i-tabler-list-check', to: '/series' }]
     : []),
   { label: t('nav.customers'), icon: 'i-tabler-users', to: '/customers' },
   { label: t('nav.sections.masterData'), type: 'label' as const },

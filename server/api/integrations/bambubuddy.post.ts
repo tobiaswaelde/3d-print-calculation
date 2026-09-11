@@ -3,7 +3,7 @@ import { requireUser } from '../../utils/auth';
 import { requireSameOrigin } from '../../utils/http';
 defineRouteMeta({
   openAPI: {
-    summary: 'Run a BambuBuddy action',
+    summary: 'Run a Bambuddy action',
     tags: ['Integrations'],
     security: [{ cookieAuth: [] }],
     requestBody: {

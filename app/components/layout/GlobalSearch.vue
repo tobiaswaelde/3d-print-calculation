@@ -96,7 +96,7 @@ const icons: Record<GlobalSearchKind, string> = {
   components: 'i-tabler-components',
   filaments: 'i-tabler-disc',
   spools: 'i-tabler-qrcode',
-  series: 'i-tabler-stack-2',
+  series: 'i-tabler-list-check',
 };
 const totalResults = computed(
   () => response.value?.groups.reduce((total, group) => total + group.items.length, 0) ?? 0,

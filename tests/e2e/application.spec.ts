@@ -18,7 +18,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page).toHaveTitle('ezPrint');
   const brandLink = page.getByRole('link', { name: 'ezPrint' });
   await expect(brandLink).toHaveText('ezPrint');
-  await expect(page.getByRole('link', { name: 'BambuBuddy-Anbindung', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Bambuddy-Anbindung', exact: true })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Übersicht' })).toHaveCount(0);
   await page.keyboard.press('Shift+/');
   const shortcutsDialog = page.getByRole('dialog', { name: 'Tastenkürzel' });
@@ -38,6 +38,26 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(brandLink).toHaveText('ez');
   await page.getByRole('button', { name: 'Navigation ausklappen' }).click();
   await expect(brandLink).toHaveText('ezPrint');
+  const footer = page.locator('[data-sidebar-footer]');
+  const footerItems = page.locator('[data-sidebar-footer-item]');
+  await expect(footerItems).toHaveCount(3);
+  await expect(footerItems.nth(0)).toContainText('GitHub');
+  await expect(footerItems.nth(1)).toContainText('Dokumentation');
+  const footerBox = (await footer.boundingBox())!;
+  const footerBoxes = await footerItems.evaluateAll((items) =>
+    items.map((item) => {
+      const { top, right, bottom, left, width } = item.getBoundingClientRect();
+      return { top, right, bottom, left, width };
+    }),
+  );
+  expect(footerBoxes[0]!.bottom).toBeLessThanOrEqual(footerBoxes[1]!.top);
+  expect(footerBoxes[1]!.bottom).toBeLessThanOrEqual(footerBoxes[2]!.top);
+  expect(footerBoxes[0]!.width).toBeGreaterThanOrEqual(footerBox.width - 1);
+  expect(footerBoxes[1]!.width).toBeGreaterThanOrEqual(footerBox.width - 1);
+  expect((footerBoxes[2]!.left + footerBoxes[2]!.right) / 2).toBeCloseTo(
+    footerBox.x + footerBox.width / 2,
+    0,
+  );
   const changelogButton = page.getByRole('button', { name: 'Changelog öffnen' });
   const updateBadge = changelogButton.getByText('Update verfügbar', { exact: true });
   await expect(updateBadge).toBeVisible();
@@ -68,6 +88,11 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('link', { name: 'Drucke', exact: true }).click();
   const printsToolbar = page.locator('[data-table-toolbar]');
   await expect(printsToolbar.getByText('Drucke', { exact: true })).toBeVisible();
+  const breadcrumbItems = printsToolbar
+    .getByRole('navigation', { name: 'breadcrumb' })
+    .locator('[data-slot="item"]');
+  await expect(breadcrumbItems).toHaveCount(2);
+  await expect(breadcrumbItems.locator('[data-slot="linkLeadingIcon"]')).toHaveCount(2);
   await expect(page.getByRole('combobox', { name: 'Status' })).toContainText('Alle Status');
   await page.getByRole('combobox', { name: 'Status' }).click();
   for (const option of ['Entwurf', 'Wird gedruckt', 'Gedruckt', 'Versendet', 'Erledigt']) {
@@ -167,18 +192,51 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Druckserien', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Spulen', exact: true })).toBeVisible();
-  await page.getByRole('link', { name: 'Integrationen', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Spoolman-Anbindung' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'BambuBuddy-Anbindung' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bambuddy-Anbindung' })).toBeVisible();
   const spoolmanSettings = page.locator('#integration-spoolman');
   const bambubuddySettings = page.locator('#integration-bambubuddy');
+  await expect(spoolmanSettings.getByRole('link', { name: 'Dokumentation öffnen' })).toHaveAttribute(
+    'href',
+    'https://tobiaswaelde.github.io/ezprint/guide/integrations#spoolman-import-and-ownership',
+  );
+  await expect(bambubuddySettings.getByRole('link', { name: 'Dokumentation öffnen' })).toHaveAttribute(
+    'href',
+    'https://tobiaswaelde.github.io/ezprint/guide/integrations#bambuddy-printer-and-print-links',
+  );
+  await expect(spoolmanSettings.locator('[data-slot="body"]')).toHaveCount(0);
+  await expect(bambubuddySettings.locator('[data-slot="body"]')).toHaveCount(0);
   await spoolmanSettings.getByRole('switch', { name: 'Aktiviert' }).click();
-  await spoolmanSettings.getByLabel('Server-URL').fill('http://spoolman:7912');
+  await expect(spoolmanSettings.locator('[data-slot="body"]')).toHaveCount(0);
   await bambubuddySettings.getByRole('switch', { name: 'Aktiviert' }).click();
-  await bambubuddySettings.getByLabel('Server-URL').fill('http://bambubuddy:8000');
-  await bambubuddySettings.getByLabel('API-Schlüssel').fill('synthetic-browser-key');
-  await page.getByRole('button', { name: 'Integrationseinstellungen speichern', exact: true }).click();
-  await expect(page.getByText('Integrationseinstellungen gespeichert.')).toBeVisible();
+  await expect(bambubuddySettings.locator('[data-slot="body"]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Speichern', exact: true })).toHaveCount(1);
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Spoolman', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Bambuddy', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Spoolman', exact: true }).click();
+  await expect(page.getByText('Anbindung ist nicht konfiguriert.')).toBeVisible();
+  const spoolmanConfiguration = page.locator('#spoolman-configuration');
+  await spoolmanConfiguration.getByLabel('Server-URL').fill('http://spoolman:7912');
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await expect(page.getByText('Anbindung ist nicht konfiguriert.')).toHaveCount(0);
+  await page.goto('/settings/integrations#integration-spoolman');
+  await expect(page).toHaveURL(/\/settings\/spoolman#spoolman-configuration$/);
+  await page.getByRole('link', { name: 'Bambuddy', exact: true }).click();
+  await expect(page.getByText('Anbindung ist nicht konfiguriert.')).toBeVisible();
+  const bambubuddyConfiguration = page.locator('#bambubuddy-configuration');
+  await bambubuddyConfiguration.getByLabel('Server-URL').fill('http://bambubuddy:8000');
+  await bambubuddyConfiguration.getByLabel('API-Schlüssel').fill('synthetic-browser-key');
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await expect(page.getByText('Anbindung ist nicht konfiguriert.')).toHaveCount(0);
+  await page.goto('/settings/integrations#integration-bambubuddy');
+  await expect(page).toHaveURL(/\/settings\/bambuddy#bambubuddy-configuration$/);
+
+  await page.goto('/settings/bambubuddy#bambubuddy-configuration');
+  await expect(page).toHaveURL(/\/settings\/bambuddy#bambubuddy-configuration$/);
   await page.getByRole('link', { name: 'Features', exact: true }).click();
   const spoolManagement = page.getByRole('switch', { name: 'Spulenverwaltung' });
   await expect(spoolManagement).toBeChecked();
@@ -186,17 +244,20 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
   await expect(page.getByRole('link', { name: 'Spulen' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Spoolman', exact: true })).toHaveCount(0);
   await page.goto('/spools');
   await expect(page).toHaveURL(/\/filaments$/);
   await page.getByRole('link', { name: 'Einstellungen' }).click();
-  await page.getByRole('link', { name: 'Integrationen', exact: true }).click();
+  await page.getByRole('link', { name: 'Features', exact: true }).click();
   await expect(
     page.getByText(
       'Aktiviere die Spulenverwaltung unter Einstellungen → Features, um Spoolman zu konfigurieren.',
     ),
   ).toBeVisible();
-  await expect(page.locator('#integration-spoolman')).toHaveCount(0);
-  await page.getByRole('link', { name: 'Features', exact: true }).click();
+  await expect(page.locator('#integration-spoolman')).toBeVisible();
+  await expect(
+    page.locator('#integration-spoolman').getByRole('switch', { name: 'Aktiviert' }),
+  ).toBeDisabled();
   await page.getByRole('switch', { name: 'Spulenverwaltung' }).click();
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Spulen' })).toBeVisible();
@@ -207,10 +268,13 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
       bambubuddy: { enabled: false, url: 'http://bambubuddy:8000' },
     },
   });
+  await page.reload();
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('link', { name: 'Berechnung', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Features', exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Integrationen', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Spoolman', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Bambuddy', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Integrationen', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.getByRole('link', { name: 'Allgemein', exact: true }).click();

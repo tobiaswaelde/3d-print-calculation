@@ -1,7 +1,7 @@
 <template>
   <LayoutPagePanel panel-id="prints" :title="t('nav.prints')" table>
     <template #toolbar>
-      <CommonTableToolbar v-model:search="search" :title="t('nav.prints')">
+      <CommonTableToolbar v-model:search="search" icon="i-tabler-printer" :title="t('nav.prints')">
         <template #filters>
           <USelect
             v-model="status"

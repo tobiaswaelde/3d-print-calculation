@@ -3,7 +3,7 @@ import { getIntegrationConfig, type IntegrationName } from '../../services/integ
 
 export async function integrationConfigured(name: IntegrationName) {
   const config = await getIntegrationConfig(name);
-  return config.enabled && !!config.url;
+  return config.enabled && !!config.url && (name !== 'BAMBUBUDDY' || !!config.credential);
 }
 export function integrationUrl(value: string) {
   try {

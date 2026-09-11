@@ -1,7 +1,7 @@
 <template>
   <LayoutPagePanel panel-id="series" :title="t('nav.series')" table>
     <template #toolbar>
-      <CommonTableToolbar v-model:search="search" :title="t('nav.series')">
+      <CommonTableToolbar v-model:search="search" icon="i-tabler-list-check" :title="t('nav.series')">
         <template #filters>
           <USelect
             v-model="status"
@@ -39,7 +39,7 @@
         class="min-h-full rounded-none border-0"
         :title="t('series.emptyTitle')"
         :description="t('series.emptyDescription')"
-        icon="i-tabler-stack-2"
+        icon="i-tabler-list-check"
       >
         <UButton icon="i-tabler-plus" :label="t('common.new')" @click="creating = true" />
       </CommonEmptyState>

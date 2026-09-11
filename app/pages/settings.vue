@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n();
+const { spoolmanEnabled, bambubuddyEnabled, load: loadIntegrationSettings } = useIntegrationSettings();
 
 const navigation = computed(() => [
   [
@@ -31,11 +32,26 @@ const navigation = computed(() => [
       icon: 'i-tabler-toggle-right',
       to: '/settings/features',
     },
-    {
-      label: t('settings.integrations'),
-      icon: 'i-tabler-plug-connected',
-      to: '/settings/integrations',
-    },
+    ...(spoolmanEnabled.value
+      ? [
+          {
+            label: t('integration.spoolmanTab'),
+            icon: 'i-tabler-packages',
+            to: '/settings/spoolman',
+          },
+        ]
+      : []),
+    ...(bambubuddyEnabled.value
+      ? [
+          {
+            label: t('integration.bambuTab'),
+            icon: 'i-tabler-printer',
+            to: '/settings/bambuddy',
+          },
+        ]
+      : []),
   ],
 ]);
+
+onMounted(() => loadIntegrationSettings(true));
 </script>

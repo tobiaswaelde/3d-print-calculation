@@ -2,6 +2,8 @@
   <LayoutPagePanel panel-id="spool" :title="t('nav.spools')">
     <template #toolbar>
       <CommonDetailToolbar
+        icon="i-tabler-file-description"
+        parent-icon="i-tabler-qrcode"
         :parent-title="t('nav.spools')"
         parent-to="/spools"
         :title="spool?.code ?? t('common.loading')"
@@ -162,7 +164,7 @@
               @click="syncRemote"
             />
             <UButton
-              :to="{ path: '/settings/integrations', hash: '#integration-spoolman' }"
+              :to="{ path: '/settings/spoolman', hash: '#integration-spoolman-tools' }"
               :label="t('integration.spoolman')"
               color="neutral"
               variant="outline"

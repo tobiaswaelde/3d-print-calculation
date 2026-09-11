@@ -1,13 +1,13 @@
 <template>
   <LayoutPagePanel panel-id="spools" :title="t('nav.spools')" table>
     <template #toolbar>
-      <CommonTableToolbar v-model:search="search" :title="t('nav.spools')">
+      <CommonTableToolbar v-model:search="search" icon="i-tabler-qrcode" :title="t('nav.spools')">
         <template #options>
           <CommonTableOptionsMenu v-model:include-archived="includeArchived" />
         </template>
         <template #create>
           <UButton
-            :to="{ path: '/settings/integrations', hash: '#integration-spoolman' }"
+            :to="{ path: '/settings/spoolman', hash: '#integration-spoolman-tools' }"
             :label="t('integration.spoolman')"
             icon="i-tabler-plug-connected"
             color="neutral"
