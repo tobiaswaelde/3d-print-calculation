@@ -149,6 +149,24 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('link', { name: 'Berechnung', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Berechnung' })).toBeVisible();
   await expect(page.getByLabel('Währung')).toBeVisible();
+  await page.getByRole('link', { name: 'Features', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Druckserien' })).toBeVisible();
+  await page.getByRole('switch', { name: 'Druckserien' }).click();
+  await page.getByRole('switch', { name: 'Spulenverwaltung' }).click();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByText('Einstellungen gespeichert.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Druckserien', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Spulen', exact: true })).toHaveCount(0);
+  await page.goto('/series');
+  await expect(page).toHaveURL(/\/prints$/);
+  await page.goto('/spools');
+  await expect(page).toHaveURL(/\/filaments$/);
+  await page.goto('/settings/features');
+  await page.getByRole('switch', { name: 'Druckserien' }).click();
+  await page.getByRole('switch', { name: 'Spulenverwaltung' }).click();
+  await page.getByRole('button', { name: 'Speichern', exact: true }).click();
+  await expect(page.getByRole('link', { name: 'Druckserien', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Spulen', exact: true })).toBeVisible();
   await page.getByRole('link', { name: 'Integrationen', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Spoolman-Anbindung' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'BambuBuddy-Anbindung' })).toBeVisible();
@@ -161,9 +179,8 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await bambubuddySettings.getByLabel('API-Schlüssel').fill('synthetic-browser-key');
   await page.getByRole('button', { name: 'Integrationseinstellungen speichern', exact: true }).click();
   await expect(page.getByText('Integrationseinstellungen gespeichert.')).toBeVisible();
-  await page.getByRole('link', { name: 'Allgemein', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Allgemein' })).toBeVisible();
-  const spoolManagement = page.getByRole('switch', { name: 'Spulenverwaltung aktivieren' });
+  await page.getByRole('link', { name: 'Features', exact: true }).click();
+  const spoolManagement = page.getByRole('switch', { name: 'Spulenverwaltung' });
   await expect(spoolManagement).toBeChecked();
   await spoolManagement.click();
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
@@ -173,10 +190,14 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page).toHaveURL(/\/filaments$/);
   await page.getByRole('link', { name: 'Einstellungen' }).click();
   await page.getByRole('link', { name: 'Integrationen', exact: true }).click();
-  await expect(page.getByText('Aktiviere zuerst die Spulenverwaltung unter Allgemein.')).toBeVisible();
+  await expect(
+    page.getByText(
+      'Aktiviere die Spulenverwaltung unter Einstellungen → Features, um Spoolman zu konfigurieren.',
+    ),
+  ).toBeVisible();
   await expect(page.locator('#integration-spoolman')).toHaveCount(0);
-  await page.getByRole('link', { name: 'Allgemein', exact: true }).click();
-  await page.getByRole('switch', { name: 'Spulenverwaltung aktivieren' }).click();
+  await page.getByRole('link', { name: 'Features', exact: true }).click();
+  await page.getByRole('switch', { name: 'Spulenverwaltung' }).click();
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Spulen' })).toBeVisible();
   await page.request.patch('/api/settings/integrations', {
@@ -188,9 +209,11 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   });
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(page.getByRole('link', { name: 'Berechnung', exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Features', exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Integrationen', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   await page.setViewportSize({ width: 1280, height: 720 });
+  await page.getByRole('link', { name: 'Allgemein', exact: true }).click();
   await page.getByRole('combobox', { name: 'Sprache' }).click();
   await page.getByRole('option', { name: 'English' }).click();
   const dateFormat = page.getByRole('combobox', { name: 'Datumsformat' });

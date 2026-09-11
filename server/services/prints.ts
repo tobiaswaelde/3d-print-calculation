@@ -22,6 +22,7 @@ import { db } from '../utils/db';
 import { apiError } from '../utils/http';
 import { spoolManagementEnabled } from '../utils/spool-management';
 import { parseBody } from '../utils/validation';
+import { requireFeature } from '../utils/features';
 
 type Transaction = Prisma.TransactionClient;
 const printInclude = {
@@ -147,7 +148,14 @@ function printDto(value: PrintWithSnapshot): PrintJobDto {
   };
 }
 
-async function resolveCalculation(transaction: Transaction, input: PrintDraftInput) {
+async function resolveCalculation(
+  transaction: Transaction,
+  input: PrintDraftInput,
+  allowedDisabledSeriesId?: string | null,
+) {
+  const settings = await transaction.appSettings.findUniqueOrThrow({ where: { id: 1 } });
+  if (input.seriesId && !settings.printSeriesEnabled && input.seriesId !== allowedDisabledSeriesId)
+    apiError(409, 'PRINT_SERIES_DISABLED', 'errors.printSeriesDisabled');
   if (input.seriesId) {
     const series = await transaction.printSeries.findFirst({
       where: { id: input.seriesId, archivedAt: null },
@@ -168,8 +176,7 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
   if (new Set(componentIds).size !== componentIds.length)
     apiError(422, 'DUPLICATE_COMPONENT', 'errors.duplicateComponent');
 
-  const [settings, printer, components, filaments, customer] = await Promise.all([
-    transaction.appSettings.findUniqueOrThrow({ where: { id: 1 } }),
+  const [printer, components, filaments, customer] = await Promise.all([
     transaction.printer.findFirst({ where: { id: input.printerId, archivedAt: null } }),
     transaction.component.findMany({
       where: { id: { in: componentIds }, archivedAt: null },
@@ -366,7 +373,7 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
 export async function previewPrint(input: unknown) {
   const parsed = parseBody(printDraftSchema, input);
   return db.$transaction(async (transaction) => {
-    const { result } = await resolveCalculation(transaction, parsed);
+    const { result } = await resolveCalculation(transaction, parsed, parsed.seriesId);
     return {
       ...result,
       financials: calculatePrintFinancials(parsed.salesValue, result.totalCost, result.quantity),
@@ -411,7 +418,7 @@ export async function updatePrint(id: string, input: unknown) {
   return db.$transaction(async (transaction) => {
     const existing = await transaction.printJob.findUniqueOrThrow({ where: { id } });
     if (existing.status !== 'DRAFT') apiError(409, 'PRINT_IMMUTABLE', 'errors.printImmutable');
-    const data = persistenceData(parsed, await resolveCalculation(transaction, parsed));
+    const data = persistenceData(parsed, await resolveCalculation(transaction, parsed, existing.seriesId));
     return printDto(
       await transaction.printJob.update({
         where: { id },
@@ -483,7 +490,7 @@ export async function updatePrintWorkflow(id: string, input: unknown) {
     }
 
     const draft = intentFromPrint(existing);
-    const data = persistenceData(draft, await resolveCalculation(transaction, draft));
+    const data = persistenceData(draft, await resolveCalculation(transaction, draft, existing.seriesId));
     return printDto(
       await transaction.printJob.update({
         where: { id },
@@ -505,7 +512,11 @@ export async function updatePrintWorkflow(id: string, input: unknown) {
 export async function duplicatePrint(id: string, relationship: 'copy' | 'retry' | 'repeat' = 'copy') {
   const existing = await db.printJob.findUniqueOrThrow({ where: { id }, include: printInclude });
   const input = intentFromPrint(existing);
-  if (existing.series?.archivedAt) input.seriesId = null;
+  const features = await db.appSettings.findUniqueOrThrow({
+    where: { id: 1 },
+    select: { printSeriesEnabled: true },
+  });
+  if (!features.printSeriesEnabled || existing.series?.archivedAt) input.seriesId = null;
   return createPrint(
     { ...input, salesValue: null, name: `${input.name} (copy)` },
     {
@@ -567,6 +578,7 @@ function printFilter(input: ReturnType<typeof printListQuerySchema.parse>) {
 
 export async function listPrints(query: Record<string, unknown>, transaction?: Transaction) {
   const input = parseBody(printListQuerySchema, query);
+  if (input.seriesId) await requireFeature('printSeriesEnabled', transaction ?? db);
   const where = printFilter(input);
   const run = async (client: Transaction) => {
     const [items, total] = await Promise.all([

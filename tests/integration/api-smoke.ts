@@ -1350,19 +1350,38 @@ try {
   const deferredBalance = (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).body.remainingGrams;
 
   const disabledSettings = await json(
-    '/api/settings',
+    '/api/settings/features',
     {
       method: 'PATCH',
       body: JSON.stringify({
-        currency: 'EUR',
-        defaultLocale: 'de-DE',
-        electricityPricePerKwh: '0.32',
+        printSeriesEnabled: false,
         spoolManagementEnabled: false,
       }),
     },
     cookie,
   );
-  check(!disabledSettings.body.spoolManagementEnabled, 'Spool management can be disabled.');
+  check(
+    !disabledSettings.body.printSeriesEnabled && !disabledSettings.body.spoolManagementEnabled,
+    'Optional features can be disabled together.',
+  );
+  check(
+    (await json(`/api/series/${series.body.id}`, {}, cookie)).response.status === 409,
+    'Disabled print series reject direct API access.',
+  );
+  check(
+    (
+      await json(
+        '/api/prints',
+        { method: 'POST', body: JSON.stringify({ ...payload, seriesId: series.body.id }) },
+        cookie,
+      )
+    ).response.status === 409,
+    'Disabled print series reject new assignments.',
+  );
+  check(
+    (await json(`/api/prints/${seriesDone.body.id}`, {}, cookie)).body.series?.name === 'Bracket batch',
+    'Historical print DTOs retain their series text while the feature is disabled.',
+  );
   const disabledIntegrations = await json('/api/settings/integrations', {}, cookie);
   check(
     !disabledIntegrations.body.spoolman.enabled &&
@@ -1383,8 +1402,8 @@ try {
     cookie,
   );
   check(
-    (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).body.remainingGrams === deferredBalance,
-    'Recording an outcome while spool management is disabled does not change existing spool stock.',
+    (await json(`/api/spools/${deferredSpoolId}`, {}, cookie)).response.status === 409,
+    'Disabled spool management rejects direct API access.',
   );
   const unmanagedFilament = await json(
     '/api/filaments',
@@ -1402,10 +1421,9 @@ try {
     },
     cookie,
   );
-  const unmanagedSpools = await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie);
   check(
-    unmanagedSpools.body.items.length === 0,
-    'Disabled spool management creates filaments without spools.',
+    (await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie)).response.status === 409,
+    'Disabled spool management rejects inventory list access.',
   );
   const unmanagedPayload = {
     ...payload,
@@ -1441,28 +1459,23 @@ try {
     cookie,
   );
   check(
-    (await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie)).body.items.length === 0,
-    'Outcomes without a spool do not create stock movements.',
-  );
-  check(
     (await json('/api/spools', { method: 'POST', body: JSON.stringify({}) }, cookie)).body.data?.code ===
       'SPOOL_MANAGEMENT_DISABLED',
     'Spool writes are rejected while spool management is disabled.',
   );
   const disabledSearch = await json('/api/search?q=Unmanaged', {}, cookie);
   check(
-    !disabledSearch.body.groups.some((group: { type: string }) => group.type === 'spools') &&
-      (await json('/api/dashboard?period=all', {}, cookie)).body.lowStock.length === 0,
-    'Disabled spool management removes spool search results and low-stock warnings.',
+    !disabledSearch.body.groups.some((group: { type: string }) =>
+      ['series', 'spools'].includes(group.type),
+    ) && (await json('/api/dashboard?period=all', {}, cookie)).body.lowStock.length === 0,
+    'Disabled features remove series and spool search results plus low-stock warnings.',
   );
   const enabledSettings = await json(
-    '/api/settings',
+    '/api/settings/features',
     {
       method: 'PATCH',
       body: JSON.stringify({
-        currency: 'EUR',
-        defaultLocale: 'de-DE',
-        electricityPricePerKwh: '0.32',
+        printSeriesEnabled: true,
         spoolManagementEnabled: true,
       }),
     },
@@ -1470,7 +1483,8 @@ try {
   );
   const restoredSpools = await json(`/api/spools?filamentId=${unmanagedFilament.body.id}`, {}, cookie);
   check(
-    enabledSettings.body.spoolManagementEnabled &&
+    enabledSettings.body.printSeriesEnabled &&
+      enabledSettings.body.spoolManagementEnabled &&
       restoredSpools.body.items.length === 1 &&
       restoredSpools.body.items[0].remainingGrams === '500' &&
       !(await json('/api/settings/integrations', {}, cookie)).body.spoolman.enabled,

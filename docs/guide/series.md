@@ -9,6 +9,8 @@ A series groups print runs under a name, optional customer, target quantity, and
 
 Use **New** to open the creation dialog, then select the series in a new draft or create a print directly from its row or detail page. A series customer is inherited; conflicting customer assignments are rejected. Prints can also remain independent.
 
+Print series can be disabled under **Settings → Features**. Series pages and APIs then become unavailable, but existing assignments remain stored and visible as plain text in print history.
+
 ![Series list with target progress](/screenshots/series.jpg)
 
 The detail page presents status, target progress, run totals, production totals, actual costs, failed costs, revenue, margin, automation state, notes, and the filterable print history as separate sections. **Edit** opens the series dialog; completion, reopening, archiving, and creating a print remain explicit page actions.

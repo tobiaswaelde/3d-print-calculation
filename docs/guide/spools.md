@@ -9,9 +9,7 @@ Filaments describe products; spools identify physical stock. Open **Spools** to 
 
 Each spool has a stable code, purchase lot, location, acquisition date, purchase price, and initial net weight. **New** opens a focused creation dialog. Referenced spools can be archived, never deleted. Code, filament identity, and initial net weight remain fixed; use **Edit** for purchasing and storage metadata and a correction for a measured balance change.
 
-Spool management is optional under **Settings → General**. Disabling it removes spool navigation, selection,
-low-stock warnings, and stock changes. New print lines use the filament catalog price and net weight and retain no
-spool identity. Existing spool records, movements, and completed snapshots remain readable and unchanged.
+Spool management can be disabled under **Settings → Features**. Its pages and APIs then become unavailable while existing inventory remains stored. New prints use the filament's price and net weight without stock movements until the feature is re-enabled.
 
 ![Spool inventory with remaining material and location](/screenshots/spools.jpg)
 

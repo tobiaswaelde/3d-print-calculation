@@ -1,9 +1,12 @@
 <template>
   <div class="space-y-5">
     <div v-if="job" class="flex flex-wrap gap-3 text-sm">
-      <NuxtLink v-if="job.series" :to="`/series/${job.series.id}`" class="text-primary underline">{{
-        job.series.name
-      }}</NuxtLink
+      <NuxtLink
+        v-if="job.series && printSeriesEnabled"
+        :to="`/series/${job.series.id}`"
+        class="text-primary underline"
+        >{{ job.series.name }}</NuxtLink
+      ><span v-else-if="job.series">{{ job.series.name }}</span
       ><NuxtLink v-if="job.customer" :to="`/customers/${job.customer.id}`" class="text-primary underline">{{
         job.customer.name
       }}</NuxtLink
@@ -107,7 +110,11 @@
             <UFormField name="salesValue" :label="t('sales.value')" :description="t('sales.help')">
               <UInput v-model="form.salesValue" inputmode="decimal" class="w-full" />
             </UFormField>
-            <UFormField name="seriesId" :label="t('nav.series')" :description="t('series.customerRule')"
+            <UFormField
+              v-if="printSeriesEnabled"
+              name="seriesId"
+              :label="t('nav.series')"
+              :description="t('series.customerRule')"
               ><CommonSeriesSelect v-model="form.seriesId" @customer="form.customerId = $event"
             /></UFormField>
             <UFormField name="customerId" :label="t('nav.customers')"
@@ -383,6 +390,7 @@ import type { PrintJobDto } from '#shared/types/prints';
 const props = defineProps<{ printId?: string }>();
 const { t } = useI18n();
 const { enabled: spoolManagementEnabled, load: loadSpoolManagement } = useSpoolManagement();
+const { load: loadFeatures, printSeriesEnabled } = useFeatures();
 const { money, dateTime } = useFormatting();
 const job = ref<PrintJobDto | null>(null);
 const loading = ref(true);
@@ -456,7 +464,7 @@ function payload() {
     quantity: Number(form.quantity),
     salesValue: form.salesValue || null,
     customerId: form.customerId,
-    seriesId: form.seriesId,
+    seriesId: printSeriesEnabled.value ? form.seriesId : (job.value?.seriesId ?? null),
     printerId: form.printerId,
     buildPlateId: form.buildPlateId,
     hotends: form.hotends.map((entry) => ({
@@ -510,7 +518,7 @@ function hydrate(value: PrintJobDto) {
 }
 
 async function load() {
-  await loadSpoolManagement();
+  await Promise.all([loadFeatures(), loadSpoolManagement()]);
   const [customerResponse, printerResponse, componentResponse, filamentResponse] = await Promise.all([
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/customers', { query: { pageSize: 100 } }),
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/printers', { query: { pageSize: 100 } }),

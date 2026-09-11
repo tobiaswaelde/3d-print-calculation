@@ -10,6 +10,10 @@ registerEndpoint('/api/settings', () => ({
   calculationVersion: '3',
   spoolManagementEnabled: false,
 }));
+registerEndpoint('/api/settings/features', () => ({
+  printSeriesEnabled: true,
+  spoolManagementEnabled: false,
+}));
 for (const resource of ['customers', 'printers', 'components', 'filaments'])
   registerEndpoint(`/api/${resource}`, () => ({ items: [], total: 0, page: 1, pageSize: 100 }));
 

@@ -21,6 +21,7 @@ whole seconds.
 | `POST /api/auth/logout`                   | Yes      | Delete the current session                                            |
 | `PATCH /api/auth/preferences`             | Yes      | Update `{ locale }` for the account                                   |
 | `GET/PATCH /api/settings`                 | Yes      | Read or update currency, default language, and electricity price      |
+| `GET/PATCH /api/settings/features`        | Yes      | Read or update print-series and spool-management feature flags        |
 | `GET/POST /api/customers`                 | Yes      | Paginated list or create                                              |
 | `GET/PATCH/DELETE /api/customers/:id`     | Yes      | Read, replace/archive, or safely delete                               |
 | `GET/POST /api/printers`                  | Yes      | Paginated list or create                                              |
@@ -67,7 +68,7 @@ resolved manufacturer name.
 ## Errors
 
 Errors include an HTTP status and stable `data` with `code`, `messageKey`, optional `fieldErrors`, and `requestId`.
-Expect 401 without a session, 403 for a foreign origin, 409 for immutability, references, currency, or setup
+Expect 401 without a session, 403 for a foreign origin, 409 for disabled features, immutability, references, currency, or setup
 conflicts, and 422 for invalid or incompatible input. API clients should branch on `code`, not parse messages.
 
 `GET /api/settings` exposes `spoolManagementEnabled`. `PATCH /api/settings` requires the boolean alongside the
@@ -91,9 +92,8 @@ Authenticated `GET /api/spools` supports search, page, pageSize (1–100), inclu
 Draft filament lines accept `spoolId`. Older clients may omit it only when exactly one active spool can be resolved. Finalized usage DTOs preserve `spoolId` and `spoolCode`; historical usages without a spool remain null.
 
 When spool management is disabled, draft `spoolId` values are ignored and new usages store null spool fields.
-Calculations use the selected filament's catalog price and net weight. Spool and stock reads remain available for
-history; spool creation/update/archive/movement, stock-threshold updates, Spoolman actions, and BambuBuddy tray
-mapping return `409 SPOOL_MANAGEMENT_DISABLED`.
+Calculations use the selected filament's catalog price and net weight. Spool and stock endpoints, Spoolman actions,
+and BambuBuddy tray mapping return `409 SPOOL_MANAGEMENT_DISABLED`; historical print usage remains readable.
 
 `POST /api/prints/:id/outcome/correct` accepts the outcome fields plus a required correction note, `expectedRevision`, and a UUID `operationKey`. It appends an immutable revision, updates current result metrics, and books only consumption deltas atomically. Matching retries are idempotent; stale revisions return 409. Print DTOs expose the current revision and history containing the original plus the latest 20 corrections. The full stock ledger remains paginated on the spool detail API.
 

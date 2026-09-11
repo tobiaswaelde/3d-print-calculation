@@ -40,7 +40,11 @@
             <UFormField name="salesValue" :label="t('sales.value')" :description="t('sales.help')">
               <UInput v-model="form.salesValue" inputmode="decimal" class="w-full" />
             </UFormField>
-            <UFormField name="seriesId" :label="t('nav.series')" :description="t('series.customerRule')"
+            <UFormField
+              v-if="printSeriesEnabled"
+              name="seriesId"
+              :label="t('nav.series')"
+              :description="t('series.customerRule')"
               ><CommonSeriesSelect v-model="form.seriesId" @customer="form.customerId = $event"
             /></UFormField>
             <UFormField name="customerId" :label="t('nav.customers')">
@@ -253,6 +257,7 @@ const {
 
 const { t } = useI18n();
 const { enabled: spoolManagementEnabled, load: loadSpoolManagement } = useSpoolManagement();
+const { load: loadFeatures, printSeriesEnabled } = useFeatures();
 const formRef = ref<{
   validate: (options: { name?: string[] }) => Promise<unknown>;
 } | null>(null);
@@ -329,7 +334,7 @@ function payload() {
     quantity: Number(form.quantity),
     salesValue: form.salesValue || null,
     customerId: form.customerId,
-    seriesId: form.seriesId,
+    seriesId: printSeriesEnabled.value ? form.seriesId : null,
     printerId: form.printerId,
     buildPlateId: form.buildPlateId,
     hotends: form.hotends.map((entry) => ({
@@ -384,7 +389,7 @@ const lastStep = computed(() => stepperItems.value.length - 1);
 defineExpose({ currentStep, lastStep, loading, saving, nextStep, previousStep });
 
 async function load() {
-  await loadSpoolManagement();
+  await Promise.all([loadFeatures(), loadSpoolManagement()]);
   const [customerResponse, printerResponse, componentResponse, filamentResponse] = await Promise.all([
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/customers', { query: { pageSize: 100 } }),
     $fetch<PaginatedResponse<MasterDataListItem>>('/api/printers', { query: { pageSize: 100 } }),

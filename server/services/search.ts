@@ -20,7 +20,10 @@ export async function searchApplication(query: Record<string, unknown>) {
   const { q } = parseBody(globalSearchQuerySchema, query);
   const [settings, prints, customers, printers, components, filaments, spools, series] =
     await db.$transaction([
-      db.appSettings.findUniqueOrThrow({ where: { id: 1 }, select: { spoolManagementEnabled: true } }),
+      db.appSettings.findUniqueOrThrow({
+        where: { id: 1 },
+        select: { printSeriesEnabled: true, spoolManagementEnabled: true },
+      }),
       db.printJob.findMany({
         where: {
           archivedAt: null,
@@ -120,12 +123,14 @@ export async function searchApplication(query: Record<string, unknown>) {
   const groups: GlobalSearchGroup[] = [
     {
       type: 'series',
-      items: series.map((item) => ({
-        id: item.id,
-        title: item.name,
-        description: item.customer?.name ?? null,
-        to: `/series/${item.id}`,
-      })),
+      items: settings.printSeriesEnabled
+        ? series.map((item) => ({
+            id: item.id,
+            title: item.name,
+            description: item.customer?.name ?? null,
+            to: `/series/${item.id}`,
+          }))
+        : [],
     },
     {
       type: 'spools',

@@ -90,10 +90,11 @@
               <NuxtLink :to="`/prints/${print.id}`" class="text-primary underline">{{ print.name }}</NuxtLink>
               <p class="text-xs text-muted">{{ dateTime(print.completedAt ?? print.createdAt) }}</p>
               <NuxtLink
-                v-if="print.series"
+                v-if="print.series && printSeriesEnabled"
                 :to="`/series/${print.series.id}`"
                 class="block text-xs text-primary"
                 >{{ print.series.name }}</NuxtLink
+              ><span v-else-if="print.series" class="text-xs text-muted">{{ print.series.name }}</span
               ><NuxtLink
                 v-if="print.retryOf"
                 :to="`/prints/${print.retryOf.id}`"
@@ -155,6 +156,7 @@ const props = withDefaults(defineProps<{ customerId?: string; seriesId?: string;
   seriesId: undefined,
   showSummary: true,
 });
+const { printSeriesEnabled } = useFeatures();
 const { t } = useI18n();
 const { money, duration, dateTime } = useFormatting();
 const filters = reactive({

@@ -175,6 +175,7 @@
 <script setup lang="ts">
 import type { PrintSeriesDto } from '#shared/types/series';
 
+definePageMeta({ middleware: 'print-series' });
 const { t } = useI18n();
 const { money, dateTime } = useFormatting();
 const id = String(useRoute().params.id);

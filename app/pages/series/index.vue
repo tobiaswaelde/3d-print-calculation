@@ -153,6 +153,7 @@
 import type { PrintSeriesDto } from '#shared/types/series';
 import type { PaginatedResponse } from '#shared/types/master-data';
 
+definePageMeta({ middleware: 'print-series' });
 const { t } = useI18n();
 const { money, dateTime } = useFormatting();
 const search = ref('');

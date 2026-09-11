@@ -13,11 +13,12 @@ manufacturer, material, and color name.
 The `Component.alwaysUsed` flag controls compatible defaults in new print forms without making those selections
 mandatory.
 
-`AppSettings.spoolManagementEnabled` defaults to true and controls new spool selection, stock writes, and
-filament pricing behavior. `AppSettings` also stores explicit Spoolman and BambuBuddy enablement, server URLs, and
-server-only credentials. Nullable values preserve environment-variable defaults for deployments upgraded from
-earlier versions. Credentials are never serialized in settings or integration responses; database files and
-backups still require secret-level protection.
+`AppSettings` stores the instance-wide `printSeriesEnabled` and `spoolManagementEnabled` feature flags. Both
+default to true, and disabling them preserves existing series, spool, usage, and snapshot records. The spool flag
+controls new spool selection, stock writes, and filament pricing behavior. `AppSettings` also stores explicit
+Spoolman and BambuBuddy enablement, server URLs, and server-only credentials. Nullable values preserve
+environment-variable defaults for deployments upgraded from earlier versions. Credentials are never serialized
+in settings or integration responses; database files and backups still require secret-level protection.
 
 A `PrintJob` references one printer, an optional customer, and component and filament usage rows. Its workflow
 status is one of `DRAFT`, `PRINTING`, `PRINTED`, `SHIPPED`, or `DONE`; payment is tracked independently with the

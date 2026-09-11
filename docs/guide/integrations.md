@@ -5,7 +5,7 @@ description: Configure optional server-only integrations, preview imports, assig
 
 # Spoolman and BambuBuddy
 
-Spoolman requires spool management under **Settings → General**. Turning spool management off disables the
+Spoolman requires spool management under **Settings → Features**. Turning spool management off disables the
 integration without clearing its URL or authorization value; it is not automatically re-enabled later.
 BambuBuddy remains available without spool management, but tray-to-spool mapping is hidden and rejected by the
 API until inventory is enabled again.

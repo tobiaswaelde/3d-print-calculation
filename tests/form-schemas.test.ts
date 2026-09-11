@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { componentSchema, customerSchema, settingsSchema } from '../shared/schemas/master-data';
+import { featureSettingsSchema } from '../shared/schemas/features';
 import {
   printDraftFormSchema,
   printListQuerySchema,
@@ -24,6 +25,14 @@ describe('application form validation', () => {
         spoolManagementEnabled: true,
       }).success,
     ).toBe(false);
+  });
+
+  it('requires explicit boolean feature flags', () => {
+    expect(featureSettingsSchema.parse({ printSeriesEnabled: true, spoolManagementEnabled: false })).toEqual({
+      printSeriesEnabled: true,
+      spoolManagementEnabled: false,
+    });
+    expect(featureSettingsSchema.safeParse({ printSeriesEnabled: 'yes' }).success).toBe(false);
   });
 
   it('validates the resource-specific master-data fields', () => {
