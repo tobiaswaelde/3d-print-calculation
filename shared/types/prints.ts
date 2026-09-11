@@ -1,7 +1,26 @@
+import type { PrintFinancials } from '../domain/print-financials';
 import type { PrintCalculationResult } from '../domain/print-calculation';
+import type { PrintOutcomeInput } from '../schemas/print-outcomes';
 import type { PrintStatus } from '../schemas/prints';
 
+export type OutcomeRevisionDto = PrintOutcomeInput & {
+  revision: number;
+  recordedAt: string;
+  costs: PrintCalculationResult;
+};
+
 export interface PrintJobDto {
+  series: { id: string; name: string; archivedAt: string | null } | null;
+  seriesId: string | null;
+  repeatOf: { id: string; name: string } | null;
+  repeats: Array<{ id: string; name: string }>;
+  salesValue: string | null;
+  financials: PrintFinancials;
+  retryOf: { id: string; name: string } | null;
+  retries: Array<{ id: string; name: string }>;
+  outcome: (OutcomeRevisionDto & { history: OutcomeRevisionDto[] }) | null;
+  quantity: number;
+  costPerUnit: string;
   id: string;
   name: string;
   customer: { id: string; name: string } | null;
@@ -33,12 +52,16 @@ export interface PrintJobDto {
   filamentUsages: Array<{
     id: string;
     filamentId: string;
+    spoolId: string | null;
+    spoolCode: string | null;
     name: string;
+    costPerGram: string;
     usedGrams: string;
     lineCost: string;
   }>;
   snapshot:
     | (Omit<PrintCalculationResult, 'lines' | 'totalDurationSeconds' | 'calculationVersion'> & {
+        salesValue: string | null;
         printerName: string;
         printerPurchasePrice: string;
         printerExpectedLifetimeHours: string;
@@ -52,11 +75,31 @@ export interface PrintJobDto {
 }
 
 export interface DashboardDto {
+  lowStock: Array<{
+    filamentId: string;
+    name: string;
+    remainingGrams: string | null;
+    minimumStockGrams: string;
+  }>;
   period: '30d' | '90d' | 'all';
   periodStart: string | null;
   periodEnd: string;
   currency: string;
-  kpis: { activeDrafts: number; completedPrints: number; totalDurationSeconds: number; totalCost: string };
+  kpis: {
+    revenue: string;
+    margin: string;
+    successes: number;
+    failures: number;
+    pendingOutcomes: number;
+    successRate: string | null;
+    actualCost: string;
+    failedCost: string;
+    variance: string;
+    activeDrafts: number;
+    completedPrints: number;
+    totalDurationSeconds: number;
+    totalCost: string;
+  };
   completedCostSeries: Array<{ date: string; value: string }>;
   categoryTotals: Array<{ category: string; value: string }>;
   unfinishedPrints: Array<{

@@ -41,6 +41,7 @@ model AppSettings {
 }
 
 model Customer {
+  series     PrintSeries[]
   id         String     @id @default(cuid())
   name       String
   email      String?
@@ -55,6 +56,11 @@ model Customer {
 }
 
 model Printer {
+  bambuId Int? @unique
+  bambuState String?
+  bambuSyncedAt DateTime?
+  bambuError String?
+  trayMappings BambuTrayMapping[]
   id                    String             @id @default(cuid())
   name                  String
   manufacturer          String?
@@ -74,6 +80,7 @@ model Printer {
 }
 
 model Manufacturer {
+  spoolmanId Int? @unique
   id         String      @id @default(cuid())
   name       String      @unique
   note       String?
@@ -120,11 +127,14 @@ model PrinterComponent {
 }
 
 model Filament {
+  spoolmanId Int? @unique
   id             String               @id @default(cuid())
   name           String
   manufacturerId String
   manufacturer   Manufacturer         @relation(fields: [manufacturerId], references: [id], onDelete: Restrict)
   material       String
+  minimumStockGrams String @default("0")
+  spools         Spool[]
   colorName      String
   colorHex       String               @default("#FFFFFF")
   purchasePrice  Decimal
@@ -142,6 +152,13 @@ model Filament {
 }
 
 model PrintJob {
+  bambuLink BambuPrintLink?
+  seriesId             String?
+  series               PrintSeries? @relation(fields: [seriesId], references: [id], onDelete: Restrict)
+  repeatOfId           String?
+  repeatOf             PrintJob? @relation("PrintRepeats", fields: [repeatOfId], references: [id], onDelete: Restrict)
+  repeats              PrintJob[] @relation("PrintRepeats")
+  salesValue           String?
   id                   String                @id @default(cuid())
   name                 String
   customerId           String?
@@ -150,6 +167,7 @@ model PrintJob {
   printer              Printer               @relation(fields: [printerId], references: [id], onDelete: Restrict)
   status               String                @default("DRAFT")
   notes                String?
+  quantity             Int                   @default(1)
   totalDurationSeconds Int
   formulaVersion       String
   currency             String
@@ -159,6 +177,10 @@ model PrintJob {
   archivedAt           DateTime?
   componentUsages      PrintComponentUsage[]
   filamentUsages       PrintFilamentUsage[]
+  outcome              PrintOutcome?
+  retryOfId            String?
+  retryOf              PrintJob?             @relation("PrintRetries", fields: [retryOfId], references: [id], onDelete: Restrict)
+  retries              PrintJob[]            @relation("PrintRetries")
   snapshot             PrintCostSnapshot?
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -194,6 +216,10 @@ model PrintFilamentUsage {
   id             String   @id @default(cuid())
   printJobId     String
   printJob       PrintJob @relation(fields: [printJobId], references: [id], onDelete: Cascade)
+  spoolId        String?
+  spool          Spool? @relation(fields: [spoolId], references: [id], onDelete: Restrict)
+  spoolCode      String?
+  stockMovements StockMovement[]
   filamentId     String
   filament       Filament @relation(fields: [filamentId], references: [id], onDelete: Restrict)
   filamentName   String
@@ -211,9 +237,13 @@ model PrintFilamentUsage {
 }
 
 model PrintCostSnapshot {
+  salesValue                   String?
+  calculationJson              String?
   id                           String   @id @default(cuid())
   printJobId                   String   @unique
   printJob                     PrintJob @relation(fields: [printJobId], references: [id], onDelete: Cascade)
+  quantity                     Int      @default(1)
+  costPerUnit                  String?
   electricityPricePerKwh       Decimal
   printerName                  String
   printerPurchasePrice         Decimal
@@ -228,4 +258,127 @@ model PrintCostSnapshot {
   currency                     String
   formulaVersion               String
   calculatedAt                 DateTime @default(now())
+}
+
+model PrintOutcome {
+  corrections     PrintOutcomeCorrection[]
+  id              String   @id @default(cuid())
+  printJobId      String   @unique
+  printJob        PrintJob @relation(fields: [printJobId], references: [id], onDelete: Restrict)
+  status          String
+  durationSeconds Int
+  failureReason   String?
+  note            String?
+  inputSnapshot   String
+  costSnapshot    String
+  recordedAt      DateTime @default(now())
+}
+
+model Spool {
+  trayMappings BambuTrayMapping[]
+  spoolmanId Int? @unique
+  stockAuthority String @default("NATIVE")
+  remoteRemainingGrams String?
+  remoteState String?
+  syncedAt DateTime?
+  syncError String?
+  syncOperations SpoolSyncOperation[]
+  id               String @id @default(cuid())
+  code             String @unique
+  filamentId       String
+  filament         Filament @relation(fields: [filamentId], references: [id], onDelete: Restrict)
+  purchaseLot      String?
+  location         String?
+  acquiredAt       DateTime?
+  purchasePrice    String
+  initialNetWeightGrams String
+  legacy           Boolean @default(false)
+  archivedAt       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  movements        StockMovement[]
+  usages           PrintFilamentUsage[]
+
+  @@index([filamentId, archivedAt])
+}
+
+model StockMovement {
+  id               String @id @default(cuid())
+  spoolId          String
+  spool            Spool @relation(fields: [spoolId], references: [id], onDelete: Restrict)
+  kind             String
+  grams            String
+  note             String?
+  operationKey     String @unique
+  printUsageId     String?
+  printUsage       PrintFilamentUsage? @relation(fields: [printUsageId], references: [id], onDelete: Restrict)
+  createdAt        DateTime @default(now())
+
+  @@index([spoolId, id])
+  @@index([printUsageId])
+}
+
+model PrintOutcomeCorrection {
+  id            String @id @default(cuid())
+  outcomeId     String
+  outcome       PrintOutcome @relation(fields: [outcomeId], references: [id], onDelete: Restrict)
+  revision      Int
+  operationKey  String @unique
+  inputSnapshot String
+  costSnapshot  String
+  recordedAt    DateTime @default(now())
+
+  @@unique([outcomeId, revision])
+}
+
+model PrintSeries {
+  id             String @id @default(cuid())
+  name           String
+  customerId     String?
+  customer       Customer? @relation(fields: [customerId], references: [id], onDelete: Restrict)
+  targetQuantity Int?
+  notes          String?
+  status         String @default("OPEN")
+  autoComplete   Boolean @default(true)
+  archivedAt     DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  prints         PrintJob[]
+
+  @@index([customerId, archivedAt])
+}
+
+model SpoolSyncOperation {
+  id String @id @default(cuid())
+  operationKey String @unique
+  spoolId String
+  spool Spool @relation(fields: [spoolId], references: [id], onDelete: Restrict)
+  remoteId Int
+  grams String
+  state String @default("PENDING")
+  error String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([state, createdAt])
+}
+
+model BambuPrintLink {
+  id String @id @default(cuid())
+  printJobId String @unique
+  printJob PrintJob @relation(fields: [printJobId], references: [id], onDelete: Restrict)
+  remoteLogId Int @unique
+  cachedJson String
+  syncedAt DateTime @default(now())
+  error String?
+  importedJson String?
+  importedAt DateTime?
+}
+model BambuTrayMapping {
+  id String @id @default(cuid())
+  printerId String
+  printer Printer @relation(fields: [printerId], references: [id], onDelete: Restrict)
+  slot String
+  spoolId String
+  spool Spool @relation(fields: [spoolId], references: [id], onDelete: Restrict)
+  @@unique([printerId, slot])
 }

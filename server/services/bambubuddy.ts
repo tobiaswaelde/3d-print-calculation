@@ -1,0 +1,272 @@
+import Decimal from 'decimal.js';
+import { createHash } from 'node:crypto';
+import { z } from 'zod';
+import { bambuActionSchema, bambuQuerySchema } from '#shared/schemas/integrations';
+import { db } from '../utils/db';
+import { apiError } from '../utils/http';
+import { parseBody } from '../utils/validation';
+import { integrationConfigured, integrationRequest } from '../utils/integrations/http';
+import {
+  bambuPrinterSchema,
+  bambuStateSchema,
+  bambuLogSchema,
+  bambuLogPageSchema,
+  bambuAssignmentsSchema,
+  terminalOutcome,
+} from '../utils/integrations/bambu-contract';
+import { getPrint, recordPrintOutcome } from './prints';
+const digest = (value: string) => createHash('sha256').update(value).digest('hex');
+async function request<T>(path: string, schema: z.ZodType<T>) {
+  const response = schema.safeParse(await integrationRequest('BAMBUBUDDY', `api/v1/${path}`));
+  if (!response.success) return apiError(502, 'INTEGRATION_CONTRACT', 'errors.integrationContract');
+  return response.data;
+}
+export async function syncBambuPrinter(id: string) {
+  const printer = await db.printer.findUniqueOrThrow({ where: { id } });
+  if (!printer.bambuId) return;
+  try {
+    const state = await request(`printers/${printer.bambuId}/status`, bambuStateSchema);
+    if (state.id !== printer.bambuId) apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    let assignments: z.infer<typeof bambuAssignmentsSchema> = [];
+    let mappingWarning = false;
+    if (integrationConfigured('SPOOLMAN'))
+      try {
+        assignments = await request('spoolman/inventory/slot-assignments/all', bambuAssignmentsSchema);
+      } catch {
+        mappingWarning = true;
+      }
+    const localMappings = await db.bambuTrayMapping.findMany({ where: { printerId: id } });
+    const trays = [];
+    const slots = [
+      ...state.ams.flatMap((ams) => ams.tray.map((tray) => ({ ...tray, amsId: ams.id }))),
+      ...state.vt_tray.map((tray) => ({ ...tray, amsId: 255 })),
+    ];
+    for (const tray of slots) {
+      const slot = `${tray.amsId}:${tray.id}`;
+      const remote = assignments.filter(
+        (item) =>
+          item.printer_id === printer.bambuId && item.ams_id === tray.amsId && item.tray_id === tray.id,
+      );
+      const candidate =
+        remote.length === 1
+          ? await db.spool.findUnique({ where: { spoolmanId: remote[0]!.spoolman_spool_id } })
+          : null;
+      const linked = candidate?.stockAuthority !== 'NATIVE' ? candidate : null;
+      const explicit = localMappings.find((item) => item.slot === slot);
+      const spoolId = linked?.id ?? explicit?.spoolId ?? null;
+      const spool = spoolId ? await db.spool.findUnique({ where: { id: spoolId } }) : null;
+      trays.push({
+        slot,
+        material: tray.tray_type ?? null,
+        spoolId,
+        spoolCode: spool?.code ?? null,
+        ambiguous: remote.length > 1 || !!(linked && explicit && linked.id !== explicit.spoolId),
+        unavailable: !!spool?.archivedAt || ['ARCHIVED', 'MISSING'].includes(spool?.remoteState ?? ''),
+        source: linked ? 'SPOOLMAN' : explicit ? 'LOCAL' : 'UNMAPPED',
+      });
+    }
+    await db.printer.update({
+      where: { id },
+      data: {
+        bambuState: JSON.stringify({
+          name: state.name,
+          connected: state.connected,
+          state: state.state ?? null,
+          trays,
+          mappingWarning,
+        }),
+        bambuSyncedAt: new Date(),
+        bambuError: null,
+      },
+    });
+  } catch {
+    await db.printer.update({ where: { id }, data: { bambuError: 'INTEGRATION_UNAVAILABLE' } });
+  }
+}
+async function remoteLog(printerId: number, remoteLogId: number) {
+  // ponytail: search at most 1,000 recent records; older records stay cached until manually reconciled.
+  for (let page = 0; page < 20; page++) {
+    const result = await request(
+      `print-log/?printer_id=${printerId}&limit=50&offset=${page * 50}`,
+      bambuLogPageSchema,
+    );
+    const found = result.items.find((item) => item.id === remoteLogId);
+    if (found) return found;
+    if ((page + 1) * 50 >= result.total) break;
+  }
+  return apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+}
+export async function syncBambuPrint(printId: string) {
+  const print = await db.printJob.findUniqueOrThrow({
+    where: { id: printId },
+    include: { bambuLink: true, printer: true },
+  });
+  if (!print.bambuLink || !print.printer.bambuId || print.bambuLink.importedAt) return;
+  try {
+    const log = await remoteLog(print.printer.bambuId, print.bambuLink.remoteLogId);
+    if (log.printer_id !== print.printer.bambuId)
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    await db.bambuPrintLink.update({
+      where: { printJobId: printId },
+      data: { cachedJson: JSON.stringify(log), syncedAt: new Date(), error: null },
+    });
+  } catch {
+    await db.bambuPrintLink.update({
+      where: { printJobId: printId },
+      data: { error: 'INTEGRATION_UNAVAILABLE', syncedAt: new Date() },
+    });
+  }
+}
+export async function bambuStatus(query: Record<string, unknown>) {
+  const input = parseBody(bambuQuerySchema, query);
+  if (input.view === 'logs') {
+    const printer = await db.printer.findUniqueOrThrow({ where: { id: input.printerId ?? '' } });
+    if (!printer.bambuId) apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    return request(
+      `print-log/?printer_id=${printer.bambuId}&limit=50&offset=${(input.page - 1) * 50}`,
+      bambuLogPageSchema,
+    );
+  }
+  let remotePrinters: z.infer<typeof bambuPrinterSchema>[] = [];
+  let version: string | null = null;
+  let error: string | null = null;
+  if (integrationConfigured('BAMBUBUDDY'))
+    try {
+      remotePrinters = await request('printers/', z.array(bambuPrinterSchema).max(500));
+      version = (await request('updates/version', z.object({ version: z.string().max(64) }))).version;
+    } catch {
+      error = 'INTEGRATION_UNAVAILABLE';
+    }
+  const printers = await db.printer.findMany({
+    where: input.printerId ? { id: input.printerId } : { archivedAt: null },
+    take: 100,
+    orderBy: { name: 'asc' },
+    include: { trayMappings: true },
+  });
+  const link = input.printId
+    ? await db.bambuPrintLink.findUnique({ where: { printJobId: input.printId } })
+    : null;
+  const log = link ? bambuLogSchema.parse(JSON.parse(link.cachedJson)) : null;
+  return {
+    configured: integrationConfigured('BAMBUBUDDY'),
+    remotePrinters,
+    version,
+    error,
+    printers: printers.map((printer) => ({
+      id: printer.id,
+      name: printer.name,
+      remoteId: printer.bambuId,
+      state: printer.bambuState ? JSON.parse(printer.bambuState) : null,
+      syncedAt: printer.bambuSyncedAt,
+      error: printer.bambuError,
+      stale:
+        !!printer.bambuId &&
+        (!printer.bambuSyncedAt ||
+          Date.now() - printer.bambuSyncedAt.getTime() > 300000 ||
+          !!printer.bambuError),
+    })),
+    link:
+      link && log
+        ? {
+            remoteLogId: link.remoteLogId,
+            log,
+            previewHash: digest(link.cachedJson),
+            terminal: terminalOutcome(log.status, log.completed_at),
+            syncedAt: link.syncedAt,
+            error: link.error,
+            importedAt: link.importedAt,
+          }
+        : null,
+  };
+}
+export async function bambuAction(input: unknown) {
+  const data = parseBody(bambuActionSchema, input);
+  if (data.action === 'LINK_PRINTER') {
+    if (data.remoteId !== null) await request(`printers/${data.remoteId}`, bambuPrinterSchema);
+    const linked = await db.printer.findFirst({
+      where: { bambuId: data.remoteId, id: { not: data.printerId } },
+    });
+    if (data.remoteId !== null && linked) apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    const pending = await db.bambuPrintLink.count({
+      where: { printJob: { printerId: data.printerId }, importedAt: null },
+    });
+    if (pending) apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    await db.printer.update({
+      where: { id: data.printerId },
+      data: { bambuId: data.remoteId, bambuState: null, bambuSyncedAt: null, bambuError: null },
+    });
+    await syncBambuPrinter(data.printerId);
+  }
+  if (data.action === 'SYNC_PRINTER') await syncBambuPrinter(data.printerId);
+  if (data.action === 'MAP_TRAY') {
+    const printer = await db.printer.findUniqueOrThrow({ where: { id: data.printerId } });
+    const state = printer.bambuState
+      ? (JSON.parse(printer.bambuState) as { trays: { slot: string }[] })
+      : null;
+    if (!state?.trays.some((tray) => tray.slot === data.slot))
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    if (data.spoolId && !(await db.spool.findFirst({ where: { id: data.spoolId, archivedAt: null } })))
+      apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
+    if (data.spoolId)
+      await db.bambuTrayMapping.upsert({
+        where: { printerId_slot: { printerId: data.printerId, slot: data.slot } },
+        create: { printerId: data.printerId, slot: data.slot, spoolId: data.spoolId },
+        update: { spoolId: data.spoolId },
+      });
+    else await db.bambuTrayMapping.deleteMany({ where: { printerId: data.printerId, slot: data.slot } });
+    await syncBambuPrinter(data.printerId);
+  }
+  if (data.action === 'ATTACH') {
+    const print = await db.printJob.findUniqueOrThrow({
+      where: { id: data.printId },
+      include: { printer: true, bambuLink: true },
+    });
+    if (!print.printer.bambuId || print.archivedAt || print.bambuLink)
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    const log = await remoteLog(print.printer.bambuId, data.remoteLogId);
+    if (
+      log.printer_id !== print.printer.bambuId ||
+      (await db.bambuPrintLink.findUnique({ where: { remoteLogId: log.id } }))
+    )
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    await db.bambuPrintLink.create({
+      data: { printJobId: print.id, remoteLogId: log.id, cachedJson: JSON.stringify(log) },
+    });
+  }
+  if (data.action === 'SYNC_PRINT') await syncBambuPrint(data.printId);
+  if (data.action === 'IMPORT') {
+    const link = await db.bambuPrintLink.findUniqueOrThrow({ where: { printJobId: data.printId } });
+    if (digest(link.cachedJson) !== data.previewHash || link.error)
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    const log = bambuLogSchema.parse(JSON.parse(link.cachedJson));
+    if (terminalOutcome(log.status, log.completed_at) !== data.outcome.status)
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    const print = await getPrint(data.printId);
+    if (
+      log.duration_seconds !== null &&
+      log.duration_seconds !== undefined &&
+      log.duration_seconds !== data.outcome.durationSeconds
+    )
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    if (
+      log.filament_used_grams != null &&
+      !data.outcome.filaments
+        .reduce((sum, line) => sum.plus(line.usedGrams), new Decimal(0))
+        .eq(String(log.filament_used_grams))
+    )
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    const normalized = JSON.stringify({
+      ...data.outcome,
+      filaments: [...data.outcome.filaments].sort((a, b) => a.usageId.localeCompare(b.usageId)),
+    });
+    if (link.importedJson && link.importedJson !== normalized)
+      apiError(409, 'INTEGRATION_CONFLICT', 'errors.integrationConflict');
+    if (print.status !== 'DONE') apiError(409, 'OUTCOME_NOT_ALLOWED', 'errors.outcomeNotAllowed');
+    await recordPrintOutcome(print.id, data.outcome, true);
+    await db.bambuPrintLink.update({
+      where: { id: link.id },
+      data: { importedJson: normalized, importedAt: link.importedAt ?? new Date() },
+    });
+  }
+  return { ok: true };
+}

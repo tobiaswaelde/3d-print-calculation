@@ -1,3 +1,4 @@
+import { lowStockFilaments } from './spools';
 import Decimal from 'decimal.js';
 import { dashboardPeriodSchema } from '#shared/schemas/prints';
 import { canonicalDecimal } from '#shared/utils/decimal';
@@ -25,16 +26,26 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
         archivedAt: null,
         ...(start ? { completedAt: { gte: start, lte: now } } : {}),
       },
-      include: { snapshot: true },
+      include: {
+        snapshot: true,
+        outcome: { include: { corrections: { orderBy: { revision: 'desc' }, take: 1 } } },
+      },
       orderBy: { completedAt: 'asc' },
     }),
     db.printJob.findMany({
       where: { status: { not: 'DONE' }, archivedAt: null },
-      include: { customer: true, printer: true },
+      include: { customer: true, printer: true, snapshot: true },
       orderBy: { updatedAt: 'desc' },
     }),
   ]);
 
+  let revenue = new Decimal(0);
+  let margin = new Decimal(0);
+  let successes = 0;
+  let failures = 0;
+  let actualCost = new Decimal(0);
+  let failedCost = new Decimal(0);
+  let variance = new Decimal(0);
   let duration = 0;
   let total = new Decimal(0);
   const categories = {
@@ -46,17 +57,36 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
   const series = new Map<string, Decimal>();
   for (const job of completed) {
     if (!job.snapshot || !job.completedAt) continue;
+    const costs = job.snapshot.calculationJson ? JSON.parse(job.snapshot.calculationJson) : job.snapshot;
+    if (job.outcome) {
+      const cost = new Decimal(
+        JSON.parse(job.outcome.corrections[0]?.costSnapshot ?? job.outcome.costSnapshot).totalCost,
+      );
+      actualCost = actualCost.plus(cost);
+      variance = variance.plus(cost.minus(costs.totalCost.toString()));
+      if (job.outcome.status === 'SUCCESS') {
+        successes++;
+        if (job.snapshot.salesValue !== null) {
+          revenue = revenue.plus(job.snapshot.salesValue);
+          margin = margin.plus(new Decimal(job.snapshot.salesValue).minus(cost));
+        }
+      } else {
+        failures++;
+        failedCost = failedCost.plus(cost);
+      }
+    }
     duration += job.totalDurationSeconds;
-    total = total.plus(job.snapshot.totalCost.toString());
-    categories.printer = categories.printer.plus(job.snapshot.printerCost.toString());
-    categories.component = categories.component.plus(job.snapshot.componentCost.toString());
-    categories.filament = categories.filament.plus(job.snapshot.filamentCost.toString());
-    categories.electricity = categories.electricity.plus(job.snapshot.electricityCost.toString());
+    total = total.plus(costs.totalCost.toString());
+    categories.printer = categories.printer.plus(costs.printerCost.toString());
+    categories.component = categories.component.plus(costs.componentCost.toString());
+    categories.filament = categories.filament.plus(costs.filamentCost.toString());
+    categories.electricity = categories.electricity.plus(costs.electricityCost.toString());
     const key = bucket(job.completedAt, period);
-    series.set(key, (series.get(key) ?? new Decimal(0)).plus(job.snapshot.totalCost.toString()));
+    series.set(key, (series.get(key) ?? new Decimal(0)).plus(costs.totalCost.toString()));
   }
 
   return {
+    lowStock: await lowStockFilaments(),
     period,
     periodStart: start?.toISOString() ?? null,
     periodEnd: now.toISOString(),
@@ -65,6 +95,18 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
       unfinished[0]?.currency ??
       (await db.appSettings.findUniqueOrThrow({ where: { id: 1 } })).currency,
     kpis: {
+      revenue: canonicalDecimal(revenue),
+      margin: canonicalDecimal(margin),
+      successes,
+      failures,
+      pendingOutcomes: completed.length - successes - failures,
+      successRate:
+        successes + failures
+          ? canonicalDecimal(new Decimal(successes).mul(100).div(successes + failures))
+          : null,
+      actualCost: canonicalDecimal(actualCost),
+      failedCost: canonicalDecimal(failedCost),
+      variance: canonicalDecimal(variance),
       activeDrafts: unfinished.filter((job) => job.status === 'DRAFT').length,
       completedPrints: completed.length,
       totalDurationSeconds: duration,
@@ -85,7 +127,9 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
       customer: job.customer ? { id: job.customer.id, name: job.customer.name } : null,
       printer: { id: job.printer.id, name: job.printer.name },
       totalDurationSeconds: job.totalDurationSeconds,
-      totalCost: canonicalDecimal(job.totalCost.toString()),
+      totalCost: job.snapshot?.calculationJson
+        ? JSON.parse(job.snapshot.calculationJson).totalCost
+        : canonicalDecimal(job.totalCost.toString()),
       currency: job.currency,
       createdAt: job.createdAt.toISOString(),
       updatedAt: job.updatedAt.toISOString(),

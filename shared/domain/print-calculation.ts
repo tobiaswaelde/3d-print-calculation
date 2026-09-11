@@ -1,7 +1,9 @@
+import type { PrintFinancials } from './print-financials';
+import { printQuantitySchema } from '../schemas/prints';
 import Decimal from 'decimal.js';
 import { canonicalDecimal } from '../utils/decimal';
 
-export const PRINT_CALCULATION_VERSION = '1';
+export const PRINT_CALCULATION_VERSION = '3';
 
 export interface CostSource {
   id: string;
@@ -11,6 +13,7 @@ export interface CostSource {
 }
 
 export interface PrintCalculationInput {
+  quantity?: number;
   printer: CostSource & { averagePowerWatts: number };
   buildPlate: CostSource;
   hotends: Array<CostSource & { durationSeconds: number }>;
@@ -36,6 +39,9 @@ export interface CostBreakdownLine {
 }
 
 export interface PrintCalculationResult {
+  financials?: PrintFinancials;
+  quantity: number;
+  costPerUnit: string;
   calculationVersion: string;
   currency: string;
   totalDurationSeconds: number;
@@ -72,6 +78,7 @@ function hourly(source: CostSource) {
 }
 
 export function calculatePrintCost(input: PrintCalculationInput): PrintCalculationResult {
+  const quantity = printQuantitySchema.parse(input.quantity);
   if (!input.printer || !input.buildPlate) throw new Error('A printer and one build plate are required');
   if (!input.hotends.length) throw new Error('At least one hotend is required');
   if (!input.filaments.length) throw new Error('At least one filament is required');
@@ -157,6 +164,8 @@ export function calculatePrintCost(input: PrintCalculationInput): PrintCalculati
 
   const totalCost = printerCost.plus(componentCost).plus(filamentCost).plus(electricityCost);
   return {
+    quantity,
+    costPerUnit: canonicalDecimal(totalCost.div(quantity)),
     calculationVersion: PRINT_CALCULATION_VERSION,
     currency: input.currency,
     totalDurationSeconds,

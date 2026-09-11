@@ -1,7 +1,22 @@
+import { bookPrintStock } from './spoolman';
+import type { PrintJobDto } from '#shared/types/prints';
+import { componentSchema } from '#shared/schemas/master-data';
+import { summarizePrints, emptyPrintSummary } from '#shared/domain/print-summary';
+import { calculatePrintFinancials } from '#shared/domain/print-financials';
+import Decimal from 'decimal.js';
+import { spoolBalance, StockDecimal } from './spools';
+import { calculateActualPrintCost } from '#shared/domain/print-outcome';
+import { printOutcomeSchema, printOutcomeCorrectionSchema } from '#shared/schemas/print-outcomes';
+import type { PrintCalculationResult } from '#shared/domain/print-calculation';
 import type { Prisma } from '../../prisma/generated/client/client';
 import { calculatePrintCost } from '#shared/domain/print-calculation';
 import type { PrintDraftInput } from '#shared/schemas/prints';
-import { printDraftSchema, printListQuerySchema, printWorkflowUpdateSchema } from '#shared/schemas/prints';
+import {
+  printStatusSchema,
+  printDraftSchema,
+  printListQuerySchema,
+  printWorkflowUpdateSchema,
+} from '#shared/schemas/prints';
 import { canonicalDecimal } from '#shared/utils/decimal';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
@@ -9,28 +24,69 @@ import { parseBody } from '../utils/validation';
 
 type Transaction = Prisma.TransactionClient;
 const printInclude = {
+  bambuLink: true,
   customer: true,
   printer: true,
   componentUsages: { orderBy: { createdAt: 'asc' as const } },
   filamentUsages: { orderBy: { createdAt: 'asc' as const } },
   snapshot: true,
+  series: true,
+  repeatOf: { select: { id: true, name: true } },
+  repeats: { select: { id: true, name: true } },
+  outcome: { include: { corrections: { orderBy: { revision: 'desc' as const }, take: 20 } } },
+  retryOf: { select: { id: true, name: true } },
+  retries: { select: { id: true, name: true } },
 };
 type PrintWithSnapshot = Prisma.PrintJobGetPayload<{ include: typeof printInclude }>;
 
-function printDto(value: PrintWithSnapshot) {
+function printDto(value: PrintWithSnapshot): PrintJobDto {
+  const exact = value.snapshot?.calculationJson
+    ? (JSON.parse(value.snapshot.calculationJson) as PrintCalculationResult)
+    : null;
+  const exactLine = (id: string) => exact?.lines.find((line) => line.sourceId === id);
+  const history = value.outcome
+    ? [{ ...value.outcome, revision: 1 }, ...[...value.outcome.corrections].reverse()].map((entry) => ({
+        ...printOutcomeSchema.parse(JSON.parse(entry.inputSnapshot)),
+        revision: entry.revision,
+        recordedAt: entry.recordedAt.toISOString(),
+        costs: JSON.parse(entry.costSnapshot) as PrintCalculationResult,
+      }))
+    : [];
   return {
     id: value.id,
+    seriesId: value.seriesId,
+    series: value.series
+      ? {
+          id: value.series.id,
+          name: value.series.name,
+          archivedAt: value.series.archivedAt?.toISOString() ?? null,
+        }
+      : null,
+    repeatOf: value.repeatOf,
+    repeats: value.repeats,
+    retryOf: value.retryOf,
+    retries: value.retries,
+    outcome: history.length ? { ...history.at(-1)!, history } : null,
+    salesValue: value.snapshot?.salesValue ?? value.salesValue,
+    financials: calculatePrintFinancials(
+      value.snapshot?.salesValue ?? value.salesValue,
+      exact?.totalCost ?? value.totalCost.toString(),
+      value.quantity,
+      history.at(-1),
+    ),
     name: value.name,
+    quantity: value.quantity,
     customer: value.customer ? { id: value.customer.id, name: value.customer.name } : null,
     customerId: value.customerId,
     printer: { id: value.printer.id, name: value.printer.name },
     printerId: value.printerId,
-    status: value.status,
+    status: printStatusSchema.parse(value.status),
     notes: value.notes,
     totalDurationSeconds: value.totalDurationSeconds,
     formulaVersion: value.formulaVersion,
     currency: value.currency,
-    totalCost: canonicalDecimal(value.totalCost.toString()),
+    totalCost: exact?.totalCost ?? canonicalDecimal(value.totalCost.toString()),
+    costPerUnit: canonicalDecimal((value.snapshot?.costPerUnit ?? value.totalCost).toString()),
     completedAt: value.completedAt?.toISOString() ?? null,
     paidAt: value.paidAt?.toISOString() ?? null,
     archivedAt: value.archivedAt?.toISOString() ?? null,
@@ -39,38 +95,50 @@ function printDto(value: PrintWithSnapshot) {
     componentUsages: value.componentUsages.map((entry) => ({
       id: entry.id,
       componentId: entry.componentId,
-      type: entry.componentType,
+      type: componentSchema.shape.type.parse(entry.componentType),
       name: entry.componentName,
       purchasePrice: canonicalDecimal(entry.purchasePrice.toString()),
       expectedLifetimeHours: canonicalDecimal(entry.expectedLifetimeHours.toString()),
-      hourlyRate: canonicalDecimal(entry.hourlyRate.toString()),
+      hourlyRate: exactLine(entry.componentId)?.unitRate ?? canonicalDecimal(entry.hourlyRate.toString()),
       appliedDurationSeconds: entry.appliedDurationSeconds,
-      lineCost: canonicalDecimal(entry.lineCost.toString()),
+      lineCost: exactLine(entry.componentId)?.cost ?? canonicalDecimal(entry.lineCost.toString()),
     })),
     filamentUsages: value.filamentUsages.map((entry) => ({
       id: entry.id,
       filamentId: entry.filamentId,
+      spoolId: entry.spoolId,
+      spoolCode: entry.spoolCode,
       name: entry.filamentName,
       manufacturer: entry.manufacturer,
       material: entry.material,
       purchasePrice: canonicalDecimal(entry.purchasePrice.toString()),
       netWeightGrams: canonicalDecimal(entry.netWeightGrams.toString()),
-      costPerGram: canonicalDecimal(entry.costPerGram.toString()),
-      usedGrams: canonicalDecimal(entry.usedGrams.toString()),
-      lineCost: canonicalDecimal(entry.lineCost.toString()),
+      costPerGram:
+        exactLine(entry.spoolId ?? entry.filamentId)?.unitRate ??
+        canonicalDecimal(entry.costPerGram.toString()),
+      usedGrams:
+        exactLine(entry.spoolId ?? entry.filamentId)?.quantity ??
+        canonicalDecimal(entry.usedGrams.toString()),
+      lineCost:
+        exactLine(entry.spoolId ?? entry.filamentId)?.cost ?? canonicalDecimal(entry.lineCost.toString()),
     })),
     snapshot: value.snapshot && {
+      salesValue: value.snapshot.salesValue,
+      quantity: value.snapshot.quantity,
+      costPerUnit: canonicalDecimal((value.snapshot.costPerUnit ?? value.snapshot.totalCost).toString()),
       electricityPricePerKwh: canonicalDecimal(value.snapshot.electricityPricePerKwh.toString()),
       printerName: value.snapshot.printerName,
       printerPurchasePrice: canonicalDecimal(value.snapshot.printerPurchasePrice.toString()),
       printerExpectedLifetimeHours: canonicalDecimal(value.snapshot.printerExpectedLifetimeHours.toString()),
-      printerHourlyRate: canonicalDecimal(value.snapshot.printerHourlyRate.toString()),
+      printerHourlyRate:
+        exact?.lines.find((line) => line.category === 'printer')?.unitRate ??
+        canonicalDecimal(value.snapshot.printerHourlyRate.toString()),
       printerPowerWatts: value.snapshot.printerPowerWatts,
-      printerCost: canonicalDecimal(value.snapshot.printerCost.toString()),
-      componentCost: canonicalDecimal(value.snapshot.componentCost.toString()),
-      filamentCost: canonicalDecimal(value.snapshot.filamentCost.toString()),
-      electricityCost: canonicalDecimal(value.snapshot.electricityCost.toString()),
-      totalCost: canonicalDecimal(value.snapshot.totalCost.toString()),
+      printerCost: exact?.printerCost ?? canonicalDecimal(value.snapshot.printerCost.toString()),
+      componentCost: exact?.componentCost ?? canonicalDecimal(value.snapshot.componentCost.toString()),
+      filamentCost: exact?.filamentCost ?? canonicalDecimal(value.snapshot.filamentCost.toString()),
+      electricityCost: exact?.electricityCost ?? canonicalDecimal(value.snapshot.electricityCost.toString()),
+      totalCost: exact?.totalCost ?? canonicalDecimal(value.snapshot.totalCost.toString()),
       currency: value.snapshot.currency,
       formulaVersion: value.snapshot.formulaVersion,
       calculatedAt: value.snapshot.calculatedAt.toISOString(),
@@ -79,16 +147,25 @@ function printDto(value: PrintWithSnapshot) {
 }
 
 async function resolveCalculation(transaction: Transaction, input: PrintDraftInput) {
+  if (input.seriesId) {
+    const series = await transaction.printSeries.findFirst({
+      where: { id: input.seriesId, archivedAt: null },
+    });
+    if (!series) apiError(422, 'INVALID_SERIES', 'errors.invalidSeries');
+    if (series.customerId) {
+      if (input.customerId && input.customerId !== series.customerId)
+        apiError(409, 'SERIES_CUSTOMER_CONFLICT', 'errors.seriesCustomerConflict');
+      input.customerId = series.customerId;
+    }
+  }
   const componentIds = [
     input.buildPlateId,
     ...input.hotends.map((entry) => entry.componentId),
     ...input.otherComponentIds,
   ];
-  const filamentIds = input.filaments.map((entry) => entry.filamentId);
+  const filamentIds = [...new Set(input.filaments.map((entry) => entry.filamentId))];
   if (new Set(componentIds).size !== componentIds.length)
     apiError(422, 'DUPLICATE_COMPONENT', 'errors.duplicateComponent');
-  if (new Set(filamentIds).size !== filamentIds.length)
-    apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
 
   const [settings, printer, components, filaments, customer] = await Promise.all([
     transaction.appSettings.findUniqueOrThrow({ where: { id: 1 } }),
@@ -111,6 +188,25 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     apiError(422, 'INVALID_COMPONENT', 'errors.invalidComponent');
   if (filaments.length !== filamentIds.length) apiError(422, 'INVALID_FILAMENT', 'errors.invalidFilament');
 
+  const spools = await transaction.spool.findMany({
+    where: { filamentId: { in: filamentIds }, archivedAt: null },
+  });
+  for (const line of input.filaments) {
+    const candidates = spools.filter(
+      (spool) => spool.filamentId === line.filamentId && (!line.spoolId || spool.id === line.spoolId),
+    );
+    const balance = candidates.length === 1 ? await spoolBalance(transaction, candidates[0]!.id) : null;
+    if (
+      candidates.length !== 1 ||
+      ['ARCHIVED', 'MISSING'].includes(candidates[0]!.remoteState ?? '') ||
+      (balance !== null && new Decimal(balance).lte(0))
+    )
+      apiError(422, 'INVALID_SPOOL', 'errors.invalidSpool');
+    line.spoolId = candidates[0]!.id;
+  }
+  if (new Set(input.filaments.map((line) => line.spoolId)).size !== input.filaments.length)
+    apiError(422, 'DUPLICATE_FILAMENT', 'errors.duplicateFilament');
+  const spoolMap = new Map(spools.map((spool) => [spool.id, spool]));
   const componentMap = new Map(components.map((entry) => [entry.id, entry]));
   const filamentMap = new Map(filaments.map((entry) => [entry.id, entry]));
   const buildPlate = componentMap.get(input.buildPlateId)!;
@@ -128,6 +224,7 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
   }
 
   const result = calculatePrintCost({
+    quantity: input.quantity,
     printer: {
       id: printer.id,
       name: printer.name,
@@ -162,22 +259,23 @@ async function resolveCalculation(transaction: Transaction, input: PrintDraftInp
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
+      const spool = spoolMap.get(entry.spoolId!)!;
       return {
-        id: source.id,
-        name: source.name,
-        purchasePrice: source.purchasePrice.toString(),
-        netWeightGrams: source.netWeightGrams.toString(),
+        id: spool.id,
+        name: `${source.name} · ${spool.code}`,
+        purchasePrice: spool.purchasePrice,
+        netWeightGrams: spool.initialNetWeightGrams,
         usedGrams: entry.usedGrams,
       };
     }),
     electricityPricePerKwh: settings.electricityPricePerKwh.toString(),
     currency: settings.currency,
   });
-  return { settings, printer, componentMap, filamentMap, result };
+  return { settings, printer, componentMap, filamentMap, spoolMap, result };
 }
 
 function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<typeof resolveCalculation>>) {
-  const { settings, printer, componentMap, filamentMap, result } = resolved;
+  const { settings, printer, componentMap, filamentMap, spoolMap, result } = resolved;
   const lineMap = new Map(
     result.lines.filter((line) => line.sourceId !== 'electricity').map((line) => [line.sourceId, line]),
   );
@@ -189,6 +287,9 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
   return {
     job: {
       name: input.name,
+      quantity: input.quantity,
+      salesValue: input.salesValue,
+      seriesId: input.seriesId,
       customerId: input.customerId,
       printerId: input.printerId,
       notes: input.notes,
@@ -213,20 +314,27 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
     }),
     filaments: input.filaments.map((entry) => {
       const source = filamentMap.get(entry.filamentId)!;
-      const line = lineMap.get(entry.filamentId)!;
+      const spool = spoolMap.get(entry.spoolId!)!;
+      const line = lineMap.get(spool.id)!;
       return {
         filamentId: source.id,
+        spoolId: spool.id,
+        spoolCode: spool.code,
         filamentName: source.name,
         manufacturer: source.manufacturer.name,
         material: source.material,
-        purchasePrice: source.purchasePrice,
-        netWeightGrams: source.netWeightGrams,
+        purchasePrice: spool.purchasePrice,
+        netWeightGrams: spool.initialNetWeightGrams,
         costPerGram: line.unitRate,
         usedGrams: entry.usedGrams,
         lineCost: line.cost,
       };
     }),
     snapshot: {
+      calculationJson: JSON.stringify(result),
+      salesValue: input.salesValue,
+      quantity: result.quantity,
+      costPerUnit: result.costPerUnit,
       electricityPricePerKwh: settings.electricityPricePerKwh,
       printerName: printer.name,
       printerPurchasePrice: printer.purchasePrice,
@@ -248,17 +356,37 @@ function persistenceData(input: PrintDraftInput, resolved: Awaited<ReturnType<ty
 
 export async function previewPrint(input: unknown) {
   const parsed = parseBody(printDraftSchema, input);
-  return db.$transaction(async (transaction) => (await resolveCalculation(transaction, parsed)).result);
+  return db.$transaction(async (transaction) => {
+    const { result } = await resolveCalculation(transaction, parsed);
+    return {
+      ...result,
+      financials: calculatePrintFinancials(parsed.salesValue, result.totalCost, result.quantity),
+    };
+  });
 }
 
-export async function createPrint(input: unknown) {
+export async function createPrint(input: unknown, links: { retryOfId?: string; repeatOfId?: string } = {}) {
+  const { retryOfId, repeatOfId } = links;
   const parsed = parseBody(printDraftSchema, input);
   return db.$transaction(async (transaction) => {
+    if (retryOfId) {
+      const source = await transaction.printJob.findFirst({
+        where: { id: retryOfId, archivedAt: null, outcome: { status: 'FAILED' } },
+      });
+      if (!source) apiError(409, 'RETRY_NOT_ALLOWED', 'errors.retryNotAllowed');
+    }
+    if (
+      repeatOfId &&
+      !(await transaction.printJob.findFirst({ where: { id: repeatOfId, archivedAt: null, status: 'DONE' } }))
+    )
+      apiError(409, 'REPEAT_NOT_ALLOWED', 'errors.repeatNotAllowed');
     const data = persistenceData(parsed, await resolveCalculation(transaction, parsed));
     return printDto(
       await transaction.printJob.create({
         data: {
           ...data.job,
+          retryOfId,
+          repeatOfId,
           componentUsages: { create: data.components },
           filamentUsages: { create: data.filaments },
           snapshot: { create: data.snapshot },
@@ -295,6 +423,9 @@ function intentFromPrint(value: PrintWithSnapshot): PrintDraftInput {
   if (!buildPlate) apiError(409, 'STALE_PRINT', 'errors.stalePrint');
   return {
     name: value.name,
+    quantity: value.quantity,
+    salesValue: value.salesValue,
+    seriesId: value.seriesId,
     customerId: value.customerId,
     printerId: value.printerId,
     buildPlateId: buildPlate.componentId,
@@ -304,8 +435,9 @@ function intentFromPrint(value: PrintWithSnapshot): PrintDraftInput {
     otherComponentIds: value.componentUsages
       .filter((entry) => entry.componentType === 'OTHER')
       .map((entry) => entry.componentId),
-    filaments: value.filamentUsages.map((entry) => ({
+    filaments: printDto(value).filamentUsages.map((entry) => ({
       filamentId: entry.filamentId,
+      spoolId: entry.spoolId ?? undefined,
       usedGrams: entry.usedGrams.toString(),
     })),
     notes: value.notes,
@@ -328,17 +460,17 @@ export async function updatePrintWorkflow(id: string, input: unknown) {
       parsed.paid === undefined ? {} : { paidAt: parsed.paid ? (existing.paidAt ?? new Date()) : null };
 
     if (existing.status !== 'DRAFT' || status === 'DRAFT') {
-      return printDto(
-        await transaction.printJob.update({
-          where: { id },
-          data: {
-            status,
-            ...(status === 'DONE' && !existing.completedAt ? { completedAt: new Date() } : {}),
-            ...paymentData,
-          },
-          include: printInclude,
-        }),
-      );
+      const updated = await transaction.printJob.update({
+        where: { id },
+        data: {
+          status,
+          ...(status === 'DONE' && !existing.completedAt ? { completedAt: new Date() } : {}),
+          ...paymentData,
+        },
+        include: printInclude,
+      });
+      await refreshSeriesProgress(transaction, existing.seriesId);
+      return printDto(updated);
     }
 
     const draft = intentFromPrint(existing);
@@ -361,32 +493,47 @@ export async function updatePrintWorkflow(id: string, input: unknown) {
   });
 }
 
-export async function duplicatePrint(id: string) {
+export async function duplicatePrint(id: string, relationship: 'copy' | 'retry' | 'repeat' = 'copy') {
   const existing = await db.printJob.findUniqueOrThrow({ where: { id }, include: printInclude });
   const input = intentFromPrint(existing);
-  return createPrint({ ...input, name: `${input.name} (copy)` });
+  if (existing.series?.archivedAt) input.seriesId = null;
+  return createPrint(
+    { ...input, salesValue: null, name: `${input.name} (copy)` },
+    {
+      retryOfId: relationship === 'retry' ? id : undefined,
+      repeatOfId: relationship === 'repeat' ? id : undefined,
+    },
+  );
 }
 
 export async function archivePrint(id: string, archived: boolean) {
-  return printDto(
-    await db.printJob.update({
+  return db.$transaction(async (transaction) => {
+    const print = await transaction.printJob.update({
       where: { id },
       data: { archivedAt: archived ? new Date() : null },
       include: printInclude,
-    }),
-  );
+    });
+    await refreshSeriesProgress(transaction, print.seriesId);
+    return printDto(print);
+  });
 }
 
 export async function getPrint(id: string) {
   return printDto(await db.printJob.findUniqueOrThrow({ where: { id }, include: printInclude }));
 }
 
-export async function listPrints(query: Record<string, unknown>) {
-  const input = parseBody(printListQuerySchema, query);
-  const where = {
+function printFilter(input: ReturnType<typeof printListQuerySchema.parse>) {
+  const where: Prisma.PrintJobWhereInput = {
     ...(input.includeArchived ? {} : { archivedAt: null }),
     ...(input.status ? { status: input.status } : {}),
     ...(input.customerId ? { customerId: input.customerId } : {}),
+    ...(input.printerId ? { printerId: input.printerId } : {}),
+    ...(input.seriesId ? { seriesId: input.seriesId } : {}),
+    ...(input.outcome === 'PENDING'
+      ? { outcome: null }
+      : input.outcome
+        ? { outcome: { status: input.outcome } }
+        : {}),
     ...(input.search
       ? {
           OR: [
@@ -397,17 +544,35 @@ export async function listPrints(query: Record<string, unknown>) {
         }
       : {}),
   };
-  const [items, total] = await db.$transaction([
-    db.printJob.findMany({
-      where,
-      skip: (input.page - 1) * input.pageSize,
-      take: input.pageSize,
-      orderBy: { updatedAt: 'desc' },
-      include: printInclude,
-    }),
-    db.printJob.count({ where }),
-  ]);
-  return { items: items.map(printDto), total, page: input.page, pageSize: input.pageSize };
+  const conditions: Prisma.PrintJobWhereInput[] = input.outcome === 'PENDING' ? [{ status: 'DONE' }] : [];
+  if (input.dateFrom || input.dateTo) {
+    const range = {
+      ...(input.dateFrom ? { gte: new Date(`${input.dateFrom}T00:00:00.000Z`) } : {}),
+      ...(input.dateTo ? { lte: new Date(`${input.dateTo}T23:59:59.999Z`) } : {}),
+    };
+    conditions.push({ OR: [{ completedAt: range }, { completedAt: null, createdAt: range }] });
+  }
+  where.AND = conditions;
+  return where;
+}
+
+export async function listPrints(query: Record<string, unknown>, transaction?: Transaction) {
+  const input = parseBody(printListQuerySchema, query);
+  const where = printFilter(input);
+  const run = async (client: Transaction) => {
+    const [items, total] = await Promise.all([
+      client.printJob.findMany({
+        where,
+        skip: (input.page - 1) * input.pageSize,
+        take: input.pageSize,
+        orderBy: { updatedAt: 'desc' },
+        include: printInclude,
+      }),
+      client.printJob.count({ where }),
+    ]);
+    return { items: items.map(printDto), total, page: input.page, pageSize: input.pageSize };
+  };
+  return transaction ? run(transaction) : db.$transaction(run);
 }
 
 export async function assertUnreferenced(
@@ -415,7 +580,10 @@ export async function assertUnreferenced(
   id: string,
 ) {
   let count: number;
-  if (resource === 'customers') count = await db.printJob.count({ where: { customerId: id } });
+  if (resource === 'customers')
+    count =
+      (await db.printJob.count({ where: { customerId: id } })) +
+      (await db.printSeries.count({ where: { customerId: id } }));
   else if (resource === 'printers') count = await db.printJob.count({ where: { printerId: id } });
   else if (resource === 'manufacturers')
     count =
@@ -423,6 +591,171 @@ export async function assertUnreferenced(
       (await db.filament.count({ where: { manufacturerId: id } }));
   else if (resource === 'components')
     count = await db.printComponentUsage.count({ where: { componentId: id } });
-  else count = await db.printFilamentUsage.count({ where: { filamentId: id } });
+  else
+    count =
+      (await db.printFilamentUsage.count({ where: { filamentId: id } })) +
+      (await db.spool.count({ where: { filamentId: id } }));
   if (count) apiError(409, 'RESOURCE_REFERENCED', 'errors.resourceReferenced');
+}
+
+export async function recordPrintOutcome(id: string, input: unknown, externalAlreadyTracked = false) {
+  const parsed = parseBody(printOutcomeSchema, input);
+  parsed.filaments.sort((a, b) => a.usageId.localeCompare(b.usageId));
+  return db.$transaction(async (transaction) => {
+    const existing = await transaction.printJob.findUniqueOrThrow({ where: { id }, include: printInclude });
+    if (existing.status !== 'DONE' || existing.archivedAt || !existing.snapshot)
+      apiError(409, 'OUTCOME_NOT_ALLOWED', 'errors.outcomeNotAllowed');
+    const inputSnapshot = JSON.stringify(parsed);
+    if (existing.outcome) {
+      if (existing.outcome.inputSnapshot !== inputSnapshot)
+        apiError(409, 'OUTCOME_IMMUTABLE', 'errors.outcomeImmutable');
+      return printDto(existing);
+    }
+    const source = printDto(existing);
+    if (
+      parsed.filaments.length !== source.filamentUsages.length ||
+      parsed.filaments.some((line) => !source.filamentUsages.some((usage) => usage.id === line.usageId))
+    )
+      apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
+    const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    await transaction.printOutcome.create({
+      data: {
+        printJobId: id,
+        status: parsed.status,
+        durationSeconds: parsed.durationSeconds,
+        failureReason: parsed.failureReason,
+        note: parsed.note,
+        inputSnapshot,
+        costSnapshot: JSON.stringify(costs),
+      },
+    });
+    for (const usage of existing.filamentUsages) {
+      if (!usage.spoolId) continue;
+      const grams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+      await bookPrintStock(
+        transaction,
+        {
+          spoolId: usage.spoolId,
+          kind: 'PRINT',
+          grams: new Decimal(grams).negated().toFixed(),
+          printUsageId: usage.id,
+          operationKey: `outcome:${id}:${usage.id}`,
+        },
+        externalAlreadyTracked,
+      );
+    }
+    if (externalAlreadyTracked && existing.bambuLink)
+      await transaction.bambuPrintLink.update({
+        where: { id: existing.bambuLink.id },
+        data: { importedAt: new Date(), importedJson: inputSnapshot },
+      });
+    await refreshSeriesProgress(transaction, existing.seriesId);
+    return printDto(await transaction.printJob.findUniqueOrThrow({ where: { id }, include: printInclude }));
+  });
+}
+
+export async function correctPrintOutcome(id: string, input: unknown) {
+  const { operationKey, expectedRevision, ...parsed } = parseBody(printOutcomeCorrectionSchema, input);
+  parsed.filaments.sort((a, b) => a.usageId.localeCompare(b.usageId));
+  return db.$transaction(async (transaction) => {
+    const existing = await transaction.printJob.findUniqueOrThrow({ where: { id }, include: printInclude });
+    if (existing.status !== 'DONE' || existing.archivedAt || !existing.outcome || !existing.snapshot)
+      apiError(409, 'OUTCOME_NOT_ALLOWED', 'errors.outcomeNotAllowed');
+    const source = printDto(existing);
+    const inputSnapshot = JSON.stringify(parsed);
+    const previousOperation = await transaction.printOutcomeCorrection.findUnique({
+      where: { operationKey },
+    });
+    if (previousOperation) {
+      if (
+        previousOperation.outcomeId !== existing.outcome.id ||
+        previousOperation.inputSnapshot !== inputSnapshot ||
+        previousOperation.revision !== expectedRevision + 1
+      )
+        apiError(409, 'STOCK_OPERATION_CONFLICT', 'errors.stockOperationConflict');
+      return source;
+    }
+    if (source.outcome!.revision !== expectedRevision)
+      apiError(409, 'OUTCOME_REVISION_CONFLICT', 'errors.outcomeRevisionConflict');
+    if (
+      parsed.filaments.length !== source.filamentUsages.length ||
+      parsed.filaments.some((line) => !source.filamentUsages.some((usage) => usage.id === line.usageId))
+    )
+      apiError(422, 'INVALID_ACTUAL_USAGE', 'errors.invalidActualUsage');
+    const costs = calculateActualPrintCost({ ...source, snapshot: source.snapshot! }, parsed);
+    await transaction.printOutcomeCorrection.create({
+      data: {
+        outcomeId: existing.outcome.id,
+        revision: expectedRevision + 1,
+        operationKey,
+        inputSnapshot,
+        costSnapshot: JSON.stringify(costs),
+      },
+    });
+    for (const usage of existing.filamentUsages) {
+      if (!usage.spoolId) continue;
+      const previousGrams = source.outcome!.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+      const currentGrams = parsed.filaments.find((line) => line.usageId === usage.id)!.usedGrams;
+      const delta = new StockDecimal(previousGrams).minus(currentGrams);
+      if (!delta.isZero())
+        await bookPrintStock(
+          transaction,
+          {
+            spoolId: usage.spoolId,
+            kind: 'CORRECTION',
+            grams: delta.toFixed(),
+            note: parsed.note,
+            printUsageId: usage.id,
+            operationKey: `correction:${operationKey}:${usage.id}`,
+          },
+          !!existing.bambuLink?.importedAt,
+        );
+    }
+    await transaction.printOutcome.update({
+      where: { id: existing.outcome.id },
+      data: {
+        status: parsed.status,
+        durationSeconds: parsed.durationSeconds,
+        note: parsed.note,
+        failureReason: parsed.failureReason,
+      },
+    });
+    await refreshSeriesProgress(transaction, existing.seriesId);
+    return printDto(await transaction.printJob.findUniqueOrThrow({ where: { id }, include: printInclude }));
+  });
+}
+
+export async function aggregatePrints(query: Record<string, unknown>, transaction?: Transaction) {
+  const input = parseBody(printListQuerySchema, query);
+  const run = async (transaction: Transaction) => {
+    let summary = emptyPrintSummary();
+    let cursor: string | undefined;
+    for (;;) {
+      const rows = await transaction.printJob.findMany({
+        where: printFilter(input),
+        include: printInclude,
+        orderBy: { id: 'asc' },
+        take: 100,
+        ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+      });
+      summary = summarizePrints(rows.map(printDto), summary);
+      if (rows.length < 100) return summary;
+      cursor = rows.at(-1)!.id;
+    }
+  };
+  return transaction ? run(transaction) : db.$transaction(run);
+}
+
+export async function refreshSeriesProgress(transaction: Transaction, seriesId: string | null) {
+  if (!seriesId) return;
+  const series = await transaction.printSeries.findUniqueOrThrow({ where: { id: seriesId } });
+  if (!series.autoComplete || series.targetQuantity === null) return;
+  const quantity = await transaction.printJob.aggregate({
+    where: { seriesId, status: 'DONE', archivedAt: null, outcome: { status: 'SUCCESS' } },
+    _sum: { quantity: true },
+  });
+  await transaction.printSeries.update({
+    where: { id: seriesId },
+    data: { status: (quantity._sum.quantity ?? 0) >= series.targetQuantity ? 'COMPLETED' : 'OPEN' },
+  });
 }

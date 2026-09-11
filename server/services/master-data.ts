@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import Decimal from 'decimal.js';
 import type { Prisma } from '../../prisma/generated/client/client';
 import {
@@ -257,6 +258,20 @@ export async function createResource(resource: Resource, input: unknown) {
       data: {
         ...data,
         name: `${manufacturer!.name} ${data.material} - ${data.colorName}`,
+        spools: {
+          create: {
+            code: `S-${randomUUID()}`,
+            purchasePrice: data.purchasePrice,
+            initialNetWeightGrams: data.netWeightGrams,
+            movements: {
+              create: {
+                kind: 'RECEIPT',
+                grams: data.netWeightGrams,
+                operationKey: `opening:${randomUUID()}`,
+              },
+            },
+          },
+        },
       },
       include: { manufacturer: true },
     }),

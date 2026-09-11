@@ -1,9 +1,24 @@
+import { decimalSchema } from './master-data';
+import { canonicalDecimal } from '../utils/decimal';
 import Decimal from 'decimal.js';
 import { z } from 'zod';
 
 export const printStatuses = ['DRAFT', 'PRINTING', 'PRINTED', 'SHIPPED', 'DONE'] as const;
 export const printStatusSchema = z.enum(printStatuses);
 export type PrintStatus = z.output<typeof printStatusSchema>;
+
+export const printQuantitySchema = z
+  .union([z.number(), z.string().regex(/^\d+$/)])
+  .transform(Number)
+  .pipe(z.number().int().min(1).max(1000000))
+  .default(1);
+
+export const salesValueSchema = z.preprocess(
+  (value) => (value === '' ? null : value),
+  decimalSchema()
+    .nullish()
+    .transform((value) => (value == null ? null : canonicalDecimal(value))),
+);
 
 const positiveDecimal = z
   .union([z.string(), z.number().finite()])
@@ -23,17 +38,39 @@ const printDurationFormSchema = z
   });
 
 export const printDraftFormSchema = z.object({
+  quantity: printQuantitySchema,
+  salesValue: salesValueSchema,
+  seriesId: z
+    .string()
+    .min(1)
+    .nullish()
+    .transform((value) => value || null),
   name: z.string().trim().min(1).max(200),
   customerId: z.string().min(1).nullable(),
   printerId: z.string().min(1),
   buildPlateId: z.string().min(1),
   hotends: z.array(printDurationFormSchema).min(1),
   otherComponentIds: z.array(z.string().min(1)).default([]),
-  filaments: z.array(z.object({ filamentId: z.string().min(1), usedGrams: positiveDecimal })).min(1),
+  filaments: z
+    .array(
+      z.object({
+        filamentId: z.string().min(1),
+        spoolId: z.string().min(1).optional(),
+        usedGrams: positiveDecimal,
+      }),
+    )
+    .min(1),
   notes: z.string().trim().max(5000),
 });
 
 export const printDraftSchema = z.object({
+  quantity: printQuantitySchema,
+  salesValue: salesValueSchema,
+  seriesId: z
+    .string()
+    .min(1)
+    .nullish()
+    .transform((value) => value || null),
   name: z.string().trim().min(1).max(200),
   customerId: z
     .string()
@@ -46,7 +83,15 @@ export const printDraftSchema = z.object({
     .array(z.object({ componentId: z.string().min(1), durationSeconds: z.coerce.number().int().positive() }))
     .min(1),
   otherComponentIds: z.array(z.string().min(1)).default([]),
-  filaments: z.array(z.object({ filamentId: z.string().min(1), usedGrams: positiveDecimal })).min(1),
+  filaments: z
+    .array(
+      z.object({
+        filamentId: z.string().min(1),
+        spoolId: z.string().min(1).optional(),
+        usedGrams: positiveDecimal,
+      }),
+    )
+    .min(1),
   notes: z
     .string()
     .trim()
@@ -55,17 +100,27 @@ export const printDraftSchema = z.object({
     .transform((value) => value || null),
 });
 
-export const printListQuerySchema = z.object({
-  search: z.string().trim().max(200).default(''),
-  page: z.coerce.number().int().positive().default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(25),
-  status: printStatusSchema.optional(),
-  customerId: z.string().optional(),
-  includeArchived: z.preprocess(
-    (value) => (value === 'true' ? true : value === 'false' || value === undefined ? false : value),
-    z.boolean(),
-  ),
-});
+export const printListQuerySchema = z
+  .object({
+    search: z.string().trim().max(200).default(''),
+    page: z.coerce.number().int().positive().default(1),
+    pageSize: z.coerce.number().int().min(1).max(100).default(25),
+    status: printStatusSchema.optional(),
+    outcome: z.enum(['PENDING', 'SUCCESS', 'FAILED']).optional(),
+    customerId: z.string().optional(),
+    printerId: z.string().optional(),
+    seriesId: z.string().optional(),
+    dateFrom: z.iso.date().optional(),
+    dateTo: z.iso.date().optional(),
+    includeArchived: z.preprocess(
+      (value) => (value === 'true' ? true : value === 'false' || value === undefined ? false : value),
+      z.boolean(),
+    ),
+  })
+  .refine((value) => !value.dateFrom || !value.dateTo || value.dateFrom <= value.dateTo, {
+    path: ['dateTo'],
+    message: 'End date must not precede start date',
+  });
 
 export const printWorkflowUpdateSchema = z
   .object({

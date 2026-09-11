@@ -1,4 +1,11 @@
-export type GlobalSearchKind = 'prints' | 'customers' | 'printers' | 'components' | 'filaments';
+export type GlobalSearchKind =
+  | 'prints'
+  | 'customers'
+  | 'printers'
+  | 'components'
+  | 'filaments'
+  | 'spools'
+  | 'series';
 
 export interface GlobalSearchResult {
   id: string;
