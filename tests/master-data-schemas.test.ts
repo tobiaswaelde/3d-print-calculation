@@ -6,6 +6,7 @@ describe('master data validation', () => {
     expect(
       printerSchema.safeParse({
         name: 'P1',
+        manufacturerId: 'manufacturer-1',
         purchasePrice: '0',
         expectedLifetimeHours: '1',
         averagePowerWatts: 0,
@@ -14,6 +15,7 @@ describe('master data validation', () => {
     expect(
       printerSchema.safeParse({
         name: 'P1',
+        manufacturerId: 'manufacturer-1',
         purchasePrice: '-1',
         expectedLifetimeHours: '1',
         averagePowerWatts: 0,
@@ -30,6 +32,23 @@ describe('master data validation', () => {
         netWeightGrams: '0',
       }).success,
     ).toBe(false);
+  });
+
+  it('requires a printer manufacturer while accepting the legacy manufacturer name', () => {
+    const printer = {
+      name: 'P1',
+      purchasePrice: '100',
+      expectedLifetimeHours: '1000',
+      averagePowerWatts: 100,
+    };
+
+    expect(printerSchema.safeParse(printer).success).toBe(false);
+    expect(printerSchema.parse({ ...printer, manufacturerId: ' manufacturer-1 ' }).manufacturerId).toBe(
+      'manufacturer-1',
+    );
+    expect(printerSchema.parse({ ...printer, manufacturer: ' Legacy Maker ' }).manufacturer).toBe(
+      'Legacy Maker',
+    );
   });
 
   it('preserves decimal quantities as strings', () => {

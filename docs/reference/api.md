@@ -56,10 +56,13 @@ accepts `{ status }` or `{ paid }`. Leaving `DRAFT` finalizes the cost snapshot,
 `DRAFT`, and `{ paid: true }` records a server-generated `paidAt` timestamp while `false` clears it. Authoritative
 schemas are in [`shared/schemas`](https://github.com/tobiaswaelde/ezprint/tree/main/shared/schemas).
 
-Component and filament inputs reference shared manufacturers with `manufacturerId`. Component references are
-optional; filament references are required. Component inputs also accept `alwaysUsed`, which defaults to `false`.
+Printer, component, and filament inputs reference shared manufacturers with `manufacturerId`. Printer and filament
+references are required; component references are optional. For compatibility, printer requests may still send the
+legacy `manufacturer` name, which resolves an existing active manufacturer or creates one. Component inputs also
+accept `alwaysUsed`, which defaults to `false`.
 Filament inputs require `material`, `colorName`, and a `colorHex` in `#RRGGBB` format; their `name` is derived from
-manufacturer, material, and color name. Responses expose the resolved manufacturer name and the color fields.
+manufacturer, material, and color name. Printer, component, and filament responses expose `manufacturerId` and the
+resolved manufacturer name.
 
 ## Errors
 

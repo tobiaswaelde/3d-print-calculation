@@ -587,6 +587,7 @@ export async function assertUnreferenced(
   else if (resource === 'printers') count = await db.printJob.count({ where: { printerId: id } });
   else if (resource === 'manufacturers')
     count =
+      (await db.printer.count({ where: { manufacturerId: id } })) +
       (await db.component.count({ where: { manufacturerId: id } })) +
       (await db.filament.count({ where: { manufacturerId: id } }));
   else if (resource === 'components')

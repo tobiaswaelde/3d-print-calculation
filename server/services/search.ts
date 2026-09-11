@@ -49,9 +49,13 @@ export async function searchApplication(query: Record<string, unknown>) {
     db.printer.findMany({
       where: {
         archivedAt: null,
-        OR: [{ name: { contains: q } }, { manufacturer: { contains: q } }, { model: { contains: q } }],
+        OR: [
+          { name: { contains: q } },
+          { manufacturer: { name: { contains: q } } },
+          { model: { contains: q } },
+        ],
       },
-      select: { id: true, name: true, manufacturer: true, model: true },
+      select: { id: true, name: true, manufacturer: { select: { name: true } }, model: true },
       orderBy: { name: 'asc' },
       take: 5,
     }),
@@ -153,7 +157,7 @@ export async function searchApplication(query: Record<string, unknown>) {
       items: printers.map((item) => ({
         id: item.id,
         title: item.name,
-        description: [item.manufacturer, item.model].filter(Boolean).join(' · ') || null,
+        description: [item.manufacturer.name, item.model].filter(Boolean).join(' · ') || null,
         to: masterDataTarget('printers', item.name),
       })),
     },

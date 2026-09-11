@@ -42,10 +42,11 @@
             <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
           </UFormField>
           <template v-if="resource === 'printers' || resource === 'components'">
-            <UFormField v-if="resource === 'printers'" name="manufacturer" :label="t('master.manufacturer')"
-              ><UInput v-model="form.manufacturer" class="w-full" icon="i-tabler-building-factory-2"
-            /></UFormField>
-            <UFormField v-else name="manufacturerId" :label="t('master.manufacturer')">
+            <UFormField
+              name="manufacturerId"
+              :label="t('master.manufacturer')"
+              :required="resource === 'printers'"
+            >
               <USelectMenu
                 v-model="form.manufacturerId"
                 class="w-full"
@@ -53,7 +54,7 @@
                 :aria-label="t('master.manufacturer')"
                 value-key="value"
                 :items="manufacturerOptions"
-                clear
+                :clear="resource === 'components'"
               />
             </UFormField>
             <UFormField name="model" :label="t('master.model')"
@@ -420,7 +421,7 @@ async function refresh() {
       });
       printerOptions.value = printers.items.map((item) => ({ label: item.name, value: item.id }));
     }
-    if (props.resource === 'components' || props.resource === 'filaments') {
+    if (props.resource === 'printers' || props.resource === 'components' || props.resource === 'filaments') {
       const manufacturers = await $fetch<PaginatedResponse<MasterDataListItem>>('/api/manufacturers', {
         query: { pageSize: 100 },
       });

@@ -99,18 +99,18 @@ test('regenerates every application screenshot used by the documentation', async
     email: 'hello@studio-north.example',
     note: 'Synthetic documentation customer',
   });
+  const prusa = await api<Resource>(page, '/api/manufacturers', 'POST', {
+    name: 'Prusa Research',
+    note: null,
+  });
   const printer = await api<Resource>(page, '/api/printers', 'POST', {
     name: 'Workshop Prusa MK4',
-    manufacturer: 'Prusa Research',
+    manufacturerId: prusa.id,
     model: 'MK4',
     purchasePrice: '1199',
     expectedLifetimeHours: '5000',
     averagePowerWatts: 120,
     note: 'Primary documentation printer',
-  });
-  const prusa = await api<Resource>(page, '/api/manufacturers', 'POST', {
-    name: 'Prusa Research',
-    note: null,
   });
   const e3d = await api<Resource>(page, '/api/manufacturers', 'POST', {
     name: 'E3D',
