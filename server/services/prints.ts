@@ -10,7 +10,7 @@ import { printOutcomeSchema, printOutcomeCorrectionSchema } from '#shared/schema
 import type { PrintCalculationResult } from '#shared/domain/print-calculation';
 import type { Prisma } from '../../prisma/generated/client/client';
 import { calculatePrintCost } from '#shared/domain/print-calculation';
-import type { PrintDraftInput } from '#shared/schemas/prints';
+import type { PrintDraftInput, PrintWhere, PrintWhereLeaf } from '#shared/schemas/prints';
 import {
   printStatusSchema,
   printDraftSchema,
@@ -542,43 +542,81 @@ export async function getPrint(id: string) {
   return printDto(await db.printJob.findUniqueOrThrow({ where: { id }, include: printInclude }));
 }
 
-function printFilter(input: ReturnType<typeof printListQuerySchema.parse>) {
-  const where: Prisma.PrintJobWhereInput = {
-    ...(input.includeArchived ? {} : { archivedAt: null }),
-    ...(input.status ? { status: input.status } : {}),
-    ...(input.customerId ? { customerId: input.customerId } : {}),
-    ...(input.printerId ? { printerId: input.printerId } : {}),
-    ...(input.seriesId ? { seriesId: input.seriesId } : {}),
-    ...(input.outcome === 'PENDING'
-      ? { outcome: null }
-      : input.outcome
-        ? { outcome: { status: input.outcome } }
-        : {}),
-    ...(input.search
-      ? {
-          OR: [
-            { name: { contains: input.search } },
-            { customer: { name: { contains: input.search } } },
-            { printer: { name: { contains: input.search } } },
-          ],
-        }
-      : {}),
+type ParsedPrintList = ReturnType<typeof printListQuerySchema.parse>;
+
+function activityDateRange(range: { gte?: Date; lte?: Date }): Prisma.PrintJobWhereInput {
+  return { OR: [{ completedAt: range }, { completedAt: null, createdAt: range }] };
+}
+
+function outcomeCondition(values: Array<'PENDING' | 'SUCCESS' | 'FAILED'>): Prisma.PrintJobWhereInput {
+  const recorded = values.filter((value): value is 'SUCCESS' | 'FAILED' => value !== 'PENDING');
+  const conditions: Prisma.PrintJobWhereInput[] = [];
+  if (values.includes('PENDING')) conditions.push({ status: 'DONE', outcome: null });
+  if (recorded.length) conditions.push({ outcome: { status: { in: recorded } } });
+  return conditions.length === 1 ? conditions[0]! : { OR: conditions };
+}
+
+export function compilePrintWhere(where: NonNullable<ParsedPrintList['where']>): Prisma.PrintJobWhereInput {
+  const compileLeaf = (leaf: PrintWhereLeaf): Prisma.PrintJobWhereInput => {
+    if ('status' in leaf) return { status: leaf.status };
+    if ('outcome' in leaf) {
+      const [operator, values] =
+        'in' in leaf.outcome ? (['in', leaf.outcome.in] as const) : (['notIn', leaf.outcome.notIn] as const);
+      const condition = outcomeCondition(values);
+      return operator === 'in' ? condition : { NOT: condition };
+    }
+    if ('printerId' in leaf) return { printerId: leaf.printerId };
+    if ('customerId' in leaf) return { customerId: leaf.customerId };
+    if ('seriesId' in leaf) return { seriesId: leaf.seriesId };
+    if ('archived' in leaf) return { archivedAt: leaf.archived ? { not: null } : null };
+    if ('dateFrom' in leaf) return activityDateRange({ gte: new Date(`${leaf.dateFrom.gte}T00:00:00.000Z`) });
+    if ('dateTo' in leaf) return activityDateRange({ lte: new Date(`${leaf.dateTo.lte}T23:59:59.999Z`) });
+    return {};
   };
-  const conditions: Prisma.PrintJobWhereInput[] = input.outcome === 'PENDING' ? [{ status: 'DONE' }] : [];
-  if (input.dateFrom || input.dateTo) {
-    const range = {
-      ...(input.dateFrom ? { gte: new Date(`${input.dateFrom}T00:00:00.000Z`) } : {}),
-      ...(input.dateTo ? { lte: new Date(`${input.dateTo}T23:59:59.999Z`) } : {}),
-    };
-    conditions.push({ OR: [{ completedAt: range }, { completedAt: null, createdAt: range }] });
-  }
-  where.AND = conditions;
-  return where;
+
+  if ('AND' in where) return { AND: where.AND.map(compileLeaf) };
+  if ('OR' in where) return { OR: where.OR.map(compileLeaf) };
+  return compileLeaf(where);
+}
+
+function filtersBySeries(where: PrintWhere): boolean {
+  if ('seriesId' in where) return true;
+  if ('AND' in where) return where.AND.some((leaf) => 'seriesId' in leaf);
+  if ('OR' in where) return where.OR.some((leaf) => 'seriesId' in leaf);
+  return false;
+}
+
+function printFilter(input: ParsedPrintList) {
+  const conditions: Prisma.PrintJobWhereInput[] = [];
+  if (!input.includeArchived) conditions.push({ archivedAt: null });
+  if (input.status) conditions.push({ status: input.status });
+  if (input.customerId) conditions.push({ customerId: input.customerId });
+  if (input.printerId) conditions.push({ printerId: input.printerId });
+  if (input.seriesId) conditions.push({ seriesId: input.seriesId });
+  if (input.outcome) conditions.push(outcomeCondition([input.outcome]));
+  if (input.search)
+    conditions.push({
+      OR: [
+        { name: { contains: input.search } },
+        { customer: { name: { contains: input.search } } },
+        { printer: { name: { contains: input.search } } },
+      ],
+    });
+  if (input.dateFrom || input.dateTo)
+    conditions.push(
+      activityDateRange({
+        ...(input.dateFrom ? { gte: new Date(`${input.dateFrom}T00:00:00.000Z`) } : {}),
+        ...(input.dateTo ? { lte: new Date(`${input.dateTo}T23:59:59.999Z`) } : {}),
+      }),
+    );
+  if (input.where) conditions.push(compilePrintWhere(input.where));
+  return conditions.length ? { AND: conditions } : {};
 }
 
 export async function listPrints(query: Record<string, unknown>, transaction?: Transaction) {
   const input = parseBody(printListQuerySchema, query);
-  if (input.seriesId) await requireFeature('printSeriesEnabled', transaction ?? db);
+  if (input.seriesId || (input.where && filtersBySeries(input.where)))
+    await requireFeature('printSeriesEnabled', transaction ?? db);
   const where = printFilter(input);
   const run = async (client: Transaction) => {
     const [items, total] = await Promise.all([

@@ -107,7 +107,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
     accessibility.violations.filter((violation) => ['critical', 'serious'].includes(violation.impact ?? '')),
   ).toEqual([]);
 
-  await page.getByRole('link', { name: 'Drucke', exact: true }).click();
+  await page.goto('/prints');
   const printsToolbar = page.locator('[data-table-toolbar]');
   await expect(printsToolbar.getByText('Drucke', { exact: true })).toBeVisible();
   const breadcrumbItems = printsToolbar
@@ -115,15 +115,18 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
     .locator('[data-slot="item"]');
   await expect(breadcrumbItems).toHaveCount(2);
   await expect(breadcrumbItems.locator('[data-slot="linkLeadingIcon"]')).toHaveCount(2);
-  await expect(page.getByRole('combobox', { name: 'Status' })).toContainText('Alle Status');
-  await page.getByRole('combobox', { name: 'Status' }).click();
-  for (const option of ['Entwurf', 'Wird gedruckt', 'Gedruckt', 'Versendet', 'Erledigt']) {
+  await expect(printsToolbar.getByRole('textbox')).toBeVisible();
+  await printsToolbar.getByRole('button', { name: 'Filter' }).click();
+  await expect(page.getByText('Archiviert', { exact: true })).toBeVisible();
+  const filterMode = page.getByRole('button', { name: 'UND/ODER wechseln' });
+  await expect(filterMode).toBeVisible();
+  await filterMode.click();
+  await filterMode.click();
+  await page.getByRole('dialog').getByRole('combobox').click();
+  for (const option of ['Status', 'Druckergebnis', 'Drucker', 'Kunden', 'Ab Datum', 'Bis Datum']) {
     await expect(page.getByRole('option', { name: option, exact: true })).toBeVisible();
   }
   await page.keyboard.press('Escape');
-  await expect(printsToolbar.getByText('Archivierte anzeigen')).toHaveCount(0);
-  await printsToolbar.getByRole('button', { name: 'Tabellenoptionen' }).click();
-  await expect(page.getByRole('menuitemcheckbox', { name: 'Archivierte anzeigen' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(printsToolbar.getByRole('button', { name: 'New' })).toBeVisible();
   await page.keyboard.press('Shift+n');
@@ -179,7 +182,29 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(resourceDialog).toBeHidden();
   await expect(page.getByRole('cell', { name: 'Acme Updated' })).toBeVisible();
 
-  const deleteButton = customerRow.getByRole('button', { name: 'Löschen' });
+  await page.getByRole('link', { name: 'Acme Updated', exact: true }).click();
+  const customerDetailToolbar = page.locator('[data-table-toolbar]');
+  const customerBreadcrumbItems = customerDetailToolbar
+    .getByRole('navigation', { name: 'breadcrumb' })
+    .locator('[data-slot="item"]');
+  await expect(customerBreadcrumbItems).toHaveCount(3);
+  await expect(customerBreadcrumbItems.locator('[data-slot="linkLeadingIcon"]')).toHaveCount(3);
+  await expect(customerDetailToolbar.getByRole('textbox')).toBeVisible();
+  await customerDetailToolbar.getByRole('button', { name: 'Bearbeiten' }).click();
+  await expect(page).toHaveURL(/\/customers\/[^/?]+$/);
+  await expect(resourceDialog.getByLabel('Name')).toHaveValue('Acme Updated');
+  await page.keyboard.press('Escape');
+  await customerDetailToolbar.getByRole('button', { name: 'Neuer Druck' }).click();
+  await expect(createPrintDialog.getByRole('combobox', { name: 'Kunden' })).toContainText('Acme Updated');
+  await createPrintDialog.getByRole('button', { name: 'Abbrechen' }).click();
+  await customerDetailToolbar.getByRole('button', { name: 'Filter' }).click();
+  await page.getByRole('dialog').getByRole('combobox').click();
+  await expect(page.getByRole('option', { name: 'Kunden', exact: true })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await page.getByRole('link', { name: 'Kunden', exact: true }).last().click();
+
+  const updatedCustomerRow = page.getByRole('row', { name: /Acme Updated/ });
+  const deleteButton = updatedCustomerRow.getByRole('button', { name: 'Löschen' });
   await expect(deleteButton).toHaveText('');
   await deleteButton.click();
   const deleteConfirmation = page.getByText(

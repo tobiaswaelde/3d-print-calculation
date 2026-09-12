@@ -13,7 +13,14 @@
 
     <UAlert v-if="error" class="m-4 shrink-0 sm:m-6" color="error" :description="error" />
 
+    <ModulesCustomersDialog
+      v-if="resource === 'customers'"
+      v-model:open="editing"
+      :value="editingCustomer"
+      @saved="customerSaved"
+    />
     <UModal
+      v-else
       v-model:open="editing"
       :title="dialogTitle"
       :dismissible="!saving"
@@ -332,7 +339,12 @@ import {
   filamentSchema,
   manufacturerSchema,
 } from '#shared/schemas/master-data';
-import type { MasterDataListItem, MasterDataResource, PaginatedResponse } from '#shared/types/master-data';
+import type {
+  CustomerDto,
+  MasterDataListItem,
+  MasterDataResource,
+  PaginatedResponse,
+} from '#shared/types/master-data';
 
 const props = defineProps<{ resource: MasterDataResource; title: string }>();
 const resourceIcon = computed(
@@ -355,6 +367,7 @@ const loading = ref(true);
 const saving = ref(false);
 const editing = ref(false);
 const editingId = ref<string | null>(null);
+const editingCustomer = ref<CustomerDto | null>(null);
 const error = ref('');
 const dialogError = ref('');
 const currency = ref('EUR');
@@ -472,6 +485,7 @@ async function refresh() {
 function startCreate() {
   Object.assign(form, emptyForm());
   editingId.value = null;
+  editingCustomer.value = null;
   dialogError.value = '';
   editing.value = true;
 }
@@ -488,8 +502,13 @@ function startEdit(item: MasterDataListItem) {
   if (props.resource === 'filaments' && typeof item.colorHex !== 'string') form.colorHex = '#FFFFFF';
   form.printerIds = Array.isArray(item.printerIds) ? ([...item.printerIds] as string[]) : [];
   editingId.value = item.id;
+  editingCustomer.value = props.resource === 'customers' ? (item as CustomerDto) : null;
   dialogError.value = '';
   editing.value = true;
+}
+
+async function customerSaved() {
+  await refresh();
 }
 
 async function save() {

@@ -31,3 +31,15 @@ created without a customer.
 - **Delete** permanently removes only an unreferenced customer after confirmation. Archive referenced customers.
 
 The Cost rate column is intentionally empty for customers because they do not contribute to a calculation.
+
+## Customer detail and print history
+
+Open a customer name to see its contact details, matching totals, and print history. The detail toolbar keeps the
+breadcrumb, **Edit**, and **New print** actions together. Editing opens the customer dialog without leaving the
+detail page; a new print starts with that customer selected.
+
+The history uses the same columns and Query Kit filtering as the main Prints page. Search by print, customer, or
+printer text and combine status, outcome, printer, optional series, archive state, and activity-date filters with
+**AND** or **OR**. The customer itself remains a mandatory scope and is therefore not offered as a history filter.
+
+![Customer detail with print table, filters, and aggregates](/screenshots/customer-history.jpg)

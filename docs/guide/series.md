@@ -23,7 +23,7 @@ The history supports dates, printer, workflow status, outcome, and archived stat
 
 ## Customer history
 
-Open a customer name to view contact details, filtered print history, and matching cost and revenue totals. Revenue includes only successful, explicitly priced completed prints. Failed print costs are reported separately. Dates refer to completion for completed runs and creation for runs without a completion date; the last-activity value follows the matching records' last update.
+Open a customer name to view contact details, the shared print table, and matching cost and revenue totals. The detail toolbar provides breadcrumbs, direct editing, new-print creation, search, and Query Kit filters. Revenue includes only successful, explicitly priced completed prints. Failed print costs are reported separately. Dates refer to completion for completed runs and creation for runs without a completion date; the last-activity value follows the matching records' last update.
 
 ![Customer detail with history, filters, and aggregates](/screenshots/customer-history.jpg)
 

@@ -7,6 +7,44 @@ export const printStatuses = ['DRAFT', 'PRINTING', 'PRINTED', 'SHIPPED', 'DONE']
 export const printStatusSchema = z.enum(printStatuses);
 export type PrintStatus = z.output<typeof printStatusSchema>;
 
+const filterIdSchema = z.string().trim().min(1).max(200);
+const setOperator = <T extends z.ZodType>(value: T) =>
+  z.union([
+    z.object({ in: z.array(value).min(1).max(100) }).strict(),
+    z.object({ notIn: z.array(value).min(1).max(100) }).strict(),
+  ]);
+export const printWhereLeafSchema = z.union([
+  z.object({ status: setOperator(printStatusSchema) }).strict(),
+  z.object({ outcome: setOperator(z.enum(['PENDING', 'SUCCESS', 'FAILED'])) }).strict(),
+  z.object({ printerId: setOperator(filterIdSchema) }).strict(),
+  z.object({ customerId: setOperator(filterIdSchema) }).strict(),
+  z.object({ seriesId: setOperator(filterIdSchema) }).strict(),
+  z.object({ archived: z.boolean() }).strict(),
+  z.object({ dateFrom: z.object({ gte: z.iso.date() }).strict() }).strict(),
+  z.object({ dateTo: z.object({ lte: z.iso.date() }).strict() }).strict(),
+]);
+export const printWhereSchema = z.union([
+  printWhereLeafSchema,
+  z.object({ AND: z.array(printWhereLeafSchema).min(1).max(20) }).strict(),
+  z.object({ OR: z.array(printWhereLeafSchema).min(1).max(20) }).strict(),
+]);
+export type PrintWhere = z.output<typeof printWhereSchema>;
+export type PrintWhereLeaf = z.output<typeof printWhereLeafSchema>;
+
+const printWhereQuerySchema = z
+  .union([z.string().max(10_000), printWhereSchema])
+  .transform((value, context) => {
+    if (typeof value !== 'string') return value;
+    try {
+      const parsed = printWhereSchema.safeParse(JSON.parse(value));
+      if (parsed.success) return parsed.data;
+    } catch {
+      // Report the same stable validation issue for invalid JSON and invalid filter structures.
+    }
+    context.addIssue({ code: 'custom', message: 'Invalid Query Kit where filter' });
+    return z.NEVER;
+  });
+
 export const printQuantitySchema = z
   .union([z.number(), z.string().regex(/^\d+$/)])
   .transform(Number)
@@ -112,6 +150,7 @@ export const printListQuerySchema = z
     seriesId: z.string().optional(),
     dateFrom: z.iso.date().optional(),
     dateTo: z.iso.date().optional(),
+    where: printWhereQuerySchema.optional(),
     includeArchived: z.preprocess(
       (value) => (value === 'true' ? true : value === 'false' || value === undefined ? false : value),
       z.boolean(),

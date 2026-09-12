@@ -427,6 +427,20 @@ test('regenerates every application screenshot used by the documentation', async
   await capture(page, 'series-detail.jpg');
   await page.goto(`/customers/${customer.id}`);
   await expect(page.getByRole('heading', { name: 'Studio North', exact: true })).toBeVisible();
+  const customerToolbar = page.locator('[data-table-toolbar]');
+  const customerBreadcrumbItems = customerToolbar
+    .getByRole('navigation', { name: 'breadcrumb' })
+    .locator('[data-slot="item"]');
+  await expect(customerBreadcrumbItems).toHaveCount(3);
+  await expect(customerBreadcrumbItems.locator('[data-slot="linkLeadingIcon"]')).toHaveCount(3);
+  await expect(customerToolbar.getByRole('textbox')).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Printer' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Duration' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: 'Payment' })).toBeVisible();
+  await customerToolbar.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.getByRole('dialog', { name: 'Edit · Customers' })).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`/customers/${customer.id}$`));
+  await page.keyboard.press('Escape');
   await capture(page, 'customer-history.jpg');
   await page.goto(`/prints/${completed.id}`);
   const immutableMessage = page.getByText(

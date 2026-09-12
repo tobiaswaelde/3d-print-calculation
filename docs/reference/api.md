@@ -127,6 +127,12 @@ Drafts and calculation requests accept optional non-negative `salesValue` in the
 
 Print/history/export filters include `dateFrom`, `dateTo` (inclusive ISO dates, completion date or creation when no completion exists), `printerId`, `customerId`, `seriesId`, `status`, `outcome=PENDING|SUCCESS|FAILED`, `search`, and `includeArchived`. A history scope always overrides a conflicting scope query. Draft input accepts nullable `seriesId`; a series customer is inherited and conflicts are rejected. See [exports](../guide/exports) for CSV field and print behavior.
 
+These endpoints also accept `where` as a JSON-serialized Query Kit filter. One optional `AND` or `OR` group may
+contain up to 20 conditions over `status`, `outcome`, `printerId`, `customerId`, `seriesId`, `archived`, `dateFrom`,
+and `dateTo`. Set filters use `in` or `notIn`; dates use `gte` or `lte`. The server validates and translates this
+allowlist rather than forwarding arbitrary Prisma input. Search, legacy filters, and the route's customer or series
+scope remain mandatory conditions outside the user-selected group.
+
 ## Optional integrations
 
 All routes require authentication; mutating routes require same-origin requests. See [integration setup and limits](../guide/integrations).

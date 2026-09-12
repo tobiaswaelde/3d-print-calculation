@@ -43,13 +43,18 @@
     "release": "changeset publish"
   },
   "dependencies": {
+    "@iconify-json/tabler": "1.2.38",
     "@node-rs/argon2": "2.2.1",
     "@nuxt/ui": "4.11.1",
     "@nuxtjs/i18n": "10.6.0",
     "@pinia/nuxt": "1.0.2",
     "@prisma/adapter-better-sqlite3": "7.10.0",
     "@prisma/client": "7.10.0",
+    "@querry-kit/nuxt": "0.2.4",
+    "@querry-kit/nuxt-ui": "3.3.2",
+    "@tanstack/table-core": "8.21.3",
     "@vite-pwa/nuxt": "^1.1.1",
+    "@vueuse/core": "14.4.0",
     "archiver": "7.0.1",
     "better-sqlite3": "12.11.1",
     "dayjs": "1.11.23",

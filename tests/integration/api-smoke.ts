@@ -1006,6 +1006,66 @@ try {
       history.body.summary.drafts === 1,
     'History aggregates across bounded pages with the same filters.',
   );
+  const queryKitDoneWhere = encodeURIComponent(
+    JSON.stringify({ AND: [{ status: { in: ['DONE'] } }, { archived: false }] }),
+  );
+  const queryKitGlobal = await json(
+    `/api/prints?includeArchived=true&where=${queryKitDoneWhere}`,
+    {},
+    cookie,
+  );
+  check(
+    queryKitGlobal.response.ok &&
+      queryKitGlobal.body.total > 0 &&
+      queryKitGlobal.body.items.every((item: { status: string }) => item.status === 'DONE'),
+    'Query Kit filters must constrain the global print list.',
+  );
+  const queryKitHistory = await json(
+    `/api/customers/${customer.body.id}/history?includeArchived=true&where=${queryKitDoneWhere}`,
+    {},
+    cookie,
+  );
+  check(
+    queryKitHistory.response.ok &&
+      queryKitHistory.body.total > 0 &&
+      queryKitHistory.body.items.every(
+        (item: { status: string; customer: { id: string } | null }) =>
+          item.status === 'DONE' && item.customer?.id === customer.body.id,
+      ) &&
+      queryKitHistory.body.summary.totalRuns === queryKitHistory.body.total,
+    `Query Kit filters must constrain customer history items and matching aggregates: ${JSON.stringify(queryKitHistory.body)}`,
+  );
+  const scopedOrWhere = encodeURIComponent(
+    JSON.stringify({ OR: [{ customerId: { in: ['outside-customer'] } }, { status: { in: ['DONE'] } }] }),
+  );
+  const scopedOrHistory = await json(
+    `/api/customers/${customer.body.id}/history?includeArchived=true&where=${scopedOrWhere}`,
+    {},
+    cookie,
+  );
+  check(
+    scopedOrHistory.body.total > 0 &&
+      scopedOrHistory.body.items.every(
+        (item: { customer: { id: string } | null }) => item.customer?.id === customer.body.id,
+      ),
+    'Customer scope must remain mandatory outside a Query Kit OR group.',
+  );
+  const queryKitCsv = await fetch(
+    `${origin}/api/prints/export?includeArchived=true&where=${encodeURIComponent(
+      JSON.stringify({ customerId: { in: [customer.body.id] } }),
+    )}`,
+    { headers: { cookie } },
+  );
+  check(
+    queryKitCsv.ok && (await queryKitCsv.text()).includes('Bracket'),
+    'CSV export must apply the validated Query Kit filter contract.',
+  );
+  const invalidQueryKitFilter = await json(
+    `/api/prints?where=${encodeURIComponent(JSON.stringify({ name: { contains: 'Bracket' } }))}`,
+    {},
+    cookie,
+  );
+  check(!invalidQueryKitFilter.response.ok, 'Print APIs must reject arbitrary Query Kit fields.');
   const reopenedSeries = await json(
     `/api/series/${series.body.id}/state`,
     { method: 'POST', body: JSON.stringify({ status: 'OPEN' }) },

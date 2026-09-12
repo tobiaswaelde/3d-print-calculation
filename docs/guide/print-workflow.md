@@ -15,9 +15,13 @@ Select a print name to open its details.
 Use the toolbar to:
 
 - search by print name;
-- filter **All statuses**, **Draft**, **Printing**, **Printed**, **Shipped**, or **Done**;
-- include archived records through **Table options**;
+- combine workflow status, outcome, printer, customer, optional series, archive state, and activity dates with
+  Query Kit **AND** or **OR** filters;
 - choose **New** or press <kbd>Shift</kbd>+<kbd>N</kbd> to create a print.
+
+Activity dates use completion time for completed runs and creation time otherwise. Active prints are selected by
+default; remove the archive filter to include both active and archived records. CSV export uses the same search and
+filter state while continuing to export completed prints only.
 
 The `/prints/new` route opens the same guided create dialog and normalizes the URL back to `/prints`.
 

@@ -7,6 +7,14 @@ export interface MasterDataListItem {
   [key: string]: unknown;
 }
 
+export interface CustomerDto extends MasterDataListItem {
+  email: string | null;
+  excludeFromDashboard: boolean;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;

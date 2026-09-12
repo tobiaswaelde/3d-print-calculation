@@ -4,7 +4,14 @@ export default defineNuxtConfig({
   ...(process.env.PRINT_COST_BUILD_DIR ? { buildDir: process.env.PRINT_COST_BUILD_DIR } : {}),
   compatibilityDate: '2026-09-01',
   ssr: false,
-  modules: ['@nuxt/ui', '@nuxtjs/i18n', '@pinia/nuxt', '@nuxt/eslint', '@vite-pwa/nuxt'],
+  modules: [
+    '@nuxt/ui',
+    '@nuxtjs/i18n',
+    '@querry-kit/nuxt-ui',
+    '@pinia/nuxt',
+    '@nuxt/eslint',
+    '@vite-pwa/nuxt',
+  ],
   css: ['~/assets/css/main.css'],
   devtools: { enabled: true },
   nitro: {

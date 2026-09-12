@@ -43,6 +43,7 @@
     "next": "Next",
     "delete": "Delete",
     "archive": "Archive",
+    "archived": "Archived",
     "restore": "Restore",
     "edit": "Edit",
     "search": "Search",
@@ -421,7 +422,38 @@
     "lastActivity": "Last activity",
     "allPrinters": "All printers",
     "filters": "Filter prints",
-    "allCustomers": "All customers"
+    "allCustomers": "All customers",
+    "archived": "Archived"
+  },
+  "querrykit": {
+    "table": {
+      "search": { "placeholder": "Search prints" },
+      "sorting": {
+        "title": "Sort",
+        "field": "Select field",
+        "add": "Add sort",
+        "clear": "Clear sorting",
+        "remove": "Remove sort",
+        "toggle": "Toggle sort direction"
+      },
+      "filtering": {
+        "title": "Filter",
+        "field": "Select field",
+        "add": "Add filter",
+        "clear": "Clear filters",
+        "remove": "Remove filter",
+        "mode": "Toggle AND/OR"
+      },
+      "options": {
+        "title": "Table options",
+        "pin": "Pin column",
+        "left": "Pin left",
+        "right": "Pin right",
+        "center": "Unpin",
+        "visibility": "Toggle column visibility"
+      },
+      "pagination": { "summary": "Showing {start}–{end} of {total}" }
+    }
   },
   "report": {
     "title": "Cost report",

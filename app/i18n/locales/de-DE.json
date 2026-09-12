@@ -43,6 +43,7 @@
     "next": "Weiter",
     "delete": "Löschen",
     "archive": "Archivieren",
+    "archived": "Archiviert",
     "restore": "Wiederherstellen",
     "edit": "Bearbeiten",
     "search": "Suchen",
@@ -421,7 +422,38 @@
     "lastActivity": "Letzte Aktivität",
     "allPrinters": "Alle Drucker",
     "filters": "Drucke filtern",
-    "allCustomers": "Alle Kunden"
+    "allCustomers": "Alle Kunden",
+    "archived": "Archiviert"
+  },
+  "querrykit": {
+    "table": {
+      "search": { "placeholder": "Drucke suchen" },
+      "sorting": {
+        "title": "Sortieren",
+        "field": "Feld auswählen",
+        "add": "Sortierung hinzufügen",
+        "clear": "Sortierung löschen",
+        "remove": "Sortierung entfernen",
+        "toggle": "Sortierrichtung wechseln"
+      },
+      "filtering": {
+        "title": "Filter",
+        "field": "Feld auswählen",
+        "add": "Filter hinzufügen",
+        "clear": "Filter löschen",
+        "remove": "Filter entfernen",
+        "mode": "UND/ODER wechseln"
+      },
+      "options": {
+        "title": "Tabellenoptionen",
+        "pin": "Spalte anheften",
+        "left": "Links anheften",
+        "right": "Rechts anheften",
+        "center": "Lösen",
+        "visibility": "Spaltensichtbarkeit wechseln"
+      },
+      "pagination": { "summary": "{start}–{end} von {total}" }
+    }
   },
   "report": {
     "title": "Kostenbericht",
