@@ -1,5 +1,13 @@
 # ezPrint
 
+## 0.8.2
+
+### Patch Changes
+
+- ecd6d9d: Add direct customer-detail editing and a shared Query Kit-filtered print history table.
+- 92851b8: Display derived filament names as a form summary instead of a disabled input.
+- 175fb31: Harden backup restore staging and status reads against filesystem races.
+
 ## 0.8.1
 
 ### Patch Changes
