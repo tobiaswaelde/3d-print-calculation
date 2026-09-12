@@ -9,7 +9,7 @@ import {
 } from '../shared/schemas/prints';
 
 describe('application form validation', () => {
-  it('accepts feature choices during first-run setup', () => {
+  it('accepts feature and demo-data choices during first-run setup', () => {
     expect(
       setupSchema.parse({
         displayName: 'Test User',
@@ -19,7 +19,20 @@ describe('application form validation', () => {
         printSeriesEnabled: false,
         spoolManagementEnabled: false,
       }),
-    ).toMatchObject({ printSeriesEnabled: false, spoolManagementEnabled: false });
+    ).toMatchObject({
+      printSeriesEnabled: false,
+      spoolManagementEnabled: false,
+      createDemoData: false,
+    });
+    expect(
+      setupSchema.parse({
+        displayName: 'Demo User',
+        email: 'demo@example.test',
+        password: 'test-password-123',
+        electricityPrice: '0.32',
+        createDemoData: true,
+      }).createDemoData,
+    ).toBe(true);
   });
 
   it('accepts valid settings and rejects malformed decimal input', () => {

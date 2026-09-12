@@ -30,7 +30,7 @@ session cookie in its cookie jar. The committed collection contains no credentia
 | ----------------------------------------- | -------- | --------------------------------------------------------------------- |
 | `GET /api/health`                         | No       | `{ status, database, version }`; 503 if the database is unreadable    |
 | `GET /api/auth/setup-status`              | No       | `{ initialized }`                                                     |
-| `POST /api/auth/setup`                    | No       | Create the first account and settings once; later calls return 409    |
+| `POST /api/auth/setup`                    | No       | Create the first account, settings, and optional demo data once       |
 | `POST /api/auth/login`                    | No       | Validate email/password and set the session cookie                    |
 | `GET /api/auth/session`                   | Optional | `{ user }` or `null`                                                  |
 | `POST /api/auth/logout`                   | Yes      | Delete the current session                                            |

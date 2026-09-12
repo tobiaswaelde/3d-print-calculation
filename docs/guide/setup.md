@@ -17,13 +17,17 @@ The first request to an empty installation redirects to `/setup`. Enter the foll
 - **Print series:** controls whether related print runs, repeat orders, and production targets are available.
 - **Spool management:** controls whether physical spools, stock movements, QR labels, and spool-specific prices are
   available.
+- **Demo data:** optionally creates synthetic inventory, print history, and examples for enabled features.
 
 ![First-run setup form in US English](/screenshots/first-run-setup.jpg)
 
-Selecting **First-run setup** creates the account and application settings atomically, then signs the account in.
+Selecting **First-run setup** creates the account, application settings, and optional demo data atomically, then signs
+the account in.
 Only one setup request can succeed. After initialization, `/setup` redirects to `/login`.
 Both optional features are preselected and can be changed later under **Settings → Features**. External integrations
-are not configured during first-run setup; add their server details and credentials later in Settings.
+are not configured during first-run setup; add their server details and credentials later in Settings. Demo data is
+disabled by default. When selected, it includes series or spool inventory only when the corresponding feature is
+enabled and uses the currency and electricity price entered in the form.
 
 ::: warning Choose the currency carefully
 The currency can no longer be changed after the first printer, component, filament, or print is created. This

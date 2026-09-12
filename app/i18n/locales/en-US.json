@@ -30,6 +30,8 @@
     "displayName": "Display name",
     "currency": "Currency",
     "electricityPrice": "Electricity price per kWh",
+    "demoData": "Start with demo data",
+    "demoDataDescription": "Creates synthetic sample data for inventory, prints, and enabled optional features.",
     "invalid": "Email or password is invalid."
   },
   "common": {

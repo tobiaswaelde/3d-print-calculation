@@ -14,9 +14,11 @@ Browser → route middleware → Nitro API → service → Prisma → SQLite /da
                                   ↘ Zod   ↘ Decimal calculation
 ```
 
-First-run setup creates `User` and `AppSettings` atomically. Passwords use Argon2. Random session tokens exist only
-in an HTTP-only, SameSite=Lax cookie; the database stores SHA-256 hashes. Writes reject foreign origins. Business
-routes require a session; setup status, setup, sign-in, and health do not.
+First-run setup creates `User`, `AppSettings`, and any selected synthetic demo data atomically. Demo calculations use
+the configured currency and electricity price, while optional series and spool records follow their feature flags.
+Passwords use Argon2. Random session tokens exist only in an HTTP-only, SameSite=Lax cookie; the database stores
+SHA-256 hashes. Writes reject foreign origins. Business routes require a session; setup status, setup, sign-in, and
+health do not.
 
 Prisma uses the synchronous Better-SQLite3 adapter, so writes and setup target one process and one container
 replica. Startup applies migrations and Nitro shutdown disconnects Prisma. See [Deployment](/operations/deployment).

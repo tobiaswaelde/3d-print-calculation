@@ -85,6 +85,7 @@ defineRouteMeta({
               electricityPrice: { $ref: '#/components/schemas/Decimal' },
               printSeriesEnabled: { type: 'boolean', default: true },
               spoolManagementEnabled: { type: 'boolean', default: true },
+              createDemoData: { type: 'boolean', default: false },
             },
           },
           Decimal: {

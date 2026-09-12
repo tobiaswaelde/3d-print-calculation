@@ -2,6 +2,7 @@ import { hash, verify } from '@node-rs/argon2';
 import { setupSchema, loginSchema } from '#shared/schemas/auth';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
+import { createDemoData } from './demo-data';
 
 let setupQueue = Promise.resolve();
 
@@ -12,24 +13,34 @@ async function setupApplicationLocked(input: unknown) {
   const data = parsed.data;
 
   try {
-    return await db.$transaction(async (transaction) => {
-      if (await transaction.user.count()) apiError(409, 'ALREADY_INITIALIZED', 'errors.alreadyInitialized');
-      const passwordHash = await hash(data.password, { algorithm: 2 });
-      const user = await transaction.user.create({
-        data: { email: data.email, displayName: data.displayName, passwordHash, locale: data.locale },
-      });
-      await transaction.appSettings.create({
-        data: {
-          id: 1,
-          currency: data.currency,
-          defaultLocale: data.locale,
-          electricityPricePerKwh: data.electricityPrice,
-          printSeriesEnabled: data.printSeriesEnabled,
-          spoolManagementEnabled: data.spoolManagementEnabled,
-        },
-      });
-      return user;
-    });
+    return await db.$transaction(
+      async (transaction) => {
+        if (await transaction.user.count()) apiError(409, 'ALREADY_INITIALIZED', 'errors.alreadyInitialized');
+        const passwordHash = await hash(data.password, { algorithm: 2 });
+        const user = await transaction.user.create({
+          data: { email: data.email, displayName: data.displayName, passwordHash, locale: data.locale },
+        });
+        await transaction.appSettings.create({
+          data: {
+            id: 1,
+            currency: data.currency,
+            defaultLocale: data.locale,
+            electricityPricePerKwh: data.electricityPrice,
+            printSeriesEnabled: data.printSeriesEnabled,
+            spoolManagementEnabled: data.spoolManagementEnabled,
+          },
+        });
+        if (data.createDemoData)
+          await createDemoData(transaction, {
+            currency: data.currency,
+            electricityPrice: data.electricityPrice,
+            printSeriesEnabled: data.printSeriesEnabled,
+            spoolManagementEnabled: data.spoolManagementEnabled,
+          });
+        return user;
+      },
+      { maxWait: 5_000, timeout: 30_000 },
+    );
   } catch (error) {
     if (await db.user.count()) apiError(409, 'ALREADY_INITIALIZED', 'errors.alreadyInitialized');
     throw error;

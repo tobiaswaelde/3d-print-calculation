@@ -10,6 +10,7 @@ export const setupSchema = z.object({
   electricityPrice: canonicalDecimalSchema,
   printSeriesEnabled: z.boolean().default(true),
   spoolManagementEnabled: z.boolean().default(true),
+  createDemoData: z.boolean().default(false),
 });
 
 export const loginSchema = z.object({

@@ -73,7 +73,8 @@ try {
       openApi.body.paths?.['/api/prints/{id}/outcome']?.post?.requestBody &&
       openApi.body.paths?.['/api/backups/download']?.get?.summary === 'Download a database backup' &&
       openApi.body.paths?.['/api/backups/restores']?.put?.requestBody &&
-      openApi.body.components?.securitySchemes?.cookieAuth?.name === 'print-cost-session',
+      openApi.body.components?.securitySchemes?.cookieAuth?.name === 'print-cost-session' &&
+      openApi.body.components?.schemas?.SetupInput?.properties?.createDemoData?.default === false,
     'OpenAPI document must expose operation metadata, request schemas, and session-cookie authentication.',
   );
   const apiReference = await fetch(`${origin}/api-reference`);

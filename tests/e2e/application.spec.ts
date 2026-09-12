@@ -11,8 +11,10 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByLabel('Passwort').fill('browser-test-password-123');
   const setupPrintSeries = page.getByRole('switch', { name: 'Druckserien' });
   const setupSpoolManagement = page.getByRole('switch', { name: 'Spulenverwaltung' });
+  const setupDemoData = page.getByRole('switch', { name: 'Mit Demodaten starten' });
   await expect(setupPrintSeries).toBeChecked();
   await expect(setupSpoolManagement).toBeChecked();
+  await expect(setupDemoData).not.toBeChecked();
   await expect(page.getByLabel('Server-URL')).toHaveCount(0);
   await setupPrintSeries.click();
   await expect(setupPrintSeries).not.toBeChecked();

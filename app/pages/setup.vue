@@ -60,6 +60,13 @@
           </div>
         </div>
       </fieldset>
+      <div class="flex items-start justify-between gap-4 rounded-lg border border-default p-4 md:col-span-2">
+        <div>
+          <p class="font-medium">{{ t('auth.demoData') }}</p>
+          <p class="mt-1 text-sm text-muted">{{ t('auth.demoDataDescription') }}</p>
+        </div>
+        <USwitch v-model="form.createDemoData" :aria-label="t('auth.demoData')" />
+      </div>
       <UAlert v-if="error" class="md:col-span-2" color="error" :description="error" />
       <UButton class="md:col-span-2" type="submit" block :loading="pending" :label="t('auth.setup')" />
     </UForm>
@@ -82,6 +89,7 @@ const form = reactive({
   electricityPrice: '0.30',
   printSeriesEnabled: true,
   spoolManagementEnabled: true,
+  createDemoData: false,
 });
 
 async function submit() {

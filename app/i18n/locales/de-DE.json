@@ -30,6 +30,8 @@
     "displayName": "Anzeigename",
     "currency": "Währung",
     "electricityPrice": "Strompreis pro kWh",
+    "demoData": "Mit Demodaten starten",
+    "demoDataDescription": "Legt synthetische Beispieldaten für Inventar, Drucke und aktivierte optionale Features an.",
     "invalid": "E-Mail oder Passwort ist ungültig."
   },
   "common": {
