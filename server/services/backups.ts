@@ -4,7 +4,6 @@ import {
   createWriteStream,
   existsSync,
   openSync,
-  readFileSync,
   rmSync,
   fsyncSync,
   statfsSync,
@@ -23,7 +22,12 @@ import {
   databasePathFromUrl,
   inspectBackupFile,
 } from '../../scripts/database-backup';
-import { RESTORE_STATUS_TTL_MS, restorePaths } from '../../scripts/restore-state';
+import {
+  acquireRestoreStaging,
+  readRestoreStatusFile,
+  releaseRestoreStaging,
+  restorePaths,
+} from '../../scripts/restore-state';
 import type { RestoreStatus } from '#shared/schemas/backups';
 import { db } from '../utils/db';
 import { apiError } from '../utils/http';
@@ -105,29 +109,32 @@ export async function stageRestore(
   consumeAuthorization(token, userId);
   const databasePath = databasePathFromUrl();
   const paths = restorePaths(databasePath);
-  if (existsSync(paths.pending) || existsSync(paths.active)) {
+  const stagingDescriptor = acquireRestoreStaging(paths.staging);
+  if (stagingDescriptor === null) {
     apiError(409, 'RESTORE_ALREADY_PENDING', 'errors.restoreAlreadyPending');
   }
-  validateUploadCapacity(databasePath, contentLength, maxBytes);
-  rmSync(paths.upload, { force: true });
-  const descriptor = openSync(paths.upload, 'wx', 0o600);
-  closeSync(descriptor);
-  const output = createWriteStream(paths.upload, { flags: 'w', mode: 0o600 });
-  let received = 0;
+  let keepStaging = false;
   try {
-    for await (const chunk of request) {
-      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
-      received += buffer.length;
-      if (received > maxBytes || received > contentLength) throw new Error('BACKUP_TOO_LARGE');
-      if (!output.write(buffer)) await once(output, 'drain');
-    }
-    output.end();
-    await finished(output);
-    const uploadedDescriptor = openSync(paths.upload, 'r');
+    validateUploadCapacity(databasePath, contentLength, maxBytes);
+    rmSync(paths.upload, { force: true });
+    const uploadDescriptor = openSync(paths.upload, 'wx', 0o600);
+    const output = createWriteStream(paths.upload, { fd: uploadDescriptor, autoClose: false });
+    let received = 0;
     try {
-      fsyncSync(uploadedDescriptor);
+      for await (const chunk of request) {
+        const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+        received += buffer.length;
+        if (received > maxBytes || received > contentLength) throw new Error('BACKUP_TOO_LARGE');
+        if (!output.write(buffer)) await once(output, 'drain');
+      }
+      output.end();
+      await finished(output);
+      fsyncSync(uploadDescriptor);
+    } catch (error) {
+      output.destroy();
+      throw error;
     } finally {
-      closeSync(uploadedDescriptor);
+      closeSync(uploadDescriptor);
     }
     if (received !== contentLength) throw new Error('BACKUP_LENGTH_MISMATCH');
     const metadata = await inspectBackupFile(paths.upload, maxBytes);
@@ -141,9 +148,10 @@ export async function stageRestore(
     const marker = { id, createdAt: new Date().toISOString() };
     writeFileSync(paths.status(id), JSON.stringify({ status: 'pending' }), { flag: 'wx', mode: 0o600 });
     writeFileSync(paths.pending, JSON.stringify(marker), { flag: 'wx', mode: 0o600 });
+    closeSync(stagingDescriptor);
+    keepStaging = true;
     return { id, status: 'pending' as const };
   } catch (error) {
-    output.destroy();
     rmSync(paths.upload, { force: true });
     if (error instanceof Error && error.message === 'BACKUP_TOO_LARGE') {
       apiError(413, 'BACKUP_TOO_LARGE', 'errors.backupTooLarge');
@@ -155,17 +163,15 @@ export async function stageRestore(
       apiError(422, 'BACKUP_INVALID', 'errors.backupInvalid');
     }
     throw error;
+  } finally {
+    if (!keepStaging) releaseRestoreStaging(paths.staging, stagingDescriptor);
   }
 }
 
 export function readRestoreStatus(id: string): { status: RestoreStatus } {
   if (!/^[0-9a-f-]{36}$/i.test(id)) apiError(404, 'RESTORE_NOT_FOUND', 'errors.restoreNotFound');
   const path = restorePaths(databasePathFromUrl()).status(id);
-  if (!existsSync(path)) apiError(404, 'RESTORE_NOT_FOUND', 'errors.restoreNotFound');
-  const age = Date.now() - statSync(path).mtimeMs;
-  if (age > RESTORE_STATUS_TTL_MS) {
-    rmSync(path, { force: true });
-    apiError(404, 'RESTORE_NOT_FOUND', 'errors.restoreNotFound');
-  }
-  return JSON.parse(readFileSync(path, 'utf8')) as { status: RestoreStatus };
+  const status = readRestoreStatusFile(path);
+  if (!status) apiError(404, 'RESTORE_NOT_FOUND', 'errors.restoreNotFound');
+  return status;
 }

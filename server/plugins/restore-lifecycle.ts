@@ -1,7 +1,7 @@
-import { existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { closeSync, existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { databasePathFromUrl } from '../../scripts/database-backup';
-import { RESTORE_STATUS_TTL_MS, restorePaths } from '../../scripts/restore-state';
+import { acquireRestoreStaging, RESTORE_STATUS_TTL_MS, restorePaths } from '../../scripts/restore-state';
 import { db } from '../utils/db';
 
 export default defineNitroPlugin(async () => {
@@ -16,6 +16,13 @@ export default defineNitroPlugin(async () => {
     }
   };
   if (!existsSync(paths.active)) {
+    if (existsSync(paths.pending)) {
+      const descriptor = acquireRestoreStaging(paths.staging);
+      if (descriptor !== null) closeSync(descriptor);
+    } else {
+      rmSync(paths.upload, { force: true });
+      rmSync(paths.staging, { force: true });
+    }
     scheduleStatusCleanup();
     return;
   }
@@ -25,5 +32,6 @@ export default defineNitroPlugin(async () => {
   rmSync(paths.upload, { force: true });
   rmSync(paths.rollback, { force: true });
   rmSync(paths.active, { force: true });
+  rmSync(paths.staging, { force: true });
   scheduleStatusCleanup();
 });

@@ -49,6 +49,7 @@ function completeRollback(marker: RestoreMarker) {
   writeFileSync(statusPath(marker.id), JSON.stringify({ status: 'rolled_back' }), { mode: 0o600 });
   rmSync(paths.active, { force: true });
   rmSync(paths.upload, { force: true });
+  rmSync(paths.staging, { force: true });
 }
 
 if (command === 'prepare') {
