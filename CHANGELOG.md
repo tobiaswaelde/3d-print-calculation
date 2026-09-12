@@ -1,5 +1,12 @@
 # ezPrint
 
+## 0.8.0
+
+### Minor Changes
+
+- 68a61ae: Allow customers and their assigned prints to be excluded from dashboard reporting.
+- 580c43b: Add portable, logically versioned backup downloads and password-confirmed restores under Settings.
+
 ## 0.7.0
 
 ### Minor Changes
