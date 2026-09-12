@@ -1,5 +1,11 @@
 # ezPrint
 
+## 0.8.1
+
+### Patch Changes
+
+- c852750: Allow first-run setup to optionally create feature-aware synthetic demo data.
+
 ## 0.8.0
 
 ### Minor Changes
