@@ -194,6 +194,10 @@ try {
     { method: 'POST', body: JSON.stringify({ name: 'Acme', email: 'hello@example.test', note: '' }) },
     cookie,
   );
+  check(
+    customer.response.ok && customer.body.excludeFromDashboard === false,
+    'Customers remain included in dashboard reporting by default.',
+  );
   const printerManufacturer = await json(
     '/api/manufacturers',
     { method: 'POST', body: JSON.stringify({ name: 'Prusa', note: '' }) },
@@ -500,6 +504,41 @@ try {
   check(
     dashboard.body.kpis.totalCost === completed.body.totalCost,
     'Dashboard totals must reconcile with stored snapshots.',
+  );
+  const excludedCustomer = await json(
+    `/api/customers/${customer.body.id}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name: customer.body.name,
+        email: customer.body.email,
+        note: customer.body.note,
+        excludeFromDashboard: true,
+      }),
+    },
+    cookie,
+  );
+  check(excludedCustomer.body.excludeFromDashboard, 'Customers can be excluded from dashboard reporting.');
+  const dashboardWithoutCustomer = await json('/api/dashboard?period=30d', {}, cookie);
+  check(
+    dashboardWithoutCustomer.body.kpis.activeDrafts === 0 &&
+      dashboardWithoutCustomer.body.kpis.completedPrints === 0 &&
+      dashboardWithoutCustomer.body.kpis.totalCost === '0' &&
+      dashboardWithoutCustomer.body.unfinishedPrints.length === 0,
+    'Dashboard data must exclude every print assigned to an excluded customer.',
+  );
+  await json(
+    `/api/customers/${customer.body.id}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name: customer.body.name,
+        email: customer.body.email,
+        note: customer.body.note,
+        excludeFromDashboard: false,
+      }),
+    },
+    cookie,
   );
   const actualInput = {
     status: 'FAILED',

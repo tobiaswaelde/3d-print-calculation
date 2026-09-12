@@ -152,13 +152,20 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(resourceDialog.getByLabel('Name')).toBeFocused();
   await resourceDialog.getByLabel('Name').fill('Acme');
   await resourceDialog.getByLabel('E-Mail').fill('hello@example.test');
+  const excludeFromDashboard = resourceDialog.getByRole('checkbox', {
+    name: 'Vom Dashboard ausschließen',
+  });
+  await expect(excludeFromDashboard).not.toBeChecked();
+  await excludeFromDashboard.click();
   await resourceDialog.getByRole('button', { name: 'Speichern' }).click();
   await expect(resourceDialog).toBeHidden();
   await expect(page.getByRole('cell', { name: 'Acme' })).toBeVisible();
 
   const customerRow = page.getByRole('row', { name: /Acme/ });
+  await expect(customerRow).toContainText('Vom Dashboard ausgeschlossen');
   await customerRow.getByRole('button', { name: 'Bearbeiten' }).click();
   await expect(resourceDialog).toBeVisible();
+  await expect(excludeFromDashboard).toBeChecked();
   await resourceDialog.getByLabel('Name').fill('Discarded name');
   await page.keyboard.press('Escape');
   await expect(resourceDialog).toBeHidden();

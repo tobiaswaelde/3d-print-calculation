@@ -52,6 +52,17 @@ describe('application form validation', () => {
   it('validates the resource-specific master-data fields', () => {
     expect(customerSchema.safeParse({ name: '', email: 'invalid', note: '' }).success).toBe(false);
     expect(
+      customerSchema.parse({
+        name: 'Internal customer',
+        email: '',
+        excludeFromDashboard: true,
+        note: '',
+      }),
+    ).toMatchObject({ excludeFromDashboard: true });
+    expect(customerSchema.safeParse({ name: 'Invalid flag', excludeFromDashboard: 'true' }).success).toBe(
+      false,
+    );
+    expect(
       componentSchema.safeParse({
         type: 'HOTEND',
         name: 'High-flow hotend',

@@ -41,6 +41,13 @@
           <UFormField v-if="resource === 'customers'" name="email" :label="t('master.email')">
             <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
           </UFormField>
+          <UFormField v-if="resource === 'customers'" name="excludeFromDashboard" class="md:col-span-2">
+            <UCheckbox
+              v-model="form.excludeFromDashboard"
+              :label="t('master.excludeFromDashboard')"
+              :description="t('master.excludeFromDashboardDescription')"
+            />
+          </UFormField>
           <template v-if="resource === 'printers' || resource === 'components'">
             <UFormField
               name="manufacturerId"
@@ -396,6 +403,7 @@ function emptyForm() {
     averagePowerWatts: 0,
     type: 'HOTEND',
     alwaysUsed: false,
+    excludeFromDashboard: false,
     printerIds: [] as string[],
     material: '',
     colorName: '',
@@ -518,7 +526,10 @@ async function remove(item: MasterDataListItem) {
 }
 
 function details(item: MasterDataListItem) {
-  if (props.resource === 'customers') return String(item.email ?? '—');
+  if (props.resource === 'customers')
+    return [item.email ?? '—', item.excludeFromDashboard ? t('master.excludedFromDashboard') : '']
+      .filter(Boolean)
+      .join(' · ');
   if (props.resource === 'manufacturers') return String(item.note ?? '—');
   if (props.resource === 'filaments')
     return [item.manufacturer, item.material, item.colorName, item.colorHex].filter(Boolean).join(' · ');

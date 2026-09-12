@@ -122,6 +122,7 @@ defineRouteMeta({
             properties: {
               name: { type: 'string', minLength: 1, maxLength: 200 },
               email: { type: ['string', 'null'], format: 'email' },
+              excludeFromDashboard: { type: 'boolean', default: false },
               note: { type: ['string', 'null'], maxLength: 2000 },
             },
           },

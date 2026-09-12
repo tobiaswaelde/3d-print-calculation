@@ -43,6 +43,7 @@ export const customerSchema = z.object({
     .union([z.literal(''), z.email()])
     .nullish()
     .transform((value) => value?.trim().toLowerCase() || null),
+  excludeFromDashboard: z.boolean().optional(),
   note: optionalText,
 });
 

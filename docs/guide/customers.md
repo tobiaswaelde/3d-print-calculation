@@ -12,17 +12,20 @@ created without a customer.
 
 ## Fields
 
-| Field     | Requirement                         | Use                                                              |
-| --------- | ----------------------------------- | ---------------------------------------------------------------- |
-| **Name**  | Required                            | Primary label in tables, selectors, dashboard drafts, and search |
-| **Email** | Optional, valid email when provided | Contact context and searchable detail                            |
-| **Note**  | Optional                            | Internal context shown when editing the customer                 |
+| Field                      | Requirement                         | Use                                                                  |
+| -------------------------- | ----------------------------------- | -------------------------------------------------------------------- |
+| **Name**                   | Required                            | Primary label in tables, selectors, dashboard drafts, and search     |
+| **Email**                  | Optional, valid email when provided | Contact context and searchable detail                                |
+| **Exclude from dashboard** | Optional, disabled by default       | Omits assigned prints from dashboard metrics, charts, and work lists |
+| **Note**                   | Optional                            | Internal context shown when editing the customer                     |
 
 ## Page functions
 
 - **Search** filters by customer name and email.
 - **New** or <kbd>Shift</kbd>+<kbd>N</kbd> opens the create dialog.
 - **Edit** opens the same fields with saved values; save to replace the editable data.
+- **Exclude from dashboard** hides every print assigned to the customer from dashboard reporting and unfinished
+  prints. It does not change print data, customer history, or other lists.
 - **Archive** removes the customer from new-print selectors but keeps it linked to existing prints.
 - **Table options → Show archived** reveals archived customers; **Restore** makes one active again.
 - **Delete** permanently removes only an unreferenced customer after confirmation. Archive referenced customers.

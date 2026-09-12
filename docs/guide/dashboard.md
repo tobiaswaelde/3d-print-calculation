@@ -16,6 +16,9 @@ Choose **Last 30 days**, **Last 90 days**, or **All time**. The selected period 
 duration, total cost, the cost-over-time chart, and the category chart. **Active drafts** and the unfinished-print
 table remain current operational data rather than historical reporting.
 
+Prints assigned to a customer marked **Exclude from dashboard** are omitted from all dashboard KPIs, charts, and
+the unfinished-print table. Prints without a customer remain included.
+
 ## KPI cards
 
 - **Active drafts** opens the Prints page filtered to Draft.

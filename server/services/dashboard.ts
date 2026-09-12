@@ -19,9 +19,13 @@ function bucket(date: Date, period: '30d' | '90d' | 'all') {
 export async function dashboardData(periodInput: unknown, now = new Date()) {
   const period = parseBody(dashboardPeriodSchema, periodInput);
   const start = startFor(period, now);
+  const includedCustomer = {
+    OR: [{ customerId: null }, { customer: { is: { excludeFromDashboard: false } } }],
+  };
   const [completed, unfinished] = await Promise.all([
     db.printJob.findMany({
       where: {
+        ...includedCustomer,
         status: 'DONE',
         archivedAt: null,
         ...(start ? { completedAt: { gte: start, lte: now } } : {}),
@@ -33,7 +37,7 @@ export async function dashboardData(periodInput: unknown, now = new Date()) {
       orderBy: { completedAt: 'asc' },
     }),
     db.printJob.findMany({
-      where: { status: { not: 'DONE' }, archivedAt: null },
+      where: { ...includedCustomer, status: { not: 'DONE' }, archivedAt: null },
       include: { customer: true, printer: true, snapshot: true },
       orderBy: { updatedAt: 'desc' },
     }),

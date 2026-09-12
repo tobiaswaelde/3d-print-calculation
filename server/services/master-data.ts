@@ -36,7 +36,12 @@ function baseDto(value: {
 }
 
 function customerDto(value: Awaited<ReturnType<typeof db.customer.findFirstOrThrow>>) {
-  return { ...baseDto(value), email: value.email, note: value.note };
+  return {
+    ...baseDto(value),
+    email: value.email,
+    excludeFromDashboard: value.excludeFromDashboard,
+    note: value.note,
+  };
 }
 
 type PrinterWithManufacturer = Prisma.PrinterGetPayload<{ include: { manufacturer: true } }>;
