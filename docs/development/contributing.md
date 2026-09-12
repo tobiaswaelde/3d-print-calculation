@@ -61,9 +61,9 @@ aligned with the current application. Screenshots must use synthetic data, show 
 contain no secrets or personal information.
 
 `pnpm docs:screenshots` starts the application against a temporary SQLite database, creates deterministic sample
-data, and replaces every image in `docs/public/screenshots/`. Run it whenever the documented UI changes. The
-documentation workflow runs the same generator before every build, so the deployed screenshots always match the
-UI from that commit.
+data, and replaces every image in `docs/public/screenshots/`. Run it whenever the documented UI changes, review
+the result, and commit the updated images. GitHub runs the generator in a separate non-blocking workflow and
+retains Playwright artifacts for failed captures; documentation builds use the checked-in screenshots.
 
 `pnpm docs:check` validates frontmatter, navigation, alt text, unresolved placeholders, and the absence of legacy
 localized Markdown. `pnpm docs:build` validates page rendering, links, and anchors.

@@ -1,0 +1,63 @@
+name: Documentation Screenshots
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'prisma/**'
+      - 'server/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'playwright.screenshots.config.ts'
+      - 'tests/docs-screenshots/**'
+      - '.github/workflows/docs-screenshots.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'prisma/**'
+      - 'server/**'
+      - 'shared/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'playwright.screenshots.config.ts'
+      - 'tests/docs-screenshots/**'
+      - '.github/workflows/docs-screenshots.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-screenshots-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Generate documentation screenshots
+        id: screenshots
+        continue-on-error: true
+        run: pnpm docs:screenshots
+      - name: Record non-blocking failure
+        if: steps.screenshots.outcome == 'failure'
+        run: echo '::warning::Documentation screenshot generation failed. See the uploaded Playwright artifacts.'
+      - name: Upload failure artifacts
+        if: steps.screenshots.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: documentation-screenshot-failure
+          path: test-results/screenshots
+          if-no-files-found: ignore
+          retention-days: 7

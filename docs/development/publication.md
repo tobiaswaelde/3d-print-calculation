@@ -5,9 +5,13 @@ description: GitHub Pages deployment, version alignment, verification, and docum
 
 # Publishing documentation
 
-Pull requests regenerate the application screenshots, build the documentation, and verify it without publishing.
-A push to `main` runs the same Playwright screenshot generator before GitHub Pages is built with `contents: read`,
-`pages: write`, and `id-token: write`; the resulting `docs/.vitepress/dist` is deployed without repository secrets.
+Pull requests build and verify the documentation without publishing. A push to `main` builds the checked-in
+documentation with `contents: read`, `pages: write`, and `id-token: write`; the resulting
+`docs/.vitepress/dist` is deployed without repository secrets.
+
+Screenshot generation runs independently for relevant application changes. It is non-blocking so a flaky capture
+cannot hold up CI or documentation deployment. Failures emit a workflow warning and retain Playwright artifacts
+for seven days. Regenerate and commit screenshots locally whenever a documented UI changes.
 
 `https://tobiaswaelde.github.io/ezprint/` documents current `main`. Changesets align the application
 version, Git tag, GitHub release, and container tag. Immutable historical documentation remains in `docs/` at each
@@ -21,10 +25,11 @@ Rotate the personal access token before it expires and update the secret without
 
 ## Verify publication
 
-1. Confirm the Playwright screenshot generator, documentation check, build, and browser smoke test passed in CI.
-2. Open the home page, local search, sitemap, and at least one deep user-guide link.
-3. Confirm the logo gradient, application screenshots, favicon, keyboard navigation, and 390-pixel viewport.
-4. Check that no legacy `/en/` or German documentation navigation remains.
+1. Confirm the documentation check, build, and browser smoke test passed in CI.
+2. Inspect any warning from the non-blocking Documentation Screenshots workflow.
+3. Open the home page, local search, sitemap, and at least one deep user-guide link.
+4. Confirm the logo gradient, application screenshots, favicon, keyboard navigation, and 390-pixel viewport.
+5. Check that no legacy `/en/` or German documentation navigation remains.
 
 ## Roll back
 
