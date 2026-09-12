@@ -1,4 +1,4 @@
-import { closeSync, existsSync, mkdirSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
+import { closeSync, existsSync, mkdtempSync, rmSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -13,8 +13,7 @@ import {
 const roots: string[] = [];
 
 function testPaths() {
-  const root = join(tmpdir(), `ezprint-restore-state-${crypto.randomUUID()}`);
-  mkdirSync(root);
+  const root = mkdtempSync(join(tmpdir(), 'ezprint-restore-state-'));
   roots.push(root);
   return restorePaths(join(root, 'app.db'));
 }
