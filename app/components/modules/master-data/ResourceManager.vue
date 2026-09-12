@@ -29,14 +29,8 @@
           class="grid gap-4 md:grid-cols-2"
           @submit="save"
         >
-          <UFormField name="name" :label="t('master.name')" required>
-            <UInput
-              v-model="form.name"
-              class="w-full"
-              icon="i-tabler-tag"
-              :autofocus="resource !== 'filaments'"
-              :readonly="resource === 'filaments'"
-            />
+          <UFormField v-if="resource !== 'filaments'" name="name" :label="t('master.name')" required>
+            <UInput v-model="form.name" class="w-full" icon="i-tabler-tag" autofocus />
           </UFormField>
           <UFormField v-if="resource === 'customers'" name="email" :label="t('master.email')">
             <UInput v-model="form.email" class="w-full" type="email" icon="i-tabler-mail" />
@@ -217,6 +211,12 @@
                 </template>
               </UInput></UFormField
             >
+            <UAlert
+              class="md:col-span-2"
+              color="neutral"
+              variant="subtle"
+              :description="`${t('master.name')}: ${form.name || '—'}`"
+            />
             <UAlert
               class="md:col-span-2"
               color="neutral"
