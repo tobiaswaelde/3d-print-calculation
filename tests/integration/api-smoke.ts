@@ -1,11 +1,12 @@
 import { parsePrintCsv } from '../utils/parse-print-csv';
 import { startFakeIntegrations } from '../utils/fake-integrations';
 import { execFileSync, spawn } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { assertSafeTestDatabaseUrl } from '../utils/test-database';
+import { createBackupFile, inspectBackupFile } from '../../scripts/database-backup';
 
 // The smoke client intentionally consumes several heterogeneous JSON endpoint shapes.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,6 +27,7 @@ const environment = {
   SPOOLMAN_AUTHORIZATION: 'Bearer synthetic-secret',
   BAMBUBUDDY_URL: fake.url,
   BAMBUBUDDY_API_KEY: 'synthetic-key',
+  NUXT_BACKUP_MAX_BYTES: '1048576',
 };
 
 execFileSync('pnpm', ['db:deploy'], { env: environment, stdio: 'inherit' });
@@ -69,6 +71,8 @@ try {
   check(
     openApi.body.paths?.['/api/auth/login']?.post?.summary === 'Sign in' &&
       openApi.body.paths?.['/api/prints/{id}/outcome']?.post?.requestBody &&
+      openApi.body.paths?.['/api/backups/download']?.get?.summary === 'Download a database backup' &&
+      openApi.body.paths?.['/api/backups/restores']?.put?.requestBody &&
       openApi.body.components?.securitySchemes?.cookieAuth?.name === 'print-cost-session',
     'OpenAPI document must expose operation metadata, request schemas, and session-cookie authentication.',
   );
@@ -108,6 +112,90 @@ try {
   const successfulSetup = setupResponses.find(({ response }) => response.ok)!;
   const cookie = successfulSetup.response.headers.getSetCookie()[0]?.split(';')[0];
   check(cookie, 'Setup must establish a session cookie.');
+
+  const downloadedBackup = await fetch(`${origin}/api/backups/download`, { headers: { cookie } });
+  const downloadedBackupPath = join(testRoot, 'downloaded.ezprint-backup');
+  writeFileSync(downloadedBackupPath, Buffer.from(await downloadedBackup.arrayBuffer()));
+  check(
+    downloadedBackup.ok &&
+      downloadedBackup.headers.get('content-type') === 'application/vnd.ezprint.backup' &&
+      downloadedBackup.headers.get('cache-control') === 'no-store' &&
+      downloadedBackup.headers.get('content-disposition')?.includes('.ezprint-backup') &&
+      (await inspectBackupFile(downloadedBackupPath)).appVersion.length > 0,
+    'Authenticated backup downloads must be versioned, intact, and non-cacheable.',
+  );
+  const unauthorizedBackup = await fetch(`${origin}/api/backups/download`);
+  check(unauthorizedBackup.status === 401, 'Backup downloads require authentication.');
+
+  const deniedRestore = await json(
+    '/api/backups/restore-authorizations',
+    { method: 'POST', body: JSON.stringify({ password: 'wrong-password' }) },
+    cookie,
+  );
+  check(deniedRestore.response.status === 401, 'Restore authorization rechecks the current password.');
+  const restoreAuthorization = await json(
+    '/api/backups/restore-authorizations',
+    { method: 'POST', body: JSON.stringify({ password: 'integration-password-123' }) },
+    cookie,
+  );
+  check(
+    restoreAuthorization.response.ok && restoreAuthorization.body.token,
+    'Valid password authorizes one restore.',
+  );
+  const invalidRestoreOptions = {
+    method: 'PUT',
+    headers: {
+      cookie,
+      origin,
+      'content-type': 'application/vnd.ezprint.backup',
+      'x-ezprint-restore-token': String(restoreAuthorization.body.token),
+    },
+    body: Buffer.from('not a backup'),
+  };
+  const invalidRestore = await fetch(`${origin}/api/backups/restores`, invalidRestoreOptions);
+  check(invalidRestore.status === 422, 'Restore rejects files without valid ezPrint backup metadata.');
+  const reusedRestoreAuthorization = await fetch(`${origin}/api/backups/restores`, invalidRestoreOptions);
+  check(
+    reusedRestoreAuthorization.status === 401,
+    'Restore authorizations are single-use even after invalid uploads.',
+  );
+
+  const oversizedAuthorization = await json(
+    '/api/backups/restore-authorizations',
+    { method: 'POST', body: JSON.stringify({ password: 'integration-password-123' }) },
+    cookie,
+  );
+  const oversizedRestore = await fetch(`${origin}/api/backups/restores`, {
+    method: 'PUT',
+    headers: {
+      cookie,
+      origin,
+      'content-type': 'application/vnd.ezprint.backup',
+      'x-ezprint-restore-token': String(oversizedAuthorization.body.token),
+    },
+    body: Buffer.alloc(1_048_577),
+  });
+  check(oversizedRestore.status === 413, 'Restore enforces the configured upload-size limit.');
+
+  const newerBackupPath = join(testRoot, 'newer.ezprint-backup');
+  await createBackupFile(join(testRoot, 'app.db'), newerBackupPath, '99.0.0');
+  const newerAuthorization = await json(
+    '/api/backups/restore-authorizations',
+    { method: 'POST', body: JSON.stringify({ password: 'integration-password-123' }) },
+    cookie,
+  );
+  const newerRestore = await fetch(`${origin}/api/backups/restores`, {
+    method: 'PUT',
+    headers: {
+      cookie,
+      origin,
+      'content-type': 'application/vnd.ezprint.backup',
+      'x-ezprint-restore-token': String(newerAuthorization.body.token),
+    },
+    body: readFileSync(newerBackupPath),
+  });
+  check(newerRestore.status === 422, 'Restore rejects backups from a newer application version.');
+
   const setupSession = await json('/api/auth/session', {}, cookie);
   check(
     setupSession.response.ok && setupSession.body.user?.email === 'integration@example.test',

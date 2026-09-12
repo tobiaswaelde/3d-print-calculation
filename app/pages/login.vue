@@ -1,6 +1,13 @@
 <template>
   <div>
     <h1 class="text-2xl font-semibold">{{ t('auth.login') }}</h1>
+    <UAlert
+      v-if="route.query.restored === 'true'"
+      class="mt-4"
+      color="success"
+      icon="i-tabler-circle-check"
+      :description="t('backup.restored')"
+    />
     <UForm :schema="loginSchema" :state="form" class="mt-6 space-y-4" @submit="submit">
       <UFormField :label="t('auth.email')" name="email" required>
         <UInput v-model="form.email" class="w-full" type="email" autocomplete="email" icon="i-tabler-mail" />

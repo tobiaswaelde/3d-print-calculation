@@ -24,6 +24,7 @@ services:
     environment:
       DATABASE_URL: file:/data/app.db
       NUXT_SESSION_TTL_HOURS: 168
+      NUXT_BACKUP_MAX_BYTES: 1073741824
       DATA_DIR: /data
     ports: ['3000:3000']
     volumes: [app-data:/data]
@@ -44,6 +45,8 @@ curl --fail http://127.0.0.1:3000/api/health
 The image runs as UID/GID 1001, verifies that `/data` is writable, creates SQLite when needed, and runs
 `prisma migrate deploy` before the server starts. The health endpoint returns HTTP 200 only after a successful
 database query. Restarts reuse the volume and apply only pending migrations.
+The restart policy is also required for an application-initiated restore: ezPrint exits after staging a validated
+backup, then creates a freshly migrated database and imports the logical backup during the automatic restart.
 
 After a healthy start, open `http://HOST:3000` and complete [first-run setup](/guide/setup). Before changing image
 versions, follow the [upgrade procedure](/operations/upgrades). Report vulnerabilities privately under the

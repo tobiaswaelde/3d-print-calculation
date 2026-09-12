@@ -203,6 +203,23 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await expect(page.getByLabel('Währung')).toBeVisible();
   await page.getByRole('link', { name: 'Features', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Druckserien' })).toBeVisible();
+  await page.getByRole('link', { name: 'Backup', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Backup erstellen' })).toBeVisible();
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Backup herunterladen' }).click();
+  await expect((await download).suggestedFilename()).toMatch(/^ezprint-backup-.*\.ezprint-backup$/);
+  await page.getByLabel('ezPrint-Backupdatei').setInputFiles({
+    name: 'invalid.ezprint-backup',
+    mimeType: 'application/vnd.ezprint.backup',
+    buffer: Buffer.from('invalid'),
+  });
+  await page.getByRole('button', { name: 'Backup wiederherstellen', exact: true }).click();
+  const restoreDialog = page.getByRole('dialog', { name: 'Wiederherstellung bestätigen' });
+  await restoreDialog.getByLabel('Passwort').fill('wrong-password');
+  await restoreDialog.getByRole('button', { name: 'Ersetzen und neu starten' }).click();
+  await expect(restoreDialog.getByText('E-Mail oder Passwort ist ungültig.')).toBeVisible();
+  await restoreDialog.getByRole('button', { name: 'Abbrechen' }).click();
+  await page.getByRole('link', { name: 'Features', exact: true }).click();
   await page.getByRole('switch', { name: 'Druckserien' }).click();
   await page.getByRole('switch', { name: 'Spulenverwaltung' }).click();
   const featureAlertIcons = page.locator(
@@ -293,7 +310,7 @@ test('setup, navigation, persistence, accessibility, and responsive shell', asyn
   await page.getByRole('button', { name: 'Speichern', exact: true }).click();
   await expect(page.getByRole('link', { name: 'Spulen' })).toBeVisible();
   await page.request.patch('/api/settings/integrations', {
-    headers: { origin: 'http://127.0.0.1:3000' },
+    headers: { origin: new URL(page.url()).origin },
     data: {
       spoolman: { enabled: false, url: 'http://spoolman:7912' },
       bambubuddy: { enabled: false, url: 'http://bambubuddy:8000' },

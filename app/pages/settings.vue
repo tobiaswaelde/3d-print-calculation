@@ -32,6 +32,11 @@ const navigation = computed(() => [
       icon: 'i-tabler-toggle-right',
       to: '/settings/features',
     },
+    {
+      label: t('settings.backup'),
+      icon: 'i-tabler-database-export',
+      to: '/settings/backup',
+    },
     ...(spoolmanEnabled.value
       ? [
           {

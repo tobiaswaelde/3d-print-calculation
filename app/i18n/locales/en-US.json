@@ -112,6 +112,7 @@
     "calculation": "Calculation",
     "calculationDescription": "Currency and energy costs used for print cost calculations.",
     "features": "Features",
+    "backup": "Backup",
     "printSeries": "Print series",
     "printSeriesDescription": "Group related print runs, repeat orders, and production targets.",
     "printSeriesDisabledHelp": "Series navigation and editing are unavailable. Existing assignments remain stored and visible as text.",
@@ -130,6 +131,27 @@
     "saved": "Settings saved.",
     "integrations": "Integrations",
     "integrationsDescription": "Enable and configure optional connections. Credentials remain server-only."
+  },
+  "backup": {
+    "createTitle": "Create backup",
+    "createDescription": "Download a complete and consistent backup of all ezPrint data.",
+    "sensitiveTitle": "Unencrypted archive",
+    "sensitiveDescription": "The backup contains account data, password hashes, settings, integration credentials, inventory, and prints. Store it encrypted and away from this host.",
+    "download": "Download backup",
+    "restoreTitle": "Restore backup",
+    "restoreDescription": "Replace the current data with a previously created ezPrint backup.",
+    "restoreWarningTitle": "Current data will be replaced",
+    "restoreWarningDescription": "The application restarts and all sessions are signed out. Backups from newer releases cannot be restored into older ezPrint versions.",
+    "file": "ezPrint backup file",
+    "restore": "Restore backup",
+    "confirmTitle": "Confirm restore",
+    "confirmDescription": "Enter your current password to validate and restore {name}.",
+    "confirmRestore": "Replace and restart",
+    "restarting": "Restoring …",
+    "restored": "The backup was restored successfully. Sign in again.",
+    "rolledBack": "The backup could not be imported or migrated. The previous database was restored automatically.",
+    "restartTimeout": "The restart is taking longer than expected. Check the service status and container logs.",
+    "restoreFailed": "The backup could not be restored."
   },
   "master": {
     "name": "Name",
@@ -261,6 +283,7 @@
     "revision": "Revision {revision}"
   },
   "errors": {
+    "invalidCredentials": "Email or password is invalid.",
     "outcomeNotAllowed": "Only non-archived done prints accept outcomes.",
     "outcomeImmutable": "This outcome has already been recorded and is immutable.",
     "invalidActualUsage": "Enter every planned filament usage exactly once.",
@@ -284,7 +307,20 @@
     "integrationMetadata": "Remote vendor, price and initial weight are required; archived spools cannot be imported.",
     "stockOwnedExternally": "Spoolman owns this stock. Change it there or explicitly unlink first.",
     "printSeriesDisabled": "Print series are disabled in Settings → Features.",
-    "spoolManagementDisabled": "Spool management is disabled in Settings → Features."
+    "spoolManagementDisabled": "Spool management is disabled in Settings → Features.",
+    "restoreAuthorizationRequired": "Password confirmation is required again.",
+    "restoreAuthorizationInvalid": "The restore authorization is invalid or expired.",
+    "restoreAlreadyPending": "A restore is already pending.",
+    "contentLengthRequired": "The backup file size could not be determined.",
+    "backupTooLarge": "The backup file exceeds the configured size limit.",
+    "insufficientStorage": "There is not enough free storage for a safe restore.",
+    "backupLengthMismatch": "The transferred backup file is incomplete.",
+    "backupFormatUnsupported": "This backup format version is not supported.",
+    "backupVersionNewer": "A backup from a newer ezPrint release cannot be restored.",
+    "backupInvalid": "The file is not a valid ezPrint backup.",
+    "backupConfigInvalid": "The configured backup size limit is invalid.",
+    "restoreNotFound": "The restore status was not found or has expired.",
+    "unsupportedMediaType": "Only ezPrint backup files are accepted."
   },
   "validation": {
     "printerManufacturerRequired": "A manufacturer is required.",

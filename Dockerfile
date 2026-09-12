@@ -19,10 +19,12 @@ RUN apk add --no-cache openssl \
   && chown app:app /data
 COPY --from=build --chown=app:app /app/.output ./.output
 COPY --from=build --chown=app:app /migration /migration
+COPY --from=build --chown=app:app /app/package.json ./package.json
 COPY --from=build --chown=app:app /app/prisma ./prisma
-COPY --from=build --chown=app:app /app/scripts/ensure-database.ts ./scripts/ensure-database.ts
+COPY --from=build --chown=app:app /app/scripts ./scripts
 COPY --from=build --chown=app:app /app/docker-entrypoint.sh ./docker-entrypoint.sh
-RUN chmod 755 /app/docker-entrypoint.sh
+RUN ln -s /app/.output/server/node_modules /app/node_modules \
+  && chmod 755 /app/docker-entrypoint.sh
 USER app
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \

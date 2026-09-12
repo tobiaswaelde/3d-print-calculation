@@ -5,7 +5,7 @@ description: Configure display, calculation, optional features, and integrations
 
 # Settings
 
-The Settings page uses linked **General**, **Calculation**, and **Features** tabs. Each tab has its own URL, so browser navigation and direct links preserve the selected settings area.
+The Settings page uses linked **General**, **Calculation**, **Features**, and **Backup** tabs. Each tab has its own URL, so browser navigation and direct links preserve the selected settings area.
 
 ![Settings page with linked configuration tabs](/screenshots/settings.jpg)
 
@@ -51,3 +51,16 @@ Connection tools stay within the Features tab; they do not add separate pages or
 [Spoolman and Bambuddy](./integrations) for setup, ownership, and reconciliation details.
 
 Select **Save** once to persist all feature flags. The Spoolman and Bambuddy tabs each have one Save action for their connection settings. A success message confirms each update; validation errors are shown without discarding the entered values.
+
+## Backup
+
+Open **Settings → Backup** to download a complete, logically versioned `.ezprint-backup` archive. The archive is
+not encrypted and includes account password hashes, integration credentials, settings, inventory, prints, and
+immutable snapshots. Sessions and database migration internals are intentionally excluded. Store it encrypted
+and outside the ezPrint host.
+
+![Backup settings with download and restore controls](/screenshots/settings-backup.jpg)
+
+Restoring requires the current account password and a versioned ezPrint backup. The restore is staged safely, the
+service restarts, creates the current database schema, and imports the logical data. All sessions are invalidated.
+If schema migration or import fails, ezPrint automatically returns to the previous database.

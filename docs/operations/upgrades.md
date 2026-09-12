@@ -23,6 +23,10 @@ docker compose logs --tail=100 app
 The documentation on `main` describes the latest application state. Changesets align the application version,
 Git tag, GitHub release, and image tag. Historical source documentation remains available in `docs/` at each tag.
 
+The future v1 migration-history baseline is a special case: do not point it directly at a v0 database after the
+legacy migrations are removed. Create a current `.ezprint-backup` first and use the documented v1 legacy importer.
+The v1 release is not complete until the retained synthetic v0 backup fixtures pass their restore tests.
+
 ## Roll back
 
 An image-only rollback is allowed only when the release notes declare database compatibility. Otherwise:

@@ -112,6 +112,7 @@
     "calculation": "Berechnung",
     "calculationDescription": "Währung und Energiekosten für die Druckkostenberechnung.",
     "features": "Features",
+    "backup": "Backup",
     "printSeries": "Druckserien",
     "printSeriesDescription": "Zusammengehörige Druckläufe, Wiederholungsaufträge und Produktionsziele verwalten.",
     "printSeriesDisabledHelp": "Seriennavigation und -bearbeitung sind nicht verfügbar. Bestehende Zuordnungen bleiben gespeichert und als Text sichtbar.",
@@ -130,6 +131,27 @@
     "saved": "Einstellungen gespeichert.",
     "integrations": "Integrationen",
     "integrationsDescription": "Optionale Verbindungen aktivieren und konfigurieren. Zugangsdaten bleiben ausschließlich serverseitig."
+  },
+  "backup": {
+    "createTitle": "Backup erstellen",
+    "createDescription": "Lade eine vollständige und konsistente Sicherung aller ezPrint-Daten herunter.",
+    "sensitiveTitle": "Unverschlüsseltes Archiv",
+    "sensitiveDescription": "Das Backup enthält Kontodaten, Passwort-Hashes, Einstellungen, Integrations-Zugangsdaten, Inventar und Drucke. Bewahre es verschlüsselt und außerhalb dieses Hosts auf.",
+    "download": "Backup herunterladen",
+    "restoreTitle": "Backup wiederherstellen",
+    "restoreDescription": "Ersetze den aktuellen Datenbestand durch ein zuvor erstelltes ezPrint-Backup.",
+    "restoreWarningTitle": "Aktuelle Daten werden ersetzt",
+    "restoreWarningDescription": "Die Anwendung startet neu und alle Sitzungen werden abgemeldet. Neuere Backups können nicht in ältere ezPrint-Versionen eingespielt werden.",
+    "file": "ezPrint-Backupdatei",
+    "restore": "Backup wiederherstellen",
+    "confirmTitle": "Wiederherstellung bestätigen",
+    "confirmDescription": "Gib dein aktuelles Passwort ein, um {name} zu prüfen und wiederherzustellen.",
+    "confirmRestore": "Ersetzen und neu starten",
+    "restarting": "Wiederherstellung läuft …",
+    "restored": "Das Backup wurde erfolgreich wiederhergestellt. Melde dich erneut an.",
+    "rolledBack": "Das Backup konnte nicht importiert oder migriert werden. Die vorherige Datenbank wurde automatisch wiederhergestellt.",
+    "restartTimeout": "Der Neustart dauert länger als erwartet. Prüfe den Dienststatus und die Containerprotokolle.",
+    "restoreFailed": "Das Backup konnte nicht wiederhergestellt werden."
   },
   "master": {
     "name": "Name",
@@ -261,6 +283,7 @@
     "revision": "Version {revision}"
   },
   "errors": {
+    "invalidCredentials": "E-Mail oder Passwort ist ungültig.",
     "outcomeNotAllowed": "Nur nicht archivierte, erledigte Drucke können Ergebnisse erhalten.",
     "outcomeImmutable": "Dieses Ergebnis wurde bereits erfasst und ist unveränderlich.",
     "invalidActualUsage": "Jeden geplanten Filamentverbrauch genau einmal angeben.",
@@ -284,7 +307,20 @@
     "integrationMetadata": "Remote-Hersteller, Preis und Anfangsgewicht erforderlich; archivierte Spulen können nicht importiert werden.",
     "stockOwnedExternally": "Spoolman führt diesen Bestand. Dort ändern oder zuerst ausdrücklich trennen.",
     "printSeriesDisabled": "Druckserien sind unter Einstellungen → Features deaktiviert.",
-    "spoolManagementDisabled": "Die Spulenverwaltung ist unter Einstellungen → Features deaktiviert."
+    "spoolManagementDisabled": "Die Spulenverwaltung ist unter Einstellungen → Features deaktiviert.",
+    "restoreAuthorizationRequired": "Eine erneute Passwortbestätigung ist erforderlich.",
+    "restoreAuthorizationInvalid": "Die Wiederherstellungsfreigabe ist ungültig oder abgelaufen.",
+    "restoreAlreadyPending": "Eine Wiederherstellung ist bereits ausstehend.",
+    "contentLengthRequired": "Die Größe der Backupdatei konnte nicht bestimmt werden.",
+    "backupTooLarge": "Die Backupdatei überschreitet das konfigurierte Größenlimit.",
+    "insufficientStorage": "Für eine sichere Wiederherstellung ist nicht genügend freier Speicher verfügbar.",
+    "backupLengthMismatch": "Die übertragene Backupdatei ist unvollständig.",
+    "backupFormatUnsupported": "Diese Backupformat-Version wird nicht unterstützt.",
+    "backupVersionNewer": "Ein Backup einer neueren ezPrint-Version kann nicht wiederhergestellt werden.",
+    "backupInvalid": "Die Datei ist kein gültiges ezPrint-Backup.",
+    "backupConfigInvalid": "Das konfigurierte Backup-Größenlimit ist ungültig.",
+    "restoreNotFound": "Der Wiederherstellungsstatus wurde nicht gefunden oder ist abgelaufen.",
+    "unsupportedMediaType": "Es werden nur ezPrint-Backupdateien akzeptiert."
   },
   "validation": {
     "printerManufacturerRequired": "Ein Hersteller ist erforderlich.",

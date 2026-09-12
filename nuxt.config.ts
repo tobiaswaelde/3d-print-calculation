@@ -41,6 +41,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     sessionTtlHours: 168,
+    backupMaxBytes: 1024 * 1024 * 1024,
     public: { siteUrl: 'http://localhost:3000', appVersion: packageJson.version },
   },
   i18n: {
